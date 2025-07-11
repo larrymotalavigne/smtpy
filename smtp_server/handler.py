@@ -1,8 +1,8 @@
 from aiosmtpd.handlers import AsyncMessage
 from email.message import EmailMessage
 import logging
-from config.db import get_session
-from config.models import Domain, Alias, ActivityLog
+from database.db import get_session
+from database.models import Domain, Alias, ActivityLog
 from forwarding.forwarder import forward_email
 import re
 from datetime import datetime

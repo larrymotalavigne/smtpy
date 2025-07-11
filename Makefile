@@ -14,10 +14,10 @@ help:
 	@echo "  make compose-down  Stop docker-compose stack (alias for stop)"
 
 build:
-	docker-compose build
+	docker-compose build --no-cache
 
 run:
-	docker-compose up -d
+	docker-compose up -d --build
 
 stop:
 	docker-compose down

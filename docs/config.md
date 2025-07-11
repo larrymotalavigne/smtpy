@@ -9,6 +9,7 @@
 
 ## Database
 - Uses SQLite by default (see `SMTPY_DB_PATH` env variable).
+- Models and DB logic are now in `database/models.py` and `database/db.py`.
 
 ## Environment Variables
 - `SMTPY_DB_PATH`: Path to the SQLite database file. 

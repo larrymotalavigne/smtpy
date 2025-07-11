@@ -8,7 +8,7 @@
 ## Local Setup
 ```bash
 uv pip install -r requirements.txt
-uvicorn web.app:app --reload
+uvicorn views.web:app --reload
 ```
 
 ## Docker

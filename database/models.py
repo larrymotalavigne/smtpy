@@ -26,14 +26,14 @@ class Domain(Base):
     id: Mapped[int] = mapped_column(primary_key=True)
     name: Mapped[str] = mapped_column(unique=True, index=True)
     catch_all: Mapped[Optional[str]] = mapped_column(nullable=True)  # Email address for catch-all alias (if set)
-    aliases: Mapped[List["Alias"]] = relationship("Alias", back_populates="domain", cascade="all, delete-orphan")
+    aliases: Mapped[List["Alias"]] = relationship("Alias", back_populates="domain")
 
 class Alias(Base):
     __tablename__ = "alias"
     id: Mapped[int] = mapped_column(primary_key=True)
     local_part: Mapped[str] = mapped_column(index=True)
     targets: Mapped[str] = mapped_column()  # Comma-separated list of destination emails
-    expires_at: Mapped[datetime.datetime] = mapped_column(DateTime, nullable=True)  # Optional expiration
+    expires_at: Mapped[datetime.datetime] = mapped_column(DateTime)
     domain_id: Mapped[int] = mapped_column(ForeignKey("domain.id"))
     domain: Mapped["Domain"] = relationship("Domain", back_populates="aliases")
 
@@ -47,18 +47,10 @@ class ForwardingRule(Base):
 class ActivityLog(Base):
     __tablename__ = "activity_log"
     id: Mapped[int] = mapped_column(primary_key=True)
-    timestamp: Mapped[str] = mapped_column(server_default=func.now())
-    event_type: Mapped[str] = mapped_column()  # e.g., 'forward', 'bounce', 'error'
+    timestamp: Mapped[datetime.datetime] = mapped_column(DateTime, default=func.now())
+    event_type: Mapped[str] = mapped_column()
     sender: Mapped[Optional[str]] = mapped_column(nullable=True)
     recipient: Mapped[Optional[str]] = mapped_column(nullable=True)
     subject: Mapped[Optional[str]] = mapped_column(nullable=True)
-    status: Mapped[Optional[str]] = mapped_column(nullable=True)  # e.g., 'success', 'failed'
-    message: Mapped[Optional[str]] = mapped_column(nullable=True)  # error or info message 
-
-class Invitation(Base):
-    __tablename__ = "invitation"
-    id: Mapped[int] = mapped_column(primary_key=True)
-    email: Mapped[str] = mapped_column(index=True)
-    token: Mapped[str] = mapped_column(String(64), unique=True, index=True)
-    expires_at: Mapped[datetime.datetime] = mapped_column(DateTime)
-    invited_by: Mapped[Optional[int]] = mapped_column(ForeignKey("user.id"), nullable=True) 
+    status: Mapped[str] = mapped_column()
+    message: Mapped[Optional[str]] = mapped_column(nullable=True) 

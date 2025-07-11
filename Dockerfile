@@ -19,4 +19,4 @@ EXPOSE 80 8025
 # EXPOSE 25  # Uncomment if you want to expose SMTP
 
 # Default command (can be overridden by docker-compose)
-CMD ["uvicorn", "web.app:app", "--host", "0.0.0.0", "--port", "80"] 
+CMD ["uvicorn", "views.web:app", "--host", "0.0.0.0", "--port", "80"] 

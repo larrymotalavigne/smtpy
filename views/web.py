@@ -1,22 +1,25 @@
+import os
+import secrets
+import smtplib
+from datetime import datetime, timedelta
+from collections import defaultdict
+from email.message import EmailMessage
+
 from fastapi import FastAPI, Request, Form, HTTPException, Depends, status, BackgroundTasks, Path, Body
 from fastapi.responses import HTMLResponse, RedirectResponse, PlainTextResponse, JSONResponse
 from fastapi.templating import Jinja2Templates
 from fastapi.staticfiles import StaticFiles
+from sqlalchemy.orm import selectinload
 from starlette.middleware.sessions import SessionMiddleware
 from passlib.context import CryptContext
-from config.db import get_session, init_db
-from config.models import Domain, Alias, ActivityLog, User, Invitation
-from api.endpoints import router as api_router
-from sqlalchemy.orm import selectinload
-import os
-from web.dns_check import check_dns_records
-from datetime import datetime, timedelta
-from collections import defaultdict
-import secrets
-import smtplib
-from email.message import EmailMessage
 from sqlalchemy.exc import IntegrityError
 import dns.resolver
+
+from database.db import get_session, init_db
+from database.models import Domain, Alias, ActivityLog, User
+from controllers.domain_controller import router as domain_router
+from controllers.alias_controller import router as alias_router
+from web.dns_check import check_dns_records
 
 SECRET_KEY = os.environ.get("SMTPY_SECRET_KEY", "change-this-secret-key")
 SMTP_HOST = os.environ.get("SMTP_HOST", "localhost")
@@ -24,9 +27,10 @@ SMTP_PORT = int(os.environ.get("SMTP_PORT", 25))
 
 app = FastAPI()
 app.add_middleware(SessionMiddleware, secret_key=SECRET_KEY)
-app.include_router(api_router, prefix="/api")
-app.mount("/static", StaticFiles(directory=os.path.join(os.path.dirname(__file__), "static")), name="static")
-templates = Jinja2Templates(directory=os.path.join(os.path.dirname(__file__), "templates"))
+app.include_router(domain_router, prefix="/api")
+app.include_router(alias_router, prefix="/api")
+app.mount("/static", StaticFiles(directory=os.path.join(os.path.dirname(__file__), "../web/static")), name="static")
+templates = Jinja2Templates(directory=os.path.join(os.path.dirname(__file__), "../web/templates"))
 
 pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
 
@@ -52,8 +56,6 @@ def on_startup():
 def create_default_admin():
     with get_session() as session:
         if not session.query(User).first():
-            from passlib.context import CryptContext
-            pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
             hashed = pwd_context.hash("password")
             user = User(
                 username="admin",
@@ -87,6 +89,14 @@ def send_invitation_email(to_email, token):
     msg.set_content(f"You've been invited! Complete your registration: http://localhost/register?invite={token}")
     with smtplib.SMTP(SMTP_HOST, SMTP_PORT) as s:
         s.send_message(msg)
+
+# --- Web routes (copied from web/app.py, update as needed) ---
+# Example for login, register, dashboard, etc.
+# All routes should use the new imports and structure
+
+@app.get("/", response_class=HTMLResponse)
+def root(request: Request):
+    return templates.TemplateResponse("presentation.html", {"request": request})
 
 @app.get("/invite-user", response_class=HTMLResponse)
 def invite_user_get(request: Request):

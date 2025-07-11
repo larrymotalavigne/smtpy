@@ -2,7 +2,7 @@ from sqlalchemy import create_engine
 from sqlalchemy.orm import sessionmaker
 from contextlib import contextmanager
 import os
-from config.models import Base
+from database.models import Base
 
 DB_PATH = os.environ.get("SMTPY_DB_PATH", "smtpy.db")
 engine = create_engine(f"sqlite:///{DB_PATH}", echo=True, future=True)
