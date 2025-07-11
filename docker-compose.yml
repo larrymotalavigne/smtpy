@@ -1,0 +1,30 @@
+
+services:
+  app:
+    build: .
+    container_name: smtpy-app
+    ports:
+      - "80:80"
+      - "8025:8025"
+    environment:
+      - DB_PATH=/data/db.sqlite3
+      - SMTP_HOST=postfix
+      - SMTP_PORT=25
+    volumes:
+      - smtpy-data:/data
+    depends_on:
+      - postfix
+    restart: unless-stopped
+
+  postfix:
+    image: boky/postfix
+    container_name: smtpy-postfix
+    environment:
+      - ALLOWED_SENDER_DOMAINS=*
+      - RELAY_NETWORKS=172.0.0.0/8
+    ports:
+      - "2525:25"
+    restart: unless-stopped
+
+volumes:
+  smtpy-data: 

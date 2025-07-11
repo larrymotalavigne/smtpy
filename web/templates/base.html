@@ -1,0 +1,88 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>{% block title %}smtpy Admin{% endblock %}</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <!-- Tabler CSS -->
+    <link href="https://unpkg.com/@tabler/core@latest/dist/css/tabler.min.css" rel="stylesheet"/>
+    <!-- Tabler Icons -->
+    <link href="https://unpkg.com/@tabler/icons@latest/iconfont/tabler-icons.min.css" rel="stylesheet"/>
+    <style>
+      body {
+        background: linear-gradient(135deg, #f8fafc 0%, #e0e7ef 100%);
+        min-height: 100vh;
+      }
+      .navbar {
+        background: #fff;
+        box-shadow: 0 2px 8px rgba(80, 80, 120, 0.04);
+      }
+      .card {
+        box-shadow: 0 2px 16px rgba(80, 80, 120, 0.07);
+        border-radius: 1rem;
+      }
+      .container-xl {
+        margin-top: 2.5rem;
+        margin-bottom: 2.5rem;
+      }
+      .footer {
+        text-align: center;
+        color: #888;
+        font-size: 0.95rem;
+        margin-top: 3rem;
+        margin-bottom: 1rem;
+      }
+      .navbar-brand {
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+      }
+      .navbar-brand svg {
+        height: 2.2rem;
+        width: 2.2rem;
+      }
+    </style>
+    {% block head %}{% endblock %}
+</head>
+<body>
+    <div class="page">
+        <header class="navbar navbar-expand-md d-print-none">
+            <div class="container-xl">
+                <a href="/" class="navbar-brand d-none-navbar-horizontal pe-0 pe-md-3">
+                  <!-- Custom SVG logo -->
+                  <svg viewBox="0 0 48 48" fill="none" xmlns="http://www.w3.org/2000/svg">
+                    <rect width="48" height="48" rx="12" fill="#a259ec"/>
+                    <path d="M12 16L24 28L36 16" stroke="#fff" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"/>
+                    <path d="M12 32H36" stroke="#fff" stroke-width="3" stroke-linecap="round"/>
+                  </svg>
+                  <span style="font-size:1.5rem;font-weight:600;color:#a259ec;vertical-align:middle;">smtpy</span>
+                </a>
+                <div class="navbar-nav flex-row order-md-last">
+                    {% if user %}
+                    <a href="/dashboard" class="nav-link">Dashboard</a>
+                    <a href="/admin" class="nav-link">Admin</a>
+                    {% if user.role == 'admin' %}
+                    <a href="/users" class="nav-link">User Management</a>
+                    {% endif %}
+                    <span class="nav-link disabled">{{ user.username }} ({{ user.role }})</span>
+                    <a href="/logout" class="nav-link">Logout</a>
+                    {% else %}
+                    <a href="/login" class="nav-link">Login</a>
+                    {% endif %}
+                </div>
+            </div>
+        </header>
+        <main class="page-wrapper">
+            <div class="container-xl mt-4">
+                {% block content %}{% endblock %}
+            </div>
+        </main>
+        <footer class="footer">
+          &copy; {{ 2024 }} <a href="https://github.com/larry-mot/smtpy" target="_blank" style="color:#a259ec;text-decoration:none;font-weight:500;">smtpy</a> &mdash; Modern Email Forwarding
+        </footer>
+    </div>
+    <!-- Tabler JS -->
+    <script src="https://unpkg.com/@tabler/core@latest/dist/js/tabler.min.js"></script>
+    {% block scripts %}{% endblock %}
+</body>
+</html> 

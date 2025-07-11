@@ -1,0 +1,83 @@
+{% extends "base.html" %}
+{% block title %}Admin - smtpy{% endblock %}
+{% block content %}
+<h1 class="mb-4">Admin Panel</h1>
+<div class="row">
+  <div class="col-md-6">
+    <div class="card">
+      <div class="card-header"><h2 class="card-title">Domains</h2></div>
+      <div class="card-body">
+        <ul class="list-group mb-3">
+          {% for domain in domains %}
+            <li class="list-group-item d-flex justify-content-between align-items-center">
+              <div>
+                <b>{{ domain.name }}</b>
+                <span class="text-muted">(Catch-all: {{ domain.catch_all or 'None' }})</span>
+              </div>
+              <form method="post" action="/edit-catchall" class="d-flex align-items-center mb-0 me-2">
+                <input type="hidden" name="domain_id" value="{{ domain.id }}">
+                <input type="email" name="catch_all" value="{{ domain.catch_all or '' }}" class="form-control form-control-sm me-2" placeholder="Set catch-all" style="max-width:180px;">
+                <button type="submit" class="btn btn-outline-primary btn-sm">Save</button>
+              </form>
+              <form method="post" action="/delete-domain" class="mb-0">
+                <input type="hidden" name="domain_id" value="{{ domain.id }}">
+                <button type="submit" class="btn btn-danger btn-sm"><span class="ti ti-trash"></span></button>
+              </form>
+            </li>
+          {% endfor %}
+        </ul>
+        <form method="post" action="/add-domain" class="row g-2 align-items-end">
+          <div class="col">
+            <input type="text" name="name" class="form-control" placeholder="Domain name" required>
+          </div>
+          <div class="col">
+            <input type="email" name="catch_all" class="form-control" placeholder="Catch-all target (optional)">
+          </div>
+          <div class="col-auto">
+            <button type="submit" class="btn btn-primary">Add Domain</button>
+          </div>
+        </form>
+      </div>
+    </div>
+  </div>
+  <div class="col-md-6">
+    <div class="card">
+      <div class="card-header"><h2 class="card-title">Aliases</h2></div>
+      <div class="card-body">
+        <ul class="list-group mb-3">
+          {% for alias in aliases %}
+            <li class="list-group-item d-flex justify-content-between align-items-center">
+              <div>
+                {{ alias.local_part }}@{{ alias.domain_id }} → {{ alias.target }}
+              </div>
+              <form method="post" action="/delete-alias" class="mb-0">
+                <input type="hidden" name="alias_id" value="{{ alias.id }}">
+                <button type="submit" class="btn btn-danger btn-sm"><span class="ti ti-trash"></span></button>
+              </form>
+            </li>
+          {% endfor %}
+        </ul>
+        <form method="post" action="/add-alias" class="row g-2 align-items-end">
+          <div class="col">
+            <input type="text" name="local_part" class="form-control" placeholder="Local part (e.g. contact)" required>
+          </div>
+          <div class="col">
+            <input type="email" name="target" class="form-control" placeholder="Target email" required>
+          </div>
+          <div class="col">
+            <select name="domain_id" class="form-select" required>
+              <option value="">Select domain</option>
+              {% for domain in domains %}
+                <option value="{{ domain.id }}">{{ domain.name }}</option>
+              {% endfor %}
+            </select>
+          </div>
+          <div class="col-auto">
+            <button type="submit" class="btn btn-primary">Add Alias</button>
+          </div>
+        </form>
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %} 

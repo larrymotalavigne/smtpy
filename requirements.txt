@@ -1,0 +1,11 @@
+aiosmtpd
+fastapi
+jinja2
+dkimpy
+uvicorn
+httpx
+sqlmodel
+python-multipart
+passlib[bcrypt]
+itsdangerous
+dnspython

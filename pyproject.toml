@@ -1,0 +1,22 @@
+[project]
+name = "smtpy"
+version = "0.1.0"
+description = "Addy.io clone for custom email aliasing and forwarding."
+authors = ["Your Name <your@email.com>"]
+requires-python = ">=3.9"
+
+dependencies = [
+    "aiosmtpd",
+    "fastapi",
+    "jinja2",
+    "dkimpy",
+    "uvicorn",
+    "httpx"
+]
+
+[tool.uv]
+# uv-specific settings can go here
+
+[build-system]
+requires = ["uv"]
+build-backend = "uv.build" 
