@@ -134,6 +134,7 @@ jobs:
         echo "$INSTANCE_INFO"
 
   security-scan:
+    needs: build
     runs-on: ubuntu-latest
     if: github.event_name == 'push'
     
