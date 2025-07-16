@@ -288,7 +288,7 @@ def delete_alias(request: Request, alias_id: int = Form(...)):
 @app.post("/edit-catchall")
 def edit_catchall(request: Request, domain_id: int = Form(...), catch_all: str = Form("")):
     with get_session() as session:
-        domain = session.query(Domain).get(domain_id)
+        domain = session.get(Domain, domain_id)
         if domain:
             domain.catch_all = catch_all or None
             session.commit()
@@ -407,7 +407,7 @@ def reset_password_post(request: Request, token: str = Form(...), password: str 
 @app.get("/domain-dns/{domain_id}", response_class=HTMLResponse)
 def domain_dns_settings(request: Request, domain_id: int = Path(...)):
     with get_session() as session:
-        domain = session.query(Domain).get(domain_id)
+        domain = session.get(Domain, domain_id)
         if not domain:
             return RedirectResponse(url="/admin", status_code=303)
         # Example recommended values (customize as needed)
@@ -433,7 +433,7 @@ def domain_dns_settings(request: Request, domain_id: int = Path(...)):
 def api_dns_status(domain_id: int = Path(...)):
     import dns.resolver
     with get_session() as session:
-        domain = session.query(Domain).get(domain_id)
+        domain = session.get(Domain, domain_id)
         if not domain:
             return {"error": "Domain not found"}
         results = {}
@@ -471,7 +471,7 @@ def api_dns_status(domain_id: int = Path(...)):
 @app.get("/domain-aliases/{domain_id}", response_class=HTMLResponse)
 def domain_aliases(request: Request, domain_id: int = Path(...)):
     with get_session() as session:
-        domain = session.query(Domain).get(domain_id)
+        domain = session.get(Domain, domain_id)
         if not domain:
             return RedirectResponse(url="/admin", status_code=303)
         return templates.TemplateResponse("domain_aliases.html", {"request": request, "domain": domain})
@@ -501,7 +501,7 @@ def api_delete_alias(request: Request, alias_id: int = Path(...)):
     if not user:
         return RedirectResponse(url="/login", status_code=303)
     with get_session() as session:
-        alias = session.query(Alias).get(alias_id)
+        alias = session.get(Alias, alias_id)
         if alias:
             session.delete(alias)
             session.commit()
@@ -511,7 +511,7 @@ def api_delete_alias(request: Request, alias_id: int = Path(...)):
 @app.post("/api/alias-test/{alias_id}")
 def api_test_alias(alias_id: int = Path(...)):
     with get_session() as session:
-        alias = session.query(Alias).get(alias_id)
+        alias = session.get(Alias, alias_id)
         if not alias:
             return JSONResponse(status_code=404, content={"error": "Alias not found"})
         # Simulate sending a test email (log only)
