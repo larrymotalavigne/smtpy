@@ -9,3 +9,7 @@ python-multipart
 passlib[bcrypt]
 itsdangerous
 dnspython
+pytest
+pytest-asyncio
+fastapi[testing]
+stripe

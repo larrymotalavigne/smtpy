@@ -20,6 +20,8 @@ class User(Base):
     invited_by: Mapped[Optional[int]] = mapped_column(ForeignKey("user.id"), nullable=True)
     password_reset_token: Mapped[Optional[str]] = mapped_column(String(64), nullable=True)
     password_reset_expiry: Mapped[Optional[datetime.datetime]] = mapped_column(DateTime, nullable=True)
+    stripe_customer_id: Mapped[Optional[str]] = mapped_column(String(64), nullable=True, index=True)
+    subscription_status: Mapped[Optional[str]] = mapped_column(String(32), nullable=True, index=True)
 
 class Domain(Base):
     __tablename__ = "domain"
@@ -33,7 +35,7 @@ class Alias(Base):
     id: Mapped[int] = mapped_column(primary_key=True)
     local_part: Mapped[str] = mapped_column(index=True)
     targets: Mapped[str] = mapped_column()  # Comma-separated list of destination emails
-    expires_at: Mapped[datetime.datetime] = mapped_column(DateTime)
+    expires_at: Mapped[Optional[datetime.datetime]] = mapped_column(DateTime, nullable=True)
     domain_id: Mapped[int] = mapped_column(ForeignKey("domain.id"))
     domain: Mapped["Domain"] = relationship("Domain", back_populates="aliases")
 
@@ -54,3 +56,11 @@ class ActivityLog(Base):
     subject: Mapped[Optional[str]] = mapped_column(nullable=True)
     status: Mapped[str] = mapped_column()
     message: Mapped[Optional[str]] = mapped_column(nullable=True) 
+
+class Invitation(Base):
+    __tablename__ = "invitation"
+    id: Mapped[int] = mapped_column(primary_key=True)
+    email: Mapped[str] = mapped_column(index=True)
+    token: Mapped[str] = mapped_column(unique=True, index=True)
+    expires_at: Mapped[datetime.datetime] = mapped_column(DateTime)
+    invited_by: Mapped[int] = mapped_column(ForeignKey("user.id")) 

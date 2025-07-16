@@ -4,6 +4,7 @@ import smtplib
 from datetime import datetime, timedelta
 from collections import defaultdict
 from email.message import EmailMessage
+import json
 
 from fastapi import FastAPI, Request, Form, HTTPException, Depends, status, BackgroundTasks, Path, Body
 from fastapi.responses import HTMLResponse, RedirectResponse, PlainTextResponse, JSONResponse
@@ -14,9 +15,10 @@ from starlette.middleware.sessions import SessionMiddleware
 from passlib.context import CryptContext
 from sqlalchemy.exc import IntegrityError
 import dns.resolver
+import stripe
 
 from database.db import get_session, init_db
-from database.models import Domain, Alias, ActivityLog, User
+from database.models import Domain, Alias, ActivityLog, User, Invitation
 from controllers.domain_controller import router as domain_router
 from controllers.alias_controller import router as alias_router
 from web.dns_check import check_dns_records
@@ -24,6 +26,10 @@ from web.dns_check import check_dns_records
 SECRET_KEY = os.environ.get("SMTPY_SECRET_KEY", "change-this-secret-key")
 SMTP_HOST = os.environ.get("SMTP_HOST", "localhost")
 SMTP_PORT = int(os.environ.get("SMTP_PORT", 25))
+
+STRIPE_TEST_API_KEY = os.environ.get("STRIPE_TEST_API_KEY", "sk_test_...")
+STRIPE_BILLING_PORTAL_RETURN_URL = os.environ.get("STRIPE_BILLING_PORTAL_RETURN_URL", "http://localhost:8000/billing")
+stripe.api_key = STRIPE_TEST_API_KEY
 
 app = FastAPI()
 app.add_middleware(SessionMiddleware, secret_key=SECRET_KEY)
@@ -212,8 +218,30 @@ def admin_panel(request: Request):
     with get_session() as session:
         domains = session.query(Domain).options(selectinload(Domain.aliases)).all()
         aliases = session.query(Alias).all()
+        # Prepare domain status for onboarding checklist
+        domain_statuses = []
+        for domain in domains:
+            dns_results = check_dns_records(domain.name)
+            verified = dns_results.get('spf', {}).get('status') == 'valid'
+            mx_valid = False
+            try:
+                import dns.resolver
+                answers = dns.resolver.resolve(domain.name, 'MX')
+                mx_valid = any(answers)
+            except Exception:
+                mx_valid = False
+            domain_statuses.append({
+                'id': domain.id,
+                'name': domain.name,
+                'catch_all': domain.catch_all,
+                'verified': verified,
+                'mx_valid': mx_valid,
+                'spf_valid': dns_results.get('spf', {}).get('status') == 'valid',
+                'dkim_valid': dns_results.get('dkim', {}).get('status') == 'valid',
+                'dmarc_valid': dns_results.get('dmarc', {}).get('status') == 'valid'
+            })
     user = get_current_user(request)
-    return templates.TemplateResponse("index.html", {"request": request, "title": "smtpy Admin", "domains": domains, "aliases": aliases, "user": user})
+    return templates.TemplateResponse("index.html", {"request": request, "title": "smtpy Admin", "domains": domain_statuses, "aliases": aliases, "user": user})
 
 @app.post("/add-domain")
 def add_domain(request: Request, name: str = Form(...), catch_all: str = Form(None)):
@@ -456,7 +484,10 @@ def api_list_aliases(domain_id: int = Path(...)):
         return [{"id": a.id, "local_part": a.local_part, "targets": a.targets, "expires_at": a.expires_at.isoformat() if a.expires_at else None} for a in aliases]
 
 @app.post("/api/aliases/{domain_id}")
-def api_add_alias(domain_id: int = Path(...), local_part: str = Body(...), targets: str = Body(...), expires_at: str = Body(None)):
+def api_add_alias(request: Request, domain_id: int = Path(...), local_part: str = Body(...), targets: str = Body(...), expires_at: str = Body(None)):
+    user = get_current_user(request)
+    if not user:
+        return RedirectResponse(url="/login", status_code=303)
     with get_session() as session:
         exp = datetime.fromisoformat(expires_at) if expires_at else None
         alias = Alias(local_part=local_part, targets=targets, domain_id=domain_id, expires_at=exp)
@@ -465,7 +496,10 @@ def api_add_alias(domain_id: int = Path(...), local_part: str = Body(...), targe
         return {"success": True, "id": alias.id}
 
 @app.delete("/api/alias/{alias_id}")
-def api_delete_alias(alias_id: int = Path(...)):
+def api_delete_alias(request: Request, alias_id: int = Path(...)):
+    user = get_current_user(request)
+    if not user:
+        return RedirectResponse(url="/login", status_code=303)
     with get_session() as session:
         alias = session.query(Alias).get(alias_id)
         if alias:
@@ -483,3 +517,97 @@ def api_test_alias(alias_id: int = Path(...)):
         # Simulate sending a test email (log only)
         print(f"Test email would be sent to {alias.target} for alias {alias.local_part}")
         return {"success": True, "message": f"Test email sent to {alias.target}"} 
+
+@app.get("/billing", response_class=HTMLResponse)
+def billing(request: Request):
+    user = get_current_user(request)
+    if not user:
+        return RedirectResponse(url="/login", status_code=303)
+    return templates.TemplateResponse("billing.html", {"request": request, "user": user}) 
+
+@app.post("/billing/stripe-portal")
+def billing_stripe_portal(request: Request):
+    user = get_current_user(request)
+    if not user:
+        return RedirectResponse(url="/login", status_code=303)
+    # Ensure user has a Stripe customer ID
+    with get_session() as session:
+        db_user = session.get(User, user.id)
+        if not db_user.stripe_customer_id:
+            # Create Stripe customer in test mode
+            customer = stripe.Customer.create(email=db_user.email or f"user{db_user.id}@example.com")
+            db_user.stripe_customer_id = customer.id
+            session.commit()
+        else:
+            customer = stripe.Customer.retrieve(db_user.stripe_customer_id)
+    # Create a billing portal session
+    try:
+        portal_session = stripe.billing_portal.Session.create(
+            customer=customer.id,
+            return_url=STRIPE_BILLING_PORTAL_RETURN_URL
+        )
+        return RedirectResponse(url=portal_session.url, status_code=303)
+    except Exception as e:
+        return templates.TemplateResponse("billing.html", {"request": request, "user": user, "error": str(e)}) 
+
+@app.post("/billing/checkout")
+def billing_checkout(request: Request, plan: str = Form(...)):
+    user = get_current_user(request)
+    if not user:
+        return RedirectResponse(url="/login", status_code=303)
+    # Map plan to Stripe price ID (test mode)
+    price_ids = {
+        "basic": os.environ.get("STRIPE_BASIC_PRICE_ID", "price_1N..."),
+        "pro": os.environ.get("STRIPE_PRO_PRICE_ID", "price_1N...")
+    }
+    price_id = price_ids.get(plan)
+    if not price_id:
+        return templates.TemplateResponse("billing.html", {"request": request, "user": user, "error": "Invalid plan selected."})
+    # Ensure user has a Stripe customer ID
+    with get_session() as session:
+        db_user = session.get(User, user.id)
+        if not db_user.stripe_customer_id:
+            customer = stripe.Customer.create(email=db_user.email or f"user{db_user.id}@example.com")
+            db_user.stripe_customer_id = customer.id
+            session.commit()
+        else:
+            customer = stripe.Customer.retrieve(db_user.stripe_customer_id)
+    # Create Stripe Checkout Session
+    try:
+        checkout_session = stripe.checkout.Session.create(
+            customer=customer.id,
+            payment_method_types=["card"],
+            line_items=[{"price": price_id, "quantity": 1}],
+            mode="subscription",
+            success_url=os.environ.get("STRIPE_CHECKOUT_SUCCESS_URL", "http://localhost:8000/billing?success=1"),
+            cancel_url=os.environ.get("STRIPE_CHECKOUT_CANCEL_URL", "http://localhost:8000/billing?canceled=1")
+        )
+        return RedirectResponse(url=checkout_session.url, status_code=303)
+    except Exception as e:
+        return templates.TemplateResponse("billing.html", {"request": request, "user": user, "error": str(e)})
+
+@app.post("/stripe/webhook")
+async def stripe_webhook(request: Request):
+    payload = await request.body()
+    sig_header = request.headers.get("stripe-signature")
+    endpoint_secret = os.environ.get("STRIPE_WEBHOOK_SECRET", "whsec_test")
+    event = None
+    try:
+        event = stripe.Webhook.construct_event(
+            payload, sig_header, endpoint_secret
+        )
+    except Exception as e:
+        print(f"Webhook error: {e}")
+        return JSONResponse(status_code=400, content={"error": str(e)})
+    # Handle subscription events
+    if event["type"].startswith("customer.subscription."):
+        data = event["data"]["object"]
+        customer_id = data["customer"]
+        status_val = data["status"]
+        with get_session() as session:
+            user = session.query(User).filter_by(stripe_customer_id=customer_id).first()
+            if user:
+                user.subscription_status = status_val
+                session.commit()
+    print(f"Received Stripe event: {event['type']}")
+    return {"received": True} 

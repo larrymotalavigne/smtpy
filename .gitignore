@@ -1,0 +1,51 @@
+# Python
+__pycache__/
+*.py[cod]
+*.pyo
+*.pyd
+*.so
+
+# Virtualenv
+.venv/
+venv/
+ENV/
+
+# SQLite
+*.sqlite3
+*.db
+
+# Alembic
+alembic/versions/*.pyc
+
+# VSCode
+.vscode/
+
+# Environment
+.env
+.env.*
+*.env
+
+# Docker
+*.log
+docker-compose.override.yml
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Test/coverage
+.coverage
+htmlcov/
+.cache/
+.pytest_cache/
+
+# Misc
+*.bak
+*.swp
+*.swo
+
+# Node (if frontend present)
+node_modules/
+
+# Stripe
+stripe.log 
