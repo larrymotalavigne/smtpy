@@ -125,7 +125,7 @@ jobs:
         echo "$HOME/bin" >> $GITHUB_PATH
 
     - name: Verify Scaleway CLI
-      run: scw --version
+      run: scw version
 
     - name: Configure Scaleway CLI
       run: |
