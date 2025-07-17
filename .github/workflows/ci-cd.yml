@@ -143,9 +143,9 @@ jobs:
 
     - name: Deploy to Scaleway Container Instances
       run: |
-        if scw container container list name=smtpy-prod | grep -q "smtpy-prod"; then
+        if scw container container list name=smtpy | grep -q "smtpy"; then
           echo "Updating existing container instance..."
-          CONTAINER_ID=$(scw container container list name=smtpy-prod -o json | jq -r '.[0].id')
+          CONTAINER_ID=$(scw container container list name=smtpy -o json | jq -r '.[0].id')
           scw container container update $CONTAINER_ID \
             registry-image=${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:latest \
             environment-variables.SMTPY_DB_PATH=/data/smtpy.db \
@@ -156,7 +156,7 @@ jobs:
         else
           echo "Creating new container instance..."
           scw container container create \
-            name=smtpy-prod \
+            name=smtpy \
             registry-image=${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:latest \
             environment-variables.SMTPY_DB_PATH=/data/smtpy.db \
             environment-variables.SMTP_RELAY=localhost \
@@ -169,11 +169,11 @@ jobs:
       run: |
         echo "Waiting for container to be ready..."
         sleep 30
-        scw container instance wait smtpy-prod
+        scw container instance wait smtpy
 
     - name: Get deployment URL
       run: |
-        INSTANCE_INFO=$(scw container instance get smtpy-prod)
-        echo "Deployment URL: https://smtpy-prod.fr-par.scw.cloud"
+        INSTANCE_INFO=$(scw container instance get smtpy)
+        echo "Deployment URL: https://smtpy.fr-par.scw.cloud"
         echo "Container instance info:"
         echo "$INSTANCE_INFO"
