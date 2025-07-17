@@ -127,6 +127,9 @@ jobs:
     - name: Verify Scaleway CLI
       run: scw version
 
+    - name: Ensure Scaleway config directory exists
+      run: mkdir -p $HOME/.config/scw
+
     - name: Configure Scaleway CLI
       run: |
         scw config set access-key=${{ secrets.SCALEWAY_ACCESS_KEY }}
