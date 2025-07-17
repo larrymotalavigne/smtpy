@@ -136,9 +136,6 @@ jobs:
     - name: Create empty Scaleway config file if missing
       run: touch $HOME/.config/scw/config.yaml
 
-    - name: Initialize Scaleway CLI config
-      run: scw init
-
     - name: Configure Scaleway CLI
       run: |
         scw config set access-key=${{ secrets.SCALEWAY_ACCESS_KEY }}
