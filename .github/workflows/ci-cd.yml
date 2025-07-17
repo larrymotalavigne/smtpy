@@ -119,22 +119,21 @@ jobs:
     - name: Checkout code
       uses: actions/checkout@v4
 
-    - name: Ensure curl is installed
-      run: sudo apt-get update && sudo apt-get install -y curl
+    - name: Install Homebrew
+      run: |
+        /bin/bash -c "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/HEAD/install.sh)"
+        echo "/home/linuxbrew/.linuxbrew/bin" >> $GITHUB_PATH
 
     - name: Install Scaleway CLI
       run: |
-        curl -s https://raw.githubusercontent.com/scaleway/scaleway-cli/refs/tags/v2.41.0/scripts/get.sh | sh
-        echo "$HOME/bin" >> $GITHUB_PATH
-
-    - name: Verify Scaleway CLI
-      run: scw version
+        brew install scaleway/scaleway/scw
+        echo "/home/linuxbrew/.linuxbrew/bin" >> $GITHUB_PATH
 
     - name: Ensure Scaleway config directory exists
       run: mkdir -p $HOME/.config/scw
 
-    - name: Create empty Scaleway config file if missing
-      run: touch $HOME/.config/scw/config.yaml
+    - name: Initialize Scaleway CLI config
+      run: scw init -c
 
     - name: Configure Scaleway CLI
       run: |
@@ -144,29 +143,33 @@ jobs:
         scw config set default-project-id=${{ secrets.SCALEWAY_PROJECT_ID }}
         scw config set default-region=fr-par
 
+    - name: Install jq
+      run: sudo apt-get update && sudo apt-get install -y jq
+
     - name: Deploy to Scaleway Container Instances
       run: |
-        # Update or create container instance
-        if scw container instance list | grep -q "smtpy-prod"; then
+        if scw container container list name=smtpy-prod | grep -q "smtpy-prod"; then
           echo "Updating existing container instance..."
-          scw container instance update smtpy-prod \
-            --image=${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:latest \
-            --env SMTPY_DB_PATH=/data/smtpy.db \
-            --env SMTP_RELAY=localhost \
-            --env SMTP_PORT=1025 \
-            --port 80:80 \
-            --port 8025:8025
+          CONTAINER_ID=$(scw container container list name=smtpy-prod -o json | jq -r '.[0].id')
+          scw container container update $CONTAINER_ID \
+            registry-image=${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:latest \
+            environment-variables.SMTPY_DB_PATH=/data/smtpy.db \
+            environment-variables.SMTP_RELAY=localhost \
+            environment-variables.SMTP_PORT=1025 \
+            port=80:80 \
+            port=8025:8025
+          scw container container deploy $CONTAINER_ID
         else
           echo "Creating new container instance..."
-          scw container instance create \
-            --name smtpy-prod \
-            --image=${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:latest \
-            --env SMTPY_DB_PATH=/data/smtpy.db \
-            --env SMTP_RELAY=localhost \
-            --env SMTP_PORT=1025 \
-            --port 80:80 \
-            --port 8025:8025 \
-            --region=fr-par
+          scw container container create \
+            name=smtpy-prod \
+            registry-image=${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:latest \
+            environment-variables.SMTPY_DB_PATH=/data/smtpy.db \
+            environment-variables.SMTP_RELAY=localhost \
+            environment-variables.SMTP_PORT=1025 \
+            port=80:80 \
+            port=8025:8025 \
+            region=fr-par
         fi
 
     - name: Wait for deployment
