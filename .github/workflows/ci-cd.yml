@@ -124,7 +124,7 @@ jobs:
 
     - name: Install Scaleway CLI
       run: |
-        curl -s https://raw.githubusercontent.com/scaleway/scaleway-cli/master/scripts/get.sh | sh
+        curl -s https://raw.githubusercontent.com/scaleway/scaleway-cli/refs/tags/v2.41.0/scripts/get.sh | sh
         echo "$HOME/bin" >> $GITHUB_PATH
 
     - name: Verify Scaleway CLI
