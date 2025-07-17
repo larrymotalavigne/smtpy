@@ -119,15 +119,10 @@ jobs:
     - name: Checkout code
       uses: actions/checkout@v4
 
-    - name: Install Homebrew
-      run: |
-        /bin/bash -c "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/HEAD/install.sh)"
-        echo "/home/linuxbrew/.linuxbrew/bin" >> $GITHUB_PATH
-
     - name: Install Scaleway CLI
       run: |
-        brew install scaleway/scaleway/scw
-        echo "/home/linuxbrew/.linuxbrew/bin" >> $GITHUB_PATH
+        curl -s https://raw.githubusercontent.com/scaleway/scaleway-cli/refs/tags/v2.41.0/scripts/get.sh | sh
+        echo "$HOME/bin" >> $GITHUB_PATH
 
     - name: Ensure Scaleway config directory exists
       run: mkdir -p $HOME/.config/scw
