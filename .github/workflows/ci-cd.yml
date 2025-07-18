@@ -141,22 +141,39 @@ jobs:
     - name: Install jq
       run: sudo apt-get update && sudo apt-get install -y jq
 
+    - name: Ensure Scaleway namespace exists
+      run: |
+        NAMESPACE_NAME=smtp
+        REGION=fr-par
+        PROJECT_ID=${{ secrets.SCALEWAY_PROJECT_ID }}
+        NAMESPACE_ID=$(scw container namespace list name=$NAMESPACE_NAME project-id=$PROJECT_ID region=$REGION -o json | jq -r '.[0].id // empty')
+        if [ -z "$NAMESPACE_ID" ]; then
+          echo "Creating namespace $NAMESPACE_NAME..."
+          NAMESPACE_ID=$(scw container namespace create name=$NAMESPACE_NAME project-id=$PROJECT_ID region=$REGION -o json | jq -r '.id')
+          echo "Created namespace $NAMESPACE_ID"
+        else
+          echo "Namespace $NAMESPACE_NAME already exists: $NAMESPACE_ID"
+        fi
+        echo "NAMESPACE_ID=$NAMESPACE_ID" >> $GITHUB_ENV
+
     - name: Deploy to Scaleway Container Instances
       run: |
-        if scw container container list name=smtpy | grep -q "smtpy"; then
+        if scw container container list name=smtpy namespace-id=$NAMESPACE_ID | grep -q "smtpy"; then
           echo "Updating existing container instance..."
-          CONTAINER_ID=$(scw container container list name=smtpy -o json | jq -r '.[0].id')
+          CONTAINER_ID=$(scw container container list name=smtpy namespace-id=$NAMESPACE_ID -o json | jq -r '.[0].id')
           scw container container update $CONTAINER_ID \
+            namespace-id=$NAMESPACE_ID \
             registry-image=${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:latest \
             environment-variables.SMTPY_DB_PATH=/data/smtpy.db \
             environment-variables.SMTP_RELAY=localhost \
             environment-variables.SMTP_PORT=1025 \
-            port=80 \
+            port=80
           scw container container deploy $CONTAINER_ID
         else
           echo "Creating new container instance..."
           scw container container create \
             name=smtpy \
+            namespace-id=$NAMESPACE_ID \
             registry-image=${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:latest \
             environment-variables.SMTPY_DB_PATH=/data/smtpy.db \
             environment-variables.SMTP_RELAY=localhost \
