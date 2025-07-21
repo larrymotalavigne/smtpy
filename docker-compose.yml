@@ -5,7 +5,6 @@ services:
     container_name: smtpy-app
     ports:
       - "80:80"
-      - "8025:8025"
     environment:
       - DB_PATH=/data/db.sqlite3
       - SMTP_HOST=postfix

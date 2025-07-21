@@ -1,196 +1,70 @@
 name: CI/CD Pipeline
 
-permissions:
-  contents: read
-  security-events: write
-
 on:
   push:
     branches: [ main, develop ]
   pull_request:
     branches: [ main ]
 
-env:
-  REGISTRY: rg.fr-par.scw.cloud
-  IMAGE_NAME: ${{ github.repository }}
-
 jobs:
   test:
     runs-on: ubuntu-latest
     steps:
-    - name: Checkout code
-      uses: actions/checkout@v4
+      - name: Checkout code
+        uses: actions/checkout@v4
 
-    - name: Set up Python
-      uses: actions/setup-python@v4
-      with:
-        python-version: '3.12'
+      - name: Set up Python
+        uses: actions/setup-python@v4
+        with:
+          python-version: '3.12'
 
-    - name: Install dependencies
-      run: |
-        python -m pip install --upgrade pip
-        pip install -r requirements.txt
-        pip install pytest pytest-asyncio httpx
+      - name: Install dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install -r requirements.txt
+          pip install pytest pytest-asyncio httpx
 
-    - name: Run tests
-      run: |
-        python -m pytest tests/ -v --tb=short
+      - name: Run tests
+        run: |
+          python -m pytest tests/ -v --tb=short
 
-  build:
+  build-and-push:
     needs: test
     runs-on: ubuntu-latest
-    if: github.event_name == 'push' && github.ref == 'refs/heads/main'
-    
     steps:
-    - name: Checkout code
-      uses: actions/checkout@v4
+      - name: Checkout code
+        uses: actions/checkout@v4
 
-    - name: Set up Docker Buildx
-      uses: docker/setup-buildx-action@v3
+      - name: Log in to Private Registry
+        uses: docker/login-action@v3
+        with:
+          registry: registry.atomdev.fr
+          username: ${{ secrets.SCALEWAY_ACCESS_KEY }}
+          password: ${{ secrets.SCALEWAY_SECRET_KEY }}
 
-    - name: Log in to Scaleway Container Registry
-      uses: docker/login-action@v3
-      with:
-        registry: ${{ env.REGISTRY }}
-        username: ${{ secrets.SCALEWAY_ACCESS_KEY }}
-        password: ${{ secrets.SCALEWAY_SECRET_KEY }}
-
-    - name: Extract metadata
-      id: meta
-      uses: docker/metadata-action@v5
-      with:
-        images: ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}
-        tags: |
-          type=ref,event=branch
-          type=ref,event=pr
-          type=sha,prefix={{branch}}-
-          type=raw,value=latest,enable={{is_default_branch}}
-
-    - name: Build and push Docker image
-      uses: docker/build-push-action@v5
-      with:
-        context: .
-        platforms: linux/amd64,linux/arm64
-        push: true
-        tags: ${{ steps.meta.outputs.tags }}
-        labels: ${{ steps.meta.outputs.labels }}
-        cache-from: type=gha
-        cache-to: type=gha,mode=max
-
-  security-scan:
-    needs: build
-    runs-on: ubuntu-latest
-    if: github.event_name == 'push'
-    
-    steps:
-    - name: Checkout code
-      uses: actions/checkout@v4
-
-    - name: Log in to Scaleway Container Registry
-      uses: docker/login-action@v3
-      with:
-        registry: ${{ env.REGISTRY }}
-        username: ${{ secrets.SCALEWAY_ACCESS_KEY }}
-        password: ${{ secrets.SCALEWAY_SECRET_KEY }}
-
-    - name: Pull Docker image
-      run: docker pull ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:latest
-
-    - name: Run Trivy vulnerability scanner
-      uses: aquasecurity/trivy-action@master
-      with:
-        image-ref: ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:latest
-        format: 'sarif'
-        output: 'trivy-results.sarif'
-
-    - name: Upload Trivy scan results to GitHub Security tab
-      uses: github/codeql-action/upload-sarif@v3
-      if: always()
-      with:
-        sarif_file: 'trivy-results.sarif' 
-
+      - name: Build and push Docker image
+        uses: docker/build-push-action@v5
+        with:
+          context: .
+          push: true
+          tags: |
+            registry.atomdev.fr/smtpy:${{ github.sha }}
+            registry.atomdev.fr/smtpy:latest
 
   deploy:
-    needs: security-scan
+    needs: build-and-push
     runs-on: ubuntu-latest
     if: github.event_name == 'push' && github.ref == 'refs/heads/main'
-    
     steps:
-    - name: Checkout code
-      uses: actions/checkout@v4
-
-    - name: Install Scaleway CLI
-      run: |
-        curl -s https://raw.githubusercontent.com/scaleway/scaleway-cli/refs/tags/v2.41.0/scripts/get.sh | sh
-        echo "$HOME/bin" >> $GITHUB_PATH
-
-    - name: Ensure Scaleway config directory exists
-      run: mkdir -p $HOME/.config/scw
-
-    - name: Create empty Scaleway config file if missing
-      run: touch $HOME/.config/scw/config.yaml
-
-    - name: Configure Scaleway CLI
-      run: |
-        scw config set access-key=${{ secrets.SCALEWAY_ACCESS_KEY }}
-        scw config set secret-key=${{ secrets.SCALEWAY_SECRET_KEY }}
-        scw config set default-organization-id=${{ secrets.SCALEWAY_ORG_ID }}
-        scw config set default-project-id=${{ secrets.SCALEWAY_PROJECT_ID }}
-        scw config set default-region=fr-par
-
-    - name: Install jq
-      run: sudo apt-get update && sudo apt-get install -y jq
-
-    - name: Ensure Scaleway namespace exists
-      run: |
-        NAMESPACE_NAME=smtp
-        REGION=fr-par
-        PROJECT_ID=${{ secrets.SCALEWAY_PROJECT_ID }}
-        NAMESPACE_ID=$(scw container namespace list name=$NAMESPACE_NAME project-id=$PROJECT_ID region=$REGION -o json | jq -r '.[0].id // empty')
-        if [ -z "$NAMESPACE_ID" ]; then
-          echo "Creating namespace $NAMESPACE_NAME..."
-          NAMESPACE_ID=$(scw container namespace create name=$NAMESPACE_NAME project-id=$PROJECT_ID region=$REGION -o json | jq -r '.id')
-          echo "Created namespace $NAMESPACE_ID"
-        else
-          echo "Namespace $NAMESPACE_NAME already exists: $NAMESPACE_ID"
-        fi
-        echo "NAMESPACE_ID=$NAMESPACE_ID" >> $GITHUB_ENV
-
-    - name: Deploy to Scaleway Container Instances
-      run: |
-        if scw container container list name=smtpy namespace-id=$NAMESPACE_ID | grep -q "smtpy"; then
-          echo "Updating existing container instance..."
-          CONTAINER_ID=$(scw container container list name=smtpy namespace-id=$NAMESPACE_ID -o json | jq -r '.[0].id')
-          scw container container update $CONTAINER_ID \
-            namespace-id=$NAMESPACE_ID \
-            registry-image=${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:latest \
-            environment-variables.SMTPY_DB_PATH=/data/smtpy.db \
-            environment-variables.SMTP_RELAY=localhost \
-            environment-variables.SMTP_PORT=1025 \
-            port=80
-          scw container container deploy $CONTAINER_ID
-        else
-          echo "Creating new container instance..."
-          scw container container create \
-            name=smtpy \
-            namespace-id=$NAMESPACE_ID \
-            registry-image=${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:latest \
-            environment-variables.SMTPY_DB_PATH=/data/smtpy.db \
-            environment-variables.SMTP_RELAY=localhost \
-            environment-variables.SMTP_PORT=1025 \
-            port=80 \
-            region=fr-par
-        fi
-
-    - name: Wait for deployment
-      run: |
-        echo "Waiting for container to be ready..."
-        sleep 30
-        scw container instance wait smtpy
-
-    - name: Get deployment URL
-      run: |
-        INSTANCE_INFO=$(scw container instance get smtpy)
-        echo "Deployment URL: https://smtpy.fr-par.scw.cloud"
-        echo "Container instance info:"
-        echo "$INSTANCE_INFO"
+      - name: Deploy to UNRAID via SSH
+        uses: appleboy/ssh-action@v1.0.3
+        with:
+          host: ${{ secrets.UNRAID_SSH_HOST }}
+          username: ${{ secrets.UNRAID_SSH_USER }}
+          key: ${{ secrets.UNRAID_SSH_KEY }}
+          script: |
+            docker login registry.atomdev.fr -u ${{ secrets.SCALEWAY_ACCESS_KEY }} -p ${{ secrets.SCALEWAY_SECRET_KEY }}
+            docker pull registry.atomdev.fr/smtpy:latest
+            docker stop smtpy || true
+            docker rm smtpy || true
+            docker run -d --restart unless-stopped --name smtpy -p 80:80 registry.atomdev.fr/smtpy:latest
