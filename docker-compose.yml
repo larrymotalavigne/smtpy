@@ -10,8 +10,6 @@ services:
     ports:
       - "1001:1001"
     restart: unless-stopped
-    networks:
-      - bridge
 
 volumes:
   smtpy-data: 
