@@ -39,8 +39,8 @@ jobs:
         uses: docker/login-action@v3
         with:
           registry: registry.atomdev.fr
-          username: ${{ secrets.SCALEWAY_ACCESS_KEY }}
-          password: ${{ secrets.SCALEWAY_SECRET_KEY }}
+          username: ${{ secrets.REGISTRY_USERNAME }}
+          password: ${{ secrets.REGISTRY_PASSWORD }}
 
       - name: Build and push Docker image
         uses: docker/build-push-action@v5
