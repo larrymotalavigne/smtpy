@@ -56,6 +56,9 @@ jobs:
     runs-on: ubuntu-latest
     if: github.event_name == 'push' && github.ref == 'refs/heads/main'
     steps:
+      - name: List files for debug
+        run: ls -l
+
       - name: Copy docker-compose files to UNRAID
         uses: appleboy/scp-action@v0.1.7
         with:
@@ -63,7 +66,7 @@ jobs:
           username: ${{ secrets.UNRAID_SSH_USER }}
           key: ${{ secrets.UNRAID_SSH_KEY }}
           source: "docker-compose.yml"
-          target: "/app/smtpy/"
+          target: "/srv/smtpy/"
 
       - name: Deploy with Docker Compose via SSH
         uses: appleboy/ssh-action@v1.0.3
@@ -72,7 +75,7 @@ jobs:
           username: ${{ secrets.UNRAID_SSH_USER }}
           key: ${{ secrets.UNRAID_SSH_KEY }}
           script: |
-            cd /app/smtpy/
+            cd /srv/smtpy/
             docker login registry.atomdev.fr -u ${{ secrets.REGISTRY_USERNAME }} -p ${{ secrets.REGISTRY_PASSWORD }}
             docker compose pull
             docker compose up -d --remove-orphans
