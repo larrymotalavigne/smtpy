@@ -1,4 +1,4 @@
-.PHONY: help build run stop logs clean compose-up compose-down
+.PHONY: help build run stop logs clean compose-up compose-down up down logs build
 
 IMAGE_NAME=smtpy-app
 CONTAINER_NAME=smtpy-app
@@ -14,7 +14,7 @@ help:
 	@echo "  make compose-down  Stop docker-compose stack (alias for stop)"
 
 build:
-	docker-compose build --no-cache
+	docker compose -f docker-compose.dev.yml build
 
 run:
 	docker-compose up -d --build
@@ -23,7 +23,7 @@ stop:
 	docker-compose down
 
 logs:
-	docker-compose logs -f
+	docker compose -f docker-compose.dev.yml logs -f
 
 clean: stop
 	docker system prune -f
@@ -31,3 +31,15 @@ clean: stop
 compose-up: run
 
 compose-down: stop 
+
+up:
+	docker compose -f docker-compose.dev.yml up
+
+down:
+	docker compose -f docker-compose.dev.yml down
+
+logs:
+	docker compose -f docker-compose.dev.yml logs -f
+
+build:
+	docker compose -f docker-compose.dev.yml build 
