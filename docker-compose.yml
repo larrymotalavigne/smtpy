@@ -9,8 +9,14 @@ services:
     volumes:
       - smtpy-data:/data
     ports:
-      - "80:1001"
+      - "1001:1001"
     restart: unless-stopped
+    networks:
+      - bridge
 
 volumes:
   smtpy-data: 
+networks:
+  bridge:
+    external: true
+    name: bridge 
