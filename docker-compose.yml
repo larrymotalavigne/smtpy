@@ -1,5 +1,6 @@
 services:
   app:
+    name: smtpy
     image: registry.atomdev.fr/smtpy:latest
     environment:
       - SMTPY_DB_PATH=/data/smtpy.db
@@ -10,6 +11,9 @@ services:
     ports:
       - "1001:1001"
     restart: unless-stopped
-
+    networks:
+      bridge:
+        external: true
+        name: bridge
 volumes:
   smtpy-data: 
