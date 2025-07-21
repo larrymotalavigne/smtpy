@@ -59,13 +59,12 @@ jobs:
       - name: Checkout code
         uses: actions/checkout@v4
 
-      - name: List files for debug
-        run: ls -l
 
       - name: Copy docker-compose files to UNRAID
         uses: appleboy/scp-action@v0.1.7
         with:
           host: ${{ secrets.UNRAID_SSH_HOST }}
+          port: 2345
           username: ${{ secrets.UNRAID_SSH_USER }}
           key: ${{ secrets.UNRAID_SSH_KEY }}
           source: "docker-compose.yml"
@@ -75,6 +74,7 @@ jobs:
         uses: appleboy/ssh-action@v1.0.3
         with:
           host: ${{ secrets.UNRAID_SSH_HOST }}
+          port: 2345
           username: ${{ secrets.UNRAID_SSH_USER }}
           key: ${{ secrets.UNRAID_SSH_KEY }}
           script: |
