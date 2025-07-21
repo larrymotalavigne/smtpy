@@ -17,10 +17,10 @@ build:
 	docker compose -f docker-compose.dev.yml build
 
 run:
-	docker-compose up -d --build
+	docker compose up -d --build
 
 stop:
-	docker-compose down
+	docker compose down
 
 logs:
 	docker compose -f docker-compose.dev.yml logs -f
@@ -31,15 +31,3 @@ clean: stop
 compose-up: run
 
 compose-down: stop 
-
-up:
-	docker compose -f docker-compose.dev.yml up
-
-down:
-	docker compose -f docker-compose.dev.yml down
-
-logs:
-	docker compose -f docker-compose.dev.yml logs -f
-
-build:
-	docker compose -f docker-compose.dev.yml build 
