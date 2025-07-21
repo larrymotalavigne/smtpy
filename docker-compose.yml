@@ -1,6 +1,6 @@
 services:
   app:
-    name: smtpy
+    container_name: smtpy
     image: registry.atomdev.fr/smtpy:latest
     environment:
       - SMTPY_DB_PATH=/data/smtpy.db
