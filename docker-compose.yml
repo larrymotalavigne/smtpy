@@ -12,8 +12,12 @@ services:
       - "1001:1001"
     restart: unless-stopped
     networks:
-      bridge:
-        external: true
-        name: bridge
+      - bridge
+
 volumes:
-  smtpy-data: 
+  smtpy-data:
+
+networks:
+  bridge:
+    external: true
+    name: bridge
