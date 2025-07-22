@@ -20,6 +20,9 @@ alembic/versions/*.pyc
 # VSCode
 .vscode/
 
+# PyCharm
+.idea/
+
 # Environment
 .env
 .env.*

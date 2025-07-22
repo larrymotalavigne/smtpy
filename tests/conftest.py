@@ -14,7 +14,7 @@ def setup_test_db():
     engine = create_engine(TEST_DATABASE_URL, connect_args={"check_same_thread": False})
     Session = sessionmaker(autocommit=False, autoflush=False, bind=engine)
     # Patch db module directly
-    from database import db
+    from utils import db
     db.engine = engine
     db.SessionLocal = Session
     # Create tables on the patched engine
