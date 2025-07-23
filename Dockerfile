@@ -5,15 +5,16 @@ WORKDIR /app
 # Install system dependencies
 RUN apt-get update && apt-get clean
 
-# Install Python dependencies first for better caching
-COPY requirements.txt ./
-RUN pip install --no-cache-dir -r requirements.txt
+# Install uv and Python dependencies first for better caching
+COPY pyproject.toml uv.lock ./
+RUN pip install uv
+RUN uv sync --frozen
 
 # Copy the rest of the application code
 COPY . .
 
 # Expose ports
-EXPOSE 80
+EXPOSE 8000
 
-# Default command (can be overridden by docker-compose)
-CMD ["uvicorn", "views.web:app", "--host", "0.0.0.0", "--port", "80"] 
+
+CMD ["uvicorn", "main:create_app", "--host", "0.0.0.0", "--port", "8000", "--factory"]

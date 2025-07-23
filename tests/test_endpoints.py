@@ -1,8 +1,8 @@
 import pytest
 from fastapi.testclient import TestClient
-from views.web import app
+from main import create_app
 
-client = TestClient(app)
+client = TestClient(create_app())
 
 # --- Public endpoints ---
 def test_root():

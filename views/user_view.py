@@ -8,9 +8,11 @@ from fastapi import APIRouter, Request, Form, BackgroundTasks, HTTPException
 from fastapi.responses import HTMLResponse, RedirectResponse
 from passlib.context import CryptContext
 
+from config import template_response
 from database.models import User, Invitation
 from utils.db import get_session
 from utils.user import get_current_user, send_invitation_email, hash_password, send_verification_email
+from utils.csrf import validate_csrf
 
 router = APIRouter(prefix="/user")
 
@@ -101,11 +103,14 @@ def login_form(request: Request):
 
 
 @router.post("/login")
-def login(request: Request, username: str = Form(...), password: str = Form(...)):
+def login(request: Request, username: str = Form(...), password: str = Form(...), csrf_token: str = Form(...)):
+    # Validate CSRF token
+    validate_csrf(request, csrf_token)
+    
     with get_session() as session:
         user = session.query(User).filter_by(username=username).first()
         if not user or not CryptContext(schemes=["bcrypt"]).verify(password, user.hashed_password):
-            return request.app.TEMPLATES.TemplateResponse("login.html", {"request": request, "error": "Invalid credentials."})
+            return template_response(request, "login.html", {"error": "Invalid credentials."})
         request.session["user_id"] = user.id
     return RedirectResponse(url="/admin", status_code=303)
 

@@ -2,7 +2,6 @@ import pytest
 from sqlalchemy import create_engine
 from sqlalchemy.orm import sessionmaker, clear_mappers
 from database.models import Base
-from views.web import app
 from unittest.mock import patch
 
 # Use a shared in-memory SQLite DB for all connections
@@ -19,8 +18,14 @@ def setup_test_db():
     db.SessionLocal = Session
     # Create tables on the patched engine
     Base.metadata.create_all(engine)
-    # Patch only the email sending function that exists
-    with patch("views.web.send_verification_email"):
+    # Patch email sending functions to prevent actual email sending in tests
+    # Also patch CSRF validation to disable it during testing
+    with patch("utils.user.send_verification_email"), \
+         patch("utils.user.send_invitation_email"), \
+         patch("smtplib.SMTP"), \
+         patch("utils.csrf.validate_csrf") as mock_csrf:
+        # Make CSRF validation always pass in tests
+        mock_csrf.return_value = None
         yield
     # Drop tables after tests
     Base.metadata.drop_all(engine)

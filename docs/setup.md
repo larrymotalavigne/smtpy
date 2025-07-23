@@ -7,8 +7,8 @@
 
 ## Local Setup
 ```bash
-uv pip install -r requirements.txt
-uvicorn views.web:app --reload
+uv sync
+uvicorn main:create_app --reload --factory
 ```
 
 ## Docker

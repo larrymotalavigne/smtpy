@@ -1,9 +1,11 @@
 from aiosmtpd.handlers import AsyncMessage
 from email.message import EmailMessage
 import logging
-from utils.db import get_session
+from utils.db import get_session, get_async_session
 from database.models import Domain, Alias, ActivityLog
 from forwarding.forwarder import forward_email
+from utils.validation import validate_email, ValidationError
+from utils.soft_delete import get_active_domains, get_active_aliases
 import re
 from datetime import datetime
 
@@ -13,25 +15,69 @@ class SMTPHandler(AsyncMessage):
     def __init__(self):
         super().__init__()
 
-    def resolve_targets(self, recipient: str):
+    async def resolve_targets(self, recipient: str):
+        # Validate and sanitize the recipient email address
+        try:
+            recipient = validate_email(recipient.strip())
+        except ValidationError as e:
+            logger.warning(f"Invalid recipient email format: {recipient} - {e}")
+            return []
+        
+        # Parse the validated email address
         match = re.match(r"([^@]+)@(.+)", recipient)
         if not match:
             return []
         local, domain_name = match.groups()
+        
         now = datetime.utcnow()
-        with get_session() as session:
-            domain = session.query(Domain).filter_by(name=domain_name).first()
+        async with get_async_session() as session:
+            # Use async queries with proper await
+            from sqlalchemy import select
+            
+            # Find active domain
+            domain_query = select(Domain).where(
+                Domain.name == domain_name,
+                Domain.is_deleted == False
+            )
+            domain_result = await session.execute(domain_query)
+            domain = domain_result.scalar_one_or_none()
+            
             if not domain:
                 return []
-            alias = session.query(Alias).filter_by(domain_id=domain.id, local_part=local).first()
+            
+            # Find active alias for this domain and local part
+            alias_query = select(Alias).where(
+                Alias.domain_id == domain.id,
+                Alias.local_part == local,
+                Alias.is_deleted == False
+            )
+            alias_result = await session.execute(alias_query)
+            alias = alias_result.scalar_one_or_none()
+            
             if alias and (alias.expires_at is None or alias.expires_at > now):
-                return [a.strip() for a in alias.targets.split(",") if a.strip()]
+                # Validate each target email address
+                validated_targets = []
+                for target in alias.targets.split(","):
+                    target = target.strip()
+                    if target:
+                        try:
+                            validated_target = validate_email(target)
+                            validated_targets.append(validated_target)
+                        except ValidationError as e:
+                            logger.warning(f"Invalid target email in alias: {target} - {e}")
+                return validated_targets
+            
             if domain.catch_all:
-                return [domain.catch_all]
+                try:
+                    validated_catch_all = validate_email(domain.catch_all)
+                    return [validated_catch_all]
+                except ValidationError as e:
+                    logger.warning(f"Invalid catch-all email: {domain.catch_all} - {e}")
+        
         return []
 
-    def log_activity(self, event_type, sender, recipient, subject, status, message):
-        with get_session() as session:
+    async def log_activity(self, event_type, sender, recipient, subject, status, message):
+        async with get_async_session() as session:
             log = ActivityLog(
                 event_type=event_type,
                 sender=sender,
@@ -41,22 +87,43 @@ class SMTPHandler(AsyncMessage):
                 message=message
             )
             session.add(log)
-            session.commit()
+            await session.commit()
 
     async def handle_message(self, message: EmailMessage) -> None:
-        sender = message.get("From", "")
-        recipients = message.get_all("To", [])
+        sender_raw = message.get("From", "")
+        recipients_raw = message.get_all("To", []) or []
         subject = message.get("Subject", "(No Subject)")
+        
+        # Validate and sanitize sender email address
+        sender = ""
+        if sender_raw:
+            try:
+                sender = validate_email(sender_raw.strip())
+            except ValidationError as e:
+                logger.warning(f"Invalid sender email format: {sender_raw} - {e}")
+                sender = sender_raw.strip()  # Keep original for logging but mark as invalid
+        
+        # Validate and sanitize recipient email addresses
+        recipients = []
+        for recipient_raw in recipients_raw:
+            if recipient_raw:
+                try:
+                    recipient = validate_email(recipient_raw.strip())
+                    recipients.append(recipient)
+                except ValidationError as e:
+                    logger.warning(f"Invalid recipient email format: {recipient_raw} - {e}")
+                    # Skip invalid recipients
+        
         logger.info(f"Received email from {sender} to {recipients} with subject '{subject}'")
 
         all_targets = set()
         for r in recipients:
-            targets = self.resolve_targets(r)
+            targets = await self.resolve_targets(r)
             if targets:
                 all_targets.update(targets)
             else:
                 logger.warning(f"No valid target for recipient {r}")
-                self.log_activity(
+                await self.log_activity(
                     event_type="bounce",
                     sender=sender,
                     recipient=r,
@@ -67,8 +134,13 @@ class SMTPHandler(AsyncMessage):
 
         if not all_targets:
             logger.warning(f"No valid recipients for message from {sender} to {recipients}")
-            print(f"Rejected email: No valid recipients in {recipients}")
-            self.log_activity(
+            logger.info(f"Rejected email: No valid recipients in {recipients}", extra={
+                "sender": sender,
+                "recipients": recipients,
+                "subject": subject,
+                "action": "reject"
+            })
+            await self.log_activity(
                 event_type="bounce",
                 sender=sender,
                 recipient=", ".join(recipients),
@@ -81,9 +153,14 @@ class SMTPHandler(AsyncMessage):
         # Forward email to all resolved targets
         try:
             forward_email(message, list(all_targets), mail_from="noreply@localhost")
-            print(f"Email forwarded: From={sender}, To={list(all_targets)}, Subject={subject}")
+            logger.info(f"Email forwarded successfully", extra={
+                "sender": sender,
+                "targets": list(all_targets),
+                "subject": subject,
+                "action": "forward"
+            })
             for target in all_targets:
-                self.log_activity(
+                await self.log_activity(
                     event_type="forward",
                     sender=sender,
                     recipient=target,
@@ -92,14 +169,19 @@ class SMTPHandler(AsyncMessage):
                     message="Email forwarded successfully"
                 )
         except Exception as e:
-            logger.error(f"Failed to forward email: {e}")
-            print(f"Failed to forward email: {e}")
+            logger.error(f"Failed to forward email: {e}", extra={
+                "sender": sender,
+                "targets": list(all_targets),
+                "subject": subject,
+                "error": str(e),
+                "action": "forward_failed"
+            })
             for target in all_targets:
-                self.log_activity(
+                await self.log_activity(
                     event_type="error",
                     sender=sender,
                     recipient=target,
                     subject=subject,
                     status="failed",
                     message=str(e)
-                ) 
+                )

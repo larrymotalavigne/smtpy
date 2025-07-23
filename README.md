@@ -14,11 +14,11 @@ A modern, open-source addy.io alternative for custom email aliasing and forwardi
 
 1. **Install dependencies:**
    ```bash
-   uv pip install -r requirements.txt
+   make
    ```
 2. **Run the app:**
    ```bash
-   uvicorn views.web:app --reload
+   uvicorn main:create_app --reload --factory
    ```
 3. **Visit:**
    - [http://localhost:8000/presentation](http://localhost:8000/presentation) — Landing page

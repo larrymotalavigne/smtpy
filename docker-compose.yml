@@ -9,7 +9,7 @@ services:
     volumes:
       - smtpy-data:/data
     ports:
-      - "1001:80"
+      - "1001:8000"
     restart: unless-stopped
 
 volumes:

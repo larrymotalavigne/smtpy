@@ -1,4 +1,4 @@
-.PHONY: help build run stop logs clean compose-up compose-down up down logs build
+.PHONY: help build run stop logs clean compose-up compose-down up down logs build test
 
 IMAGE_NAME=smtpy-app
 CONTAINER_NAME=smtpy-app
@@ -9,6 +9,7 @@ help:
 	@echo "  make run           Run the app stack in Docker (docker-compose up -d)"
 	@echo "  make stop          Stop the running containers (docker-compose down)"
 	@echo "  make logs          Show logs from the containers"
+	@echo "  make test          Run the test suite with pytest"
 	@echo "  make clean         Remove images and containers"
 	@echo "  make compose-up    Start with docker-compose (alias for run)"
 	@echo "  make compose-down  Stop docker-compose stack (alias for stop)"
@@ -30,4 +31,7 @@ clean: stop
 
 compose-up: run
 
-compose-down: stop 
+compose-down: stop
+
+test:
+	python -m pytest tests/ -v

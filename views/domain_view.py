@@ -7,7 +7,10 @@ from fastapi import APIRouter, Request, Form, Path, HTTPException
 from fastapi.responses import HTMLResponse, RedirectResponse, PlainTextResponse
 from controllers.dns_controller import check_dns_records
 
+from config import template_response
 from utils.db import get_session
+from utils.user import get_current_user
+from utils.csrf import validate_csrf
 from database.models import Domain, Alias, ActivityLog
 
 router = APIRouter(
@@ -17,22 +20,23 @@ router = APIRouter(
 
 @router.get("/dashboard", response_class=HTMLResponse)
 def dashboard(request: Request):
-    user = request.session.get("user_id")
+    user = get_current_user(request)
     if not user:
         return RedirectResponse(url="/login", status_code=303)
     with get_session() as session:
         num_domains = session.query(Domain).count()
         num_aliases = session.query(Alias).count()
         recent_activity = session.query(ActivityLog).order_by(ActivityLog.timestamp.desc()).limit(10).all()
-    return request.app.TEMPLATES.TemplateResponse(
+    return template_response(
+        request,
         "dashboard.html",
-        {"request": request, "num_domains": num_domains, "num_aliases": num_aliases, "recent_activity": recent_activity, "user": user}
+        {"num_domains": num_domains, "num_aliases": num_aliases, "recent_activity": recent_activity, "user": user}
     )
 
 
 @router.get("/admin", response_class=HTMLResponse)
 def admin_panel(request: Request):
-    user = request.session.get("user_id")
+    user = get_current_user(request)
     if not user:
         return RedirectResponse(url="/login", status_code=303)
     with get_session() as session:
@@ -59,14 +63,22 @@ def admin_panel(request: Request):
                 'dkim_valid': dns_results.get('dkim', {}).get('status') == 'valid',
                 'dmarc_valid': dns_results.get('dmarc', {}).get('status') == 'valid'
             })
-    return request.app.TEMPLATES.TemplateResponse("index.html", {"request": request, "title": "smtpy Admin", "domains": domain_statuses,
-                                                                 "aliases": aliases, "user": user})
+    return template_response(request, "index.html", {"title": "smtpy Admin", "domains": domain_statuses,
+                                                     "aliases": aliases, "user": user})
 
 
 @router.post("/")
-def add_domain(request: Request, name: str = Form(...), catch_all: str = Form(None)):
+def add_domain(request: Request, name: str = Form(...), catch_all: str = Form(None), csrf_token: str = Form(...)):
+    # Validate CSRF token
+    validate_csrf(request, csrf_token)
+    
+    # Check authentication
+    user = get_current_user(request)
+    if not user:
+        raise HTTPException(status_code=403, detail="Authentication required")
+    
     with get_session() as session:
-        domain = Domain(name=name, catch_all=catch_all)
+        domain = Domain(name=name, catch_all=catch_all, owner_id=user.id)
         session.add(domain)
         session.commit()
         session.refresh(domain)
@@ -74,23 +86,50 @@ def add_domain(request: Request, name: str = Form(...), catch_all: str = Form(No
 
 
 @router.delete("/")
-def delete_domain(request: Request, domain_id: int = Form(...)):
+def delete_domain(request: Request, domain_id: int = Form(...), csrf_token: str = Form(...)):
+    # Validate CSRF token
+    validate_csrf(request, csrf_token)
+    
+    # Check authentication
+    user = get_current_user(request)
+    if not user:
+        raise HTTPException(status_code=403, detail="Authentication required")
+    
     with get_session() as session:
         domain = session.get(Domain, domain_id)
         if not domain:
             raise HTTPException(status_code=404, detail="Domain not found")
+        
+        # Check ownership (admin can delete any domain)
+        if user.role != "admin" and domain.owner_id != user.id:
+            raise HTTPException(status_code=403, detail="Access denied: You can only delete your own domains")
+        
         session.delete(domain)
         session.commit()
     return RedirectResponse(url="/admin", status_code=303)
 
 
 @router.post("/edit-catchall")
-def edit_catchall(request: Request, domain_id: int = Form(...), catch_all: str = Form("")):
+def edit_catchall(request: Request, domain_id: int = Form(...), catch_all: str = Form(""), csrf_token: str = Form(...)):
+    # Validate CSRF token
+    validate_csrf(request, csrf_token)
+    
+    # Check authentication
+    user = get_current_user(request)
+    if not user:
+        raise HTTPException(status_code=403, detail="Authentication required")
+    
     with get_session() as session:
         domain = session.get(Domain, domain_id)
-        if domain:
-            domain.catch_all = catch_all or None
-            session.commit()
+        if not domain:
+            raise HTTPException(status_code=404, detail="Domain not found")
+        
+        # Check ownership (admin can edit any domain)
+        if user.role != "admin" and domain.owner_id != user.id:
+            raise HTTPException(status_code=403, detail="Access denied: You can only edit your own domains")
+        
+        domain.catch_all = catch_all or None
+        session.commit()
     return RedirectResponse(url="/admin", status_code=303)
 
 
