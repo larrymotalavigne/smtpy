@@ -1,17 +1,17 @@
-"""Domain service for domain management operations."""
+"""Domain controller for domain management operations."""
 
 from typing import List, Optional, Dict, Any
 from sqlalchemy.orm import Session, selectinload
 
-from .base import BaseService, ValidationError, NotFoundError, PermissionError
+from controllers.base import BaseService, ValidationError, NotFoundError, PermissionError
 from database.models import Domain, User
 from utils.validation import validate_domain_name, validate_email
 from utils.soft_delete import get_active_domains, soft_delete_domain
 from controllers.dns_controller import check_dns_records
 
 
-class DomainService(BaseService[Domain]):
-    """Service for domain management operations."""
+class DomainController(BaseService[Domain]):
+    """Controller for domain management operations."""
     
     def __init__(self):
         super().__init__(Domain)

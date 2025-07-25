@@ -5,10 +5,10 @@ from unittest.mock import patch, MagicMock
 from sqlalchemy.exc import IntegrityError
 
 from database.models import User, Domain, Alias, Invitation
-from services.user_service import UserService
-from services.domain_service import DomainService
-from services.alias_service import AliasService
-from services.base import NotFoundError, PermissionError
+from controllers.user_controller import UserController
+from controllers.domain_controller import DomainController
+from controllers.alias_controller import AliasController
+from controllers.base import NotFoundError, PermissionError
 from utils.validation import ValidationError
 from utils.error_handling import DatabaseError, ValidationError as ServiceValidationError
 from utils.db import get_session
@@ -19,12 +19,12 @@ def unique_name(prefix="test"):
     return f"{prefix}{uuid.uuid4().hex[:8]}"
 
 
-class TestUserService:
-    """Test cases for UserService."""
+class TestUserController:
+    """Test cases for UserController."""
     
     def setup_method(self):
         """Set up test fixtures."""
-        self.user_service = UserService()
+        self.user_service = UserController()
     
     def test_authenticate_user_success(self):
         """Test successful user authentication."""
@@ -345,12 +345,12 @@ class TestUserService:
             self.user_service.get_all_users("user")
 
 
-class TestDomainService:
-    """Test cases for DomainService."""
+class TestDomainController:
+    """Test cases for DomainController."""
     
     def setup_method(self):
         """Set up test fixtures."""
-        self.domain_service = DomainService()
+        self.domain_service = DomainController()
     
     def test_create_domain_success(self):
         """Test successful domain creation."""
@@ -496,12 +496,12 @@ class TestDomainService:
                     )
 
 
-class TestAliasService:
-    """Test cases for AliasService."""
+class TestAliasController:
+    """Test cases for AliasController."""
     
     def setup_method(self):
         """Set up test fixtures."""
-        self.alias_service = AliasService()
+        self.alias_service = AliasController()
     
     def test_create_alias_success(self):
         """Test successful alias creation."""

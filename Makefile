@@ -1,10 +1,11 @@
-.PHONY: help build run stop logs clean compose-up compose-down up down logs build test
+.PHONY: help install run stop logs clean compose-up compose-down up down build test
 
 IMAGE_NAME=smtpy-app
 CONTAINER_NAME=smtpy-app
 
 help:
 	@echo "Available commands:"
+	@echo "  make install       Install dependencies and sync the environment (uv sync)"
 	@echo "  make build         Build the Docker images (docker-compose build)"
 	@echo "  make run           Run the app stack in Docker (docker-compose up -d)"
 	@echo "  make stop          Stop the running containers (docker-compose down)"
@@ -14,8 +15,16 @@ help:
 	@echo "  make compose-up    Start with docker-compose (alias for run)"
 	@echo "  make compose-down  Stop docker-compose stack (alias for stop)"
 
+
+install:
+	pip install -U pip uv
+	uv sync --active --all-extras --compile-bytecode --frozen --no-install-project
+
 build:
 	docker compose -f docker-compose.dev.yml build
+
+test:
+	uv run --active --all-extras --frozen pytest -c pyproject.toml $(PYTEST_EXTRA_ARGS)
 
 run:
 	docker compose up -d --build
@@ -33,5 +42,3 @@ compose-up: run
 
 compose-down: stop
 
-test:
-	python -m pytest tests/ -v

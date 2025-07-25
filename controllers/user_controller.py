@@ -1,4 +1,4 @@
-"""User service for authentication and user management."""
+"""User controller for authentication and user management."""
 
 import secrets
 from datetime import datetime, timedelta
@@ -6,14 +6,14 @@ from typing import Optional, List
 from sqlalchemy.orm import Session
 from passlib.context import CryptContext
 
-from .base import BaseService, ValidationError, NotFoundError, PermissionError
+from controllers.base import BaseService, ValidationError, NotFoundError, PermissionError
 from database.models import User, Invitation
 from utils.validation import validate_username, validate_email, validate_password
 from utils.soft_delete import get_active_users, soft_delete_user
 
 
-class UserService(BaseService[User]):
-    """Service for user management and authentication."""
+class UserController(BaseService[User]):
+    """Controller for user management and authentication."""
     
     def __init__(self):
         super().__init__(User)
