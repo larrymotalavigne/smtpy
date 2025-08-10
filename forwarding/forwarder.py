@@ -10,7 +10,10 @@ SMTP_PORT = int(os.environ.get("SMTP_PORT", 1025))
 
 # TODO: Add support for SMTP authentication if needed
 
-def forward_email(original_msg: EmailMessage, targets, mail_from="noreply@localhost"):  # mail_from should be a valid sender
+
+def forward_email(
+    original_msg: EmailMessage, targets, mail_from="noreply@localhost"
+):  # mail_from should be a valid sender
     """
     Forward the email to the target addresses, rewriting MAIL FROM as needed.
     Preserves headers and attachments.
@@ -22,17 +25,26 @@ def forward_email(original_msg: EmailMessage, targets, mail_from="noreply@localh
         msg.set_content(body_part.get_content())
     else:
         msg.set_content(original_msg.get_content())
-    msg["Subject"] = original_msg["Subject"]
-    msg["From"] = mail_from
+    msg["Subject"] = original_msg.get("Subject", "")
+    # Preserve original visible From header; use mail_from only as SMTP envelope sender
+    msg["From"] = original_msg.get("From", mail_from)
     msg["To"] = ", ".join(targets)
-    # Copy other headers
+    # Copy other headers, but avoid MIME structural headers to prevent duplicates
+    skip_headers = {"From", "To", "Subject", "Content-Type", "Content-Transfer-Encoding", "MIME-Version"}
     for k, v in original_msg.items():
-        if k not in ("From", "To", "Subject"):
-            msg[k] = v
+        if k not in skip_headers:
+            # Avoid adding duplicate header fields
+            if k not in msg:
+                msg[k] = v
     # Attachments
     if original_msg.is_multipart():
         for part in original_msg.iter_attachments():
-            msg.add_attachment(part.get_content(), maintype=part.get_content_maintype(), subtype=part.get_content_subtype(), filename=part.get_filename())
+            msg.add_attachment(
+                part.get_content(),
+                maintype=part.get_content_maintype(),
+                subtype=part.get_content_subtype(),
+                filename=part.get_filename(),
+            )
     # TODO: DKIM sign here if enabled
     try:
         with smtplib.SMTP(SMTP_RELAY, SMTP_PORT) as s:
@@ -40,4 +52,4 @@ def forward_email(original_msg: EmailMessage, targets, mail_from="noreply@localh
         logger.info(f"Forwarded email to {targets} via {SMTP_RELAY}:{SMTP_PORT}")
     except Exception as e:
         logger.error(f"Failed to forward email: {e}")
-        raise 
+        raise

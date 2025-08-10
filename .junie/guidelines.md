@@ -35,12 +35,6 @@ SMTPy is an email aliasing and forwarding service (Addy.io clone) built with Fas
    make stop
    ```
 
-### Docker Configuration Issues
-**IMPORTANT**: The current Docker configuration has incorrect entry points:
-- `Dockerfile` and `docker-compose.dev.yml` reference `views.web:app`
-- The correct entry point should be `main:create_app` with `--factory` flag
-- A temporary `views/web.py` file has been created to bridge this gap
-
 ### Environment Variables
 Configure these environment variables for proper operation:
 - `SMTPY_SECRET_KEY`: Session secret key (default: "change-this-secret-key")
@@ -66,7 +60,7 @@ Configure these environment variables for proper operation:
 ### Running Tests
 ```bash
 # Run all tests
-python -m pytest
+make test
 
 # Run specific test file
 python -m pytest tests/test_basic.py -v
@@ -106,6 +100,7 @@ python -m pytest --cov=. tests/
   - `alias_view.py`: Email alias management
   - `billing_view.py`: Stripe billing integration
 - **Models**: Database models in `database/models.py`
+- **Database**: Database calls in `database/`
 - **Controllers**: Business logic in `controllers/`
 - **Utils**: Helper functions in `utils/`
 
@@ -122,24 +117,17 @@ python -m pytest --cov=. tests/
 
 ## Development Notes
 
-### Known Issues
-1. **Docker Entry Point**: Current Docker configuration references non-existent `views.web:app`
-   - Temporary fix: `views/web.py` created to bridge the gap
-   - Proper fix: Update Docker configs to use `main:create_app --factory`
-
-2. **Template Response Deprecation**: Starlette TemplateResponse parameter order is deprecated
-   - Current: `TemplateResponse(name, {"request": request})`
-   - Should be: `TemplateResponse(request, name)`
-
 ### Code Style Notes
 - Uses FastAPI with dependency injection patterns
-- SQLAlchemy ORM with session management via context managers
+- SQLAlchemy v2 ORM with session management via context managers
 - Password hashing with bcrypt via passlib
 - Session-based authentication (not JWT)
 - Background tasks for email sending
+- **Use function-based logic and not class-based**: Prefer standalone functions over class-based implementations for business logic
+- **Do not use alias in import**: Import statements should not use aliases (avoid `import module as alias` patterns)
 
 ### Database Patterns
-- Uses `get_session()` context manager for database operations
+- Uses `get_db()` context manager for database operations
 - Models inherit from SQLAlchemy Base
 - Relationships defined with `selectinload` for eager loading
 - Activity logging implemented for audit trails

@@ -6,13 +6,24 @@ from email.message import EmailMessage
 
 from fastapi import APIRouter, Request, Form, BackgroundTasks, HTTPException
 from fastapi.responses import HTMLResponse, RedirectResponse
-from passlib.context import CryptContext
+from sqlalchemy import select
 
 from config import template_response
-from database.models import User, Invitation
-from utils.db import get_session
-from utils.user import get_current_user, send_invitation_email, hash_password, send_verification_email
+from controllers.main_controller import (
+    invite_user_simple,
+    register_user_simple,
+    verify_email_simple,
+    authenticate_simple,
+)
+from database.models import User
 from utils.csrf import validate_csrf
+from utils.db import adbDep
+from utils.user import (
+    get_current_user,
+    send_invitation_email,
+    hash_password,
+    send_verification_email,
+)
 
 router = APIRouter(prefix="/user")
 
@@ -22,96 +33,109 @@ def invite_user_get(request: Request):
     user = get_current_user(request)
     if not user or user.role != "admin":
         raise HTTPException(status_code=403, detail="Admin access required.")
-    return request.app.TEMPLATES.TemplateResponse("invite_user.html", {"request": request, "error": None})
+    return template_response(request, "invite_user.html", {"error": None})
 
 
 @router.post("/invite", response_class=HTMLResponse)
-def invite_user_post(request: Request, background_tasks: BackgroundTasks, email: str = Form(...)):
+async def invite_user_post(
+        request: Request, background_tasks: BackgroundTasks, email: str = Form(...), db: adbDep = None
+):
     user = get_current_user(request)
     if not user or user.role != "admin":
         raise HTTPException(status_code=403, detail="Admin access required.")
-    with get_session() as session:
-        if session.query(User).filter_by(email=email).first():
-            return request.app.TEMPLATES.TemplateResponse("invite_user.html", {"request": request, "error": "Email already registered."})
-        token = secrets.token_urlsafe(32)
-        expires = datetime.utcnow() + timedelta(hours=24)
-        invitation = Invitation(email=email, token=token, expires_at=expires, invited_by=user.id)
-        session.add(invitation)
-        try:
-            session.commit()
-        except Exception:
-            return request.app.TEMPLATES.TemplateResponse("invite_user.html", {"request": request, "error": "Invitation already sent."})
-        background_tasks.add_task(send_invitation_email, email, token)
-    return request.app.TEMPLATES.TemplateResponse("invite_user.html", {"request": request, "error": "Invitation sent."})
+    from utils.error_handling import ValidationError
+
+    try:
+        result = await invite_user_simple(db, email=email, invited_by_id=user["id"])
+    except ValidationError:
+        return template_response(
+            request,
+            "invite_user.html",
+            {"error": "Invitation already sent or email registered."},
+        )
+    background_tasks.add_task(send_invitation_email, email, result.get("token"))
+    return template_response(request, "invite_user.html", {"error": "Invitation sent."})
 
 
 @router.get("/register", response_class=HTMLResponse)
 def register_get(request: Request, invite: str = None):
-    return request.app.TEMPLATES.TemplateResponse("register.html", {"request": request, "error": None, "invite": invite})
+    return template_response(request, "register.html", {"error": None, "invite": invite})
 
 
 @router.post("/register", response_class=HTMLResponse)
-def register_post(request: Request, background_tasks: BackgroundTasks, username: str = Form(...), email: str = Form(""),
-                  password: str = Form(...), invite: str = Form("")):
-    email_val = email if email else None
-    invite_val = invite if invite else None
-    with get_session() as session:
-        if invite_val:
-            invitation = session.query(Invitation).filter_by(token=invite_val).first()
-            if not invitation or invitation.expires_at < datetime.utcnow():
-                return request.app.TEMPLATES.TemplateResponse("register.html",
-                                                              {"request": request, "error": "Invalid or expired invitation.",
-                                                               "invite": invite_val})
-            email_val = invitation.email
-        if session.query(User).filter_by(username=username).first():
-            return request.app.TEMPLATES.TemplateResponse("register.html",
-                                                          {"request": request, "error": "Username already exists.", "invite": invite_val})
-        if email_val and session.query(User).filter_by(email=email_val).first():
-            return request.app.TEMPLATES.TemplateResponse("register.html",
-                                                          {"request": request, "error": "Email already registered.", "invite": invite_val})
-        token = secrets.token_urlsafe(32)
-        user = User(username=username, email=email_val, hashed_password=hash_password(password), is_active=not invite_val,
-                    email_verified=bool(invite_val), verification_token=None if invite_val else token)
-        session.add(user)
-        if invite_val:
-            session.delete(invitation)
-        session.commit()
-        if email_val and not invite_val:
-            background_tasks.add_task(send_verification_email, email_val, token)
-    if invite_val:
-        return request.app.TEMPLATES.TemplateResponse("login.html", {"request": request, "error": "Account created. You can now log in."})
-    return request.app.TEMPLATES.TemplateResponse("register.html",
-                                                  {"request": request, "error": "Check your email to verify your account.", "invite": None})
+async def register_post(
+        request: Request,
+        background_tasks: BackgroundTasks,
+        username: str = Form(...),
+        email: str = Form(""),
+        password: str = Form(...),
+        invite: str = Form(""),
+        db: adbDep = None,
+):
+    from utils.error_handling import ValidationError
+
+    try:
+        result = await register_user_simple(
+            db,
+            username=username,
+            password=password,
+            email=(email or None),
+            invite_token=(invite or None),
+        )
+    except ValidationError as e:
+        msg = str(e) if str(e) else "Registration error"
+        return template_response(
+            request,
+            "register.html",
+            {"error": msg, "invite": (invite or None)},
+        )
+    if (email or None) and result.get("requires_verification"):
+        background_tasks.add_task(send_verification_email, email, result.get("verification_token"))
+    if invite:
+        return template_response(
+            request,
+            "login.html",
+            {"error": "Account created. You can now log in."},
+        )
+    return template_response(
+        request,
+        "register.html",
+        {"error": "Check your email to verify your account.", "invite": None},
+    )
 
 
 @router.get("/verify-email", response_class=HTMLResponse)
-def verify_email(request: Request, token: str):
-    with get_session() as session:
-        user = session.query(User).filter_by(verification_token=token).first()
-        if not user:
-            return request.app.TEMPLATES.TemplateResponse("login.html", {"request": request, "error": "Invalid or expired token."})
-        user.is_active = True
-        user.email_verified = True
-        user.verification_token = None
-        session.commit()
-    return request.app.TEMPLATES.TemplateResponse("login.html", {"request": request, "error": "Email verified. You can now log in."})
+async def verify_email(request: Request, token: str, db: adbDep = None):
+    ok = await verify_email_simple(db, token)
+    if not ok:
+        return template_response(
+            request, "login.html", {"error": "Invalid or expired token."}
+        )
+    return template_response(
+        request, "login.html", {"error": "Email verified. You can now log in."}
+    )
 
 
 @router.get("/login", response_class=HTMLResponse)
 def login_form(request: Request):
-    return request.app.TEMPLATES.TemplateResponse("login.html", {"request": request})
+    return template_response(request, "login.html", {})
 
 
 @router.post("/login")
-def login(request: Request, username: str = Form(...), password: str = Form(...), csrf_token: str = Form(...)):
+async def login(
+        request: Request,
+        username: str = Form(...),
+        password: str = Form(...),
+        csrf_token: str = Form(...),
+        db: adbDep = None,
+):
     # Validate CSRF token
     validate_csrf(request, csrf_token)
-    
-    with get_session() as session:
-        user = session.query(User).filter_by(username=username).first()
-        if not user or not CryptContext(schemes=["bcrypt"]).verify(password, user.hashed_password):
-            return template_response(request, "login.html", {"error": "Invalid credentials."})
-        request.session["user_id"] = user.id
+
+    user_id = await authenticate_simple(db, username=username, password=password)
+    if not user_id:
+        return template_response(request, "login.html", {"error": "Invalid credentials."})
+    request.session["user_id"] = user_id
     return RedirectResponse(url="/admin", status_code=303)
 
 
@@ -122,88 +146,110 @@ def logout(request: Request):
 
 
 @router.get("/users", response_class=HTMLResponse)
-def user_management(request: Request):
+async def user_management(request: Request, db: adbDep):
     user = get_current_user(request)
     if not user or user.role != "admin":
         raise HTTPException(status_code=403, detail="Admin access required.")
-    with get_session() as session:
-        users = session.query(User).all()
-    return request.app.TEMPLATES.TemplateResponse("users.html", {"request": request, "users": users, "user": user})
+    users = await db.execute(select(User))
+    users_list = users.scalars().all()
+    return request.app.TEMPLATES.TemplateResponse(
+        "users.html", {"request": request, "users": users_list, "user": user}
+    )
 
 
 @router.post("/users/edit")
-def edit_user(request: Request, user_id: int = Form(...), email: str = Form(None), role: str = Form(...)):
+async def edit_user(
+        request: Request, user_id: int = Form(...), email: str = Form(None), role: str = Form(...), db: adbDep = None
+):
     user = get_current_user(request)
     if not user or user.role != "admin":
         raise HTTPException(status_code=403, detail="Admin access required.")
-    with get_session() as session:
-        u = session.get(User, user_id)
-        if u:
-            u.email = email
-            u.role = role
-            session.commit()
+    u = await db.get(User, user_id)
+    if u:
+        u.email = email
+        u.role = role
+        await db.commit()
     return RedirectResponse(url="/users", status_code=303)
 
 
 @router.post("/users/delete")
-def delete_user(request: Request, user_id: int = Form(...)):
+async def delete_user(request: Request, user_id: int = Form(...), db: adbDep = None):
     user = get_current_user(request)
     if not user or user.role != "admin":
         raise HTTPException(status_code=403, detail="Admin access required.")
-    with get_session() as session:
-        u = session.get(User, user_id)
-        if u:
-            session.delete(u)
-            session.commit()
+    u = await db.get(User, user_id)
+    if u:
+        await db.delete(u)
+        await db.commit()
     return RedirectResponse(url="/users", status_code=303)
 
 
 @router.get("/forgot-password", response_class=HTMLResponse)
 def forgot_password_get(request: Request):
-    return request.app.TEMPLATES.TemplateResponse("forgot_password.html", {"request": request, "error": None})
+    return request.app.TEMPLATES.TemplateResponse(
+        "forgot_password.html", {"request": request, "error": None}
+    )
 
 
 @router.post("/forgot-password", response_class=HTMLResponse)
-def forgot_password_post(request: Request, background_tasks: BackgroundTasks, email: str = Form(...)):
-    with get_session() as session:
-        user = session.query(User).filter_by(email=email).first()
-        if not user:
-            return request.app.TEMPLATES.TemplateResponse("forgot_password.html",
-                                                          {"request": request, "error": "If the email exists, a reset link will be sent."})
-        token = secrets.token_urlsafe(32)
-        expiry = datetime.utcnow() + timedelta(hours=1)
-        user.password_reset_token = token
-        user.password_reset_expiry = expiry
-        session.commit()
+async def forgot_password_post(
+        request: Request, background_tasks: BackgroundTasks, email: str = Form(...), db: adbDep = None
+):
+    result = await db.execute(select(User).where(User.email == email))
+    user = result.scalars().first()
+    if not user:
+        return request.app.TEMPLATES.TemplateResponse(
+            "forgot_password.html",
+            {"request": request, "error": "If the email exists, a reset link will be sent."},
+        )
+    token = secrets.token_urlsafe(32)
+    expiry = datetime.utcnow() + timedelta(hours=1)
+    user.password_reset_token = token
+    user.password_reset_expiry = expiry
+    await db.commit()
 
-        def send_reset_email(to_email, token):
-            msg = EmailMessage()
-            msg["Subject"] = "Password Reset for smtpy"
-            msg["From"] = "no-reply@smtpy.local"
-            msg["To"] = to_email
-            msg.set_content(f"Reset your password: http://localhost/reset-password?token={token}")
-            with smtplib.SMTP(os.environ.get("SMTP_HOST", "localhost"), int(os.environ.get("SMTP_PORT", 25))) as s:
-                s.send_message(msg)
+    def send_reset_email(to_email, token):
+        msg = EmailMessage()
+        msg["Subject"] = "Password Reset for smtpy"
+        msg["From"] = "no-reply@smtpy.local"
+        msg["To"] = to_email
+        msg.set_content(f"Reset your password: http://localhost/reset-password?token={token}")
+        with smtplib.SMTP(
+                os.environ.get("SMTP_HOST", "localhost"), int(os.environ.get("SMTP_PORT", 25))
+        ) as s:
+            s.send_message(msg)
 
-        background_tasks.add_task(send_reset_email, email, token)
-    return request.app.TEMPLATES.TemplateResponse("forgot_password.html",
-                                                  {"request": request, "error": "If the email exists, a reset link will be sent."})
+    background_tasks.add_task(send_reset_email, email, token)
+    return request.app.TEMPLATES.TemplateResponse(
+        "forgot_password.html",
+        {"request": request, "error": "If the email exists, a reset link will be sent."},
+    )
 
 
 @router.get("/reset-password", response_class=HTMLResponse)
 def reset_password_get(request: Request, token: str):
-    return request.app.TEMPLATES.TemplateResponse("reset_password.html", {"request": request, "error": None, "token": token})
+    return request.app.TEMPLATES.TemplateResponse(
+        "reset_password.html", {"request": request, "error": None, "token": token}
+    )
 
 
 @router.post("/reset-password", response_class=HTMLResponse)
-def reset_password_post(request: Request, token: str = Form(...), password: str = Form(...)):
-    with get_session() as session:
-        user = session.query(User).filter_by(password_reset_token=token).first()
-        if not user or not user.password_reset_expiry or user.password_reset_expiry < datetime.utcnow():
-            return request.app.TEMPLATES.TemplateResponse("reset_password.html",
-                                                          {"request": request, "error": "Invalid or expired token.", "token": token})
-        user.hashed_password = hash_password(password)
-        user.password_reset_token = None
-        user.password_reset_expiry = None
-        session.commit()
-    return request.app.TEMPLATES.TemplateResponse("login.html", {"request": request, "error": "Password reset. You can now log in."})
+async def reset_password_post(request: Request, token: str = Form(...), password: str = Form(...), db: adbDep = None):
+    result = await db.execute(select(User).where(User.password_reset_token == token))
+    user = result.scalars().first()
+    if (
+            not user
+            or not user.password_reset_expiry
+            or user.password_reset_expiry < datetime.utcnow()
+    ):
+        return request.app.TEMPLATES.TemplateResponse(
+            "reset_password.html",
+            {"request": request, "error": "Invalid or expired token.", "token": token},
+        )
+    user.hashed_password = hash_password(password)
+    user.password_reset_token = None
+    user.password_reset_expiry = None
+    await db.commit()
+    return request.app.TEMPLATES.TemplateResponse(
+        "login.html", {"request": request, "error": "Password reset. You can now log in."}
+    )

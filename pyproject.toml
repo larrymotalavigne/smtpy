@@ -1,7 +1,7 @@
 [project]
 name = "smtpy"
 version = "0.1.0"
-description = "Addy.io clone for custom email aliasing and forwarding."
+description = "Custom email aliasing and forwarding."
 authors = [
     {name = "SMTPy Team", email = "team@smtpy.local"}
 ]

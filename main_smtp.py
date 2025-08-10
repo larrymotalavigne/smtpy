@@ -8,9 +8,10 @@ if __name__ == "__main__":
     # For now, keep the process alive to handle SMTP
     try:
         import time
+
         while True:
             time.sleep(1)
     except KeyboardInterrupt:
         print("Shutting down SMTP server...")
         smtp_controller.stop()
-    # Note: For production, use proper async server and graceful shutdown 
+    # Note: For production, use proper async server and graceful shutdown

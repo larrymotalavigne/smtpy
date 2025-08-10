@@ -1,17 +1,27 @@
 import os
-from collections import defaultdict
-from datetime import datetime, timedelta
-from typing import List
+from typing import List, Optional
 
 from fastapi import APIRouter, Request, Form, Path, HTTPException
 from fastapi.responses import HTMLResponse, RedirectResponse, PlainTextResponse
-from controllers.dns_controller import check_dns_records
+from sqlalchemy import select
+from pydantic import BaseModel
 
 from config import template_response
-from utils.db import get_session
-from utils.user import get_current_user
-from utils.csrf import validate_csrf
+from controllers import domain_controller
+from controllers.dns_controller import check_dns_records
+from controllers.domain_controller import (
+    list_domains_simple,
+    create_domain_simple,
+    get_domain_simple,
+    delete_domain_simple,
+    update_domain_catchall,
+    get_dns_status_simple,
+    activity_stats_simple,
+)
 from database.models import Domain, Alias, ActivityLog
+from utils.csrf import validate_csrf
+from utils.db import adbDep
+from utils.user import require_login, get_current_user
 
 router = APIRouter(
     prefix="/domain",
@@ -19,117 +29,134 @@ router = APIRouter(
 
 
 @router.get("/dashboard", response_class=HTMLResponse)
-def dashboard(request: Request):
-    user = get_current_user(request)
-    if not user:
-        return RedirectResponse(url="/login", status_code=303)
-    with get_session() as session:
-        num_domains = session.query(Domain).count()
-        num_aliases = session.query(Alias).count()
-        recent_activity = session.query(ActivityLog).order_by(ActivityLog.timestamp.desc()).limit(10).all()
+async def dashboard(request: Request, db: adbDep):
+    user = require_login(request)
+
+    num_domains = await domain_controller.get_domain_count(db)
+    num_aliases = db.query(Alias).count()
+    recent_activity = (
+        db.query(ActivityLog).order_by(ActivityLog.timestamp.desc()).limit(10).all()
+    )
     return template_response(
         request,
         "dashboard.html",
-        {"num_domains": num_domains, "num_aliases": num_aliases, "recent_activity": recent_activity, "user": user}
+        {
+            "num_domains": num_domains,
+            "num_aliases": num_aliases,
+            "recent_activity": recent_activity,
+            "user": user,
+        },
     )
 
 
 @router.get("/admin", response_class=HTMLResponse)
-def admin_panel(request: Request):
-    user = get_current_user(request)
-    if not user:
-        return RedirectResponse(url="/login", status_code=303)
-    with get_session() as session:
-        domains = session.query(Domain).all()
-        aliases = session.query(Alias).all()
-        domain_statuses = []
-        for domain in domains:
-            dns_results = check_dns_records(domain.name)
-            verified = dns_results.get('spf', {}).get('status') == 'valid'
+async def admin_panel(request: Request, db: adbDep):
+    user = require_login(request)
+    
+    domains_result = await db.execute(select(Domain).where(Domain.is_deleted == False))
+    domains = domains_result.scalars().all()
+    aliases_result = await db.execute(select(Alias).where(Alias.is_deleted == False))
+    aliases = aliases_result.scalars().all()
+    
+    domain_statuses = []
+    for domain in domains:
+        dns_results = check_dns_records(domain.name)
+        verified = dns_results.get("spf", {}).get("status") == "valid"
+        mx_valid = False
+        try:
+            import dns.resolver
+
+            answers = dns.resolver.resolve(domain.name, "MX")
+            mx_valid = any(answers)
+        except Exception:
             mx_valid = False
-            try:
-                import dns.resolver
-                answers = dns.resolver.resolve(domain.name, 'MX')
-                mx_valid = any(answers)
-            except Exception:
-                mx_valid = False
-            domain_statuses.append({
-                'id': domain.id,
-                'name': domain.name,
-                'catch_all': domain.catch_all,
-                'verified': verified,
-                'mx_valid': mx_valid,
-                'spf_valid': dns_results.get('spf', {}).get('status') == 'valid',
-                'dkim_valid': dns_results.get('dkim', {}).get('status') == 'valid',
-                'dmarc_valid': dns_results.get('dmarc', {}).get('status') == 'valid'
-            })
-    return template_response(request, "index.html", {"title": "smtpy Admin", "domains": domain_statuses,
-                                                     "aliases": aliases, "user": user})
+        domain_statuses.append(
+            {
+                "id": domain.id,
+                "name": domain.name,
+                "catch_all": domain.catch_all,
+                "verified": verified,
+                "mx_valid": mx_valid,
+                "spf_valid": dns_results.get("spf", {}).get("status") == "valid",
+                "dkim_valid": dns_results.get("dkim", {}).get("status") == "valid",
+                "dmarc_valid": dns_results.get("dmarc", {}).get("status") == "valid",
+            }
+        )
+    return template_response(
+        request,
+        "index.html",
+        {"title": "smtpy Admin", "domains": domain_statuses, "aliases": aliases, "user": user},
+    )
 
 
 @router.post("/")
-def add_domain(request: Request, name: str = Form(...), catch_all: str = Form(None), csrf_token: str = Form(...)):
+async def add_domain(
+        request: Request,
+        name: str = Form(...),
+        catch_all: str = Form(None),
+        csrf_token: str = Form(...),
+        db: adbDep = None,
+):
     # Validate CSRF token
     validate_csrf(request, csrf_token)
-    
+
     # Check authentication
-    user = get_current_user(request)
-    if not user:
-        raise HTTPException(status_code=403, detail="Authentication required")
-    
-    with get_session() as session:
-        domain = Domain(name=name, catch_all=catch_all, owner_id=user.id)
-        session.add(domain)
-        session.commit()
-        session.refresh(domain)
+    user = require_login(request)
+
+    # Delegate to controller
+    await create_domain_simple(db, name=name, owner_id=user["id"], catch_all=catch_all)
     return RedirectResponse(url="/admin", status_code=303)
 
 
 @router.delete("/")
-def delete_domain(request: Request, domain_id: int = Form(...), csrf_token: str = Form(...)):
+async def delete_domain(
+        request: Request, domain_id: int = Form(...), csrf_token: str = Form(...), db: adbDep = None
+):
     # Validate CSRF token
     validate_csrf(request, csrf_token)
-    
+
     # Check authentication
     user = get_current_user(request)
     if not user:
         raise HTTPException(status_code=403, detail="Authentication required")
-    
-    with get_session() as session:
-        domain = session.get(Domain, domain_id)
-        if not domain:
-            raise HTTPException(status_code=404, detail="Domain not found")
-        
-        # Check ownership (admin can delete any domain)
-        if user.role != "admin" and domain.owner_id != user.id:
-            raise HTTPException(status_code=403, detail="Access denied: You can only delete your own domains")
-        
-        session.delete(domain)
-        session.commit()
+
+    domain = await get_domain_simple(db, domain_id)
+    if not domain:
+        raise HTTPException(status_code=404, detail="Domain not found")
+    # Check ownership (admin can delete any domain)
+    if user.role != "admin" and domain.get("owner_id") != user.id:
+        raise HTTPException(
+            status_code=403, detail="Access denied: You can only delete your own domains"
+        )
+    await delete_domain_simple(db, domain_id)
     return RedirectResponse(url="/admin", status_code=303)
 
 
 @router.post("/edit-catchall")
-def edit_catchall(request: Request, domain_id: int = Form(...), catch_all: str = Form(""), csrf_token: str = Form(...)):
+async def edit_catchall(
+        request: Request,
+        domain_id: int = Form(...),
+        catch_all: str = Form(""),
+        csrf_token: str = Form(...),
+        db: adbDep = None,
+):
     # Validate CSRF token
     validate_csrf(request, csrf_token)
-    
+
     # Check authentication
     user = get_current_user(request)
     if not user:
         raise HTTPException(status_code=403, detail="Authentication required")
-    
-    with get_session() as session:
-        domain = session.get(Domain, domain_id)
-        if not domain:
-            raise HTTPException(status_code=404, detail="Domain not found")
-        
-        # Check ownership (admin can edit any domain)
-        if user.role != "admin" and domain.owner_id != user.id:
-            raise HTTPException(status_code=403, detail="Access denied: You can only edit your own domains")
-        
-        domain.catch_all = catch_all or None
-        session.commit()
+
+    domain = await get_domain_simple(db, domain_id)
+    if not domain:
+        raise HTTPException(status_code=404, detail="Domain not found")
+    # Check ownership (admin can edit any domain)
+    if user.role != "admin" and domain.get("owner_id") != user.id:
+        raise HTTPException(
+            status_code=403, detail="Access denied: You can only edit your own domains"
+        )
+    await update_domain_catchall(db, domain_id, catch_all or None)
     return RedirectResponse(url="/admin", status_code=303)
 
 
@@ -142,8 +169,10 @@ def api_dns_check(domain: str):
 def get_dkim_public_key(domain: str):
     if not domain:
         return "Please specify a domain."
-    safe_domain = domain.replace('/', '').replace('..', '')
-    path = os.path.join(os.path.dirname(__file__), "../web/static", f"dkim-public-{safe_domain}.txt")
+    safe_domain = domain.replace("/", "").replace("..", "")
+    path = os.path.join(
+        os.path.dirname(__file__), "../web/static", f"dkim-public-{safe_domain}.txt"
+    )
     if not os.path.exists(path):
         return f"DKIM public key for {domain} not found. Please generate and mount the key as dkim-public-{domain}.txt."
     with open(path) as f:
@@ -151,38 +180,40 @@ def get_dkim_public_key(domain: str):
 
 
 @router.get("/activity-stats")
-def activity_stats():
-    with get_session() as session:
-        cutoff = datetime.utcnow() - timedelta(days=30)
-        logs = session.query(ActivityLog).filter(ActivityLog.timestamp >= cutoff.isoformat()).all()
-        stats = defaultdict(lambda: {"forward": 0, "bounce": 0, "error": 0})
-        for log in logs:
-            date = log.timestamp[:10]
-            stats[date][log.event_type] += 1
-        sorted_stats = sorted(stats.items())
-        return {
-            "dates": [d for d, _ in sorted_stats],
-            "forward": [v["forward"] for _, v in sorted_stats],
-            "bounce": [v["bounce"] for _, v in sorted_stats],
-            "error": [v["error"] for _, v in sorted_stats],
-        }
+async def activity_stats(db: adbDep = None):
+    return await activity_stats_simple(db)
 
 
 @router.get("/domain-dns/{domain_id}", response_class=HTMLResponse)
-def domain_dns_settings(request: Request, domain_id: int = Path(...)):
-    with get_session() as session:
-        domain = session.get(Domain, domain_id)
-        if not domain:
-            return RedirectResponse(url="/admin", status_code=303)
-        mx_records = [
-            {"type": "MX", "hostname": domain.name, "priority": 10, "value": f"mx1.{request.url.hostname}."},
-            {"type": "MX", "hostname": domain.name, "priority": 20, "value": f"mx2.{request.url.hostname}."},
-        ]
-        spf_value = f"v=spf1 include:{request.url.hostname} ~all"
-        dkim_selector = "mail"
-        dkim_value = "(DKIM public key here)"
-        dmarc_value = "v=DMARC1; p=quarantine; rua=mailto:postmaster@%s" % domain.name
-        return request.app.TEMPLATES.TemplateResponse("domain_dns.html", {
+async def domain_dns_settings(request: Request, domain_id: int = Path(...), db: adbDep = None):
+    user = require_login(request)
+    domain = await get_domain_simple(db, domain_id)
+    if not domain:
+        return RedirectResponse(url="/admin", status_code=303)
+    # Ownership check (admin can access any domain)
+    if user["role"] != "admin" and domain.get("owner_id") != user["id"]:
+        raise HTTPException(status_code=403, detail="Access denied")
+    mx_records = [
+        {
+            "type": "MX",
+            "hostname": domain["name"],
+            "priority": 10,
+            "value": f"mx1.{request.url.hostname}.",
+        },
+        {
+            "type": "MX",
+            "hostname": domain["name"],
+            "priority": 20,
+            "value": f"mx2.{request.url.hostname}.",
+        },
+    ]
+    spf_value = f"v=spf1 include:{request.url.hostname} ~all"
+    dkim_selector = "mail"
+    dkim_value = "(DKIM public key here)"
+    dmarc_value = "v=DMARC1; p=quarantine; rua=mailto:postmaster@%s" % domain["name"]
+    return request.app.TEMPLATES.TemplateResponse(
+        "domain_dns.html",
+        {
             "request": request,
             "domain": domain,
             "mx_records": mx_records,
@@ -190,86 +221,59 @@ def domain_dns_settings(request: Request, domain_id: int = Path(...)):
             "dkim_selector": dkim_selector,
             "dkim_value": dkim_value,
             "dmarc_value": dmarc_value,
-        })
+        },
+    )
 
 
 @router.get("/dns-status/{domain_id}")
-def api_dns_status(domain_id: int = Path(...)):
-    import dns.resolver
-    with get_session() as session:
-        domain = session.get(Domain, domain_id)
-        if not domain:
-            return {"error": "Domain not found"}
-        results = {}
-        try:
-            mx_answers = dns.resolver.resolve(domain.name, "MX")
-            results["mx"] = [str(r.exchange).rstrip(".") for r in mx_answers]
-        except Exception as e:
-            results["mx"] = []
-        try:
-            txt_answers = dns.resolver.resolve(domain.name, "TXT")
-            spf = [r.strings[0].decode() for r in txt_answers if r.strings and r.strings[0].decode().startswith("v=spf1")]
-            results["spf"] = spf
-        except Exception as e:
-            results["spf"] = []
-        try:
-            dkim_name = f"mail._domainkey.{domain.name}"
-            dkim_txt = dns.resolver.resolve(dkim_name, "TXT")
-            dkim = [r.strings[0].decode() for r in dkim_txt if r.strings]
-            results["dkim"] = dkim
-        except Exception as e:
-            results["dkim"] = []
-        try:
-            dmarc_name = f"_dmarc.{domain.name}"
-            dmarc_txt = dns.resolver.resolve(dmarc_name, "TXT")
-            dmarc = [r.strings[0].decode() for r in dmarc_txt if r.strings]
-            results["dmarc"] = dmarc
-        except Exception as e:
-            results["dmarc"] = []
-        return results
+async def api_dns_status(domain_id: int = Path(...), db: adbDep = None):
+    results = await get_dns_status_simple(db, domain_id)
+    if results is None:
+        return {"error": "Domain not found"}
+    return results
 
 
 @router.get("/domain-aliases/{domain_id}", response_class=HTMLResponse)
-def domain_aliases(request: Request, domain_id: int = Path(...)):
-    with get_session() as session:
-        domain = session.get(Domain, domain_id)
-        if not domain:
-            return RedirectResponse(url="/admin", status_code=303)
-        return request.app.TEMPLATES.TemplateResponse("domain_aliases.html", {"request": request, "domain": domain})
+async def domain_aliases(request: Request, domain_id: int = Path(...), db: adbDep = None):
+    user = require_login(request)
+    domain = await get_domain_simple(db, domain_id)
+    if not domain:
+        return RedirectResponse(url="/admin", status_code=303)
+    if user["role"] != "admin" and domain.get("owner_id") != user["id"]:
+        raise HTTPException(status_code=403, detail="Access denied")
+    return template_response(request, "domain_aliases.html", {"domain": domain})
 
 
 @router.get("/domains", response_model=List[dict])
-def list_domains():
-    with get_session() as session:
-        domains = session.query(Domain).all()
-        return [domain.__dict__ for domain in domains]
+async def list_domains(db: adbDep = None):
+    return await list_domains_simple(db)
+
+
+class DomainCreate(BaseModel):
+    name: str
+    catch_all: Optional[str] = None
 
 
 @router.post("/domains", response_model=dict)
-def create_domain(domain: dict):
-    with get_session() as session:
-        db_domain = Domain(name=domain["name"], catch_all=domain.get("catch_all"))
-        session.add(db_domain)
-        session.commit()
-        session.refresh(db_domain)
-        return db_domain.__dict__
+async def create_domain_api(request: Request, domain: DomainCreate, db: adbDep = None):
+    user = require_login(request)
+    created = await create_domain_simple(
+        db, name=domain.name, owner_id=user["id"], catch_all=domain.catch_all
+    )
+    return created
 
 
 @router.get("/domains/{domain_id}", response_model=dict)
-def get_domain(domain_id: int):
-    with get_session() as session:
-        domain = session.get(Domain, domain_id)
-        if not domain:
-            raise HTTPException(status_code=404, detail="Domain not found")
-        return domain.__dict__
+async def get_domain_api(domain_id: int, db: adbDep = None):
+    domain = await get_domain_simple(db, domain_id)
+    if not domain:
+        raise HTTPException(status_code=404, detail="Domain not found")
+    return domain
 
 
 @router.delete("/domains/{domain_id}")
-def delete_domain(domain_id: int):
-    with get_session() as session:
-        domain = session.get(Domain, domain_id)
-        if not domain:
-            raise HTTPException(status_code=404, detail="Domain not found")
-        session.delete(domain)
-        session.commit()
-        return {"ok": True}
+async def delete_domain_api(domain_id: int, db: adbDep = None):
+    ok = await delete_domain_simple(db, domain_id)
+    if not ok:
+        raise HTTPException(status_code=404, detail="Domain not found")
+    return {"ok": True}
