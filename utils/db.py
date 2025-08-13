@@ -1,4 +1,4 @@
-import os
+from config import SETTINGS
 import asyncio
 from contextlib import contextmanager, asynccontextmanager
 from typing import Annotated, Optional
@@ -16,7 +16,7 @@ try:
 except Exception:  # pragma: no cover - test env may not have greenlet
     _GREENLET_AVAILABLE = False
 
-DB_PATH = os.environ.get("SMTPY_DB_PATH", "smtpy.db")
+DB_PATH = SETTINGS.DB_PATH
 
 # Sync database setup (default for app and tests)
 engine = create_engine(f"sqlite:///{DB_PATH}", connect_args={"check_same_thread": False})

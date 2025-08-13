@@ -10,11 +10,13 @@ COPY pyproject.toml uv.lock ./
 RUN pip install uv
 RUN uv sync --frozen
 
+# Ensure the virtual environment is in PATH
+ENV PATH="/app/.venv/bin:$PATH"
+
 # Copy the rest of the application code
 COPY . .
 
 # Expose ports
-EXPOSE 8000
+EXPOSE 8000 1025
 
-
-CMD ["uvicorn", "main:create_app", "--host", "0.0.0.0", "--port", "8000", "--factory"]
+CMD ["uv", "run", "main_combined.py"]

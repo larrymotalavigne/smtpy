@@ -1,12 +1,12 @@
 import smtplib
 from email.message import EmailMessage
-import os
 import logging
+from config import SETTINGS
 
 logger = logging.getLogger("smtpy.forwarder")
 
-SMTP_RELAY = os.environ.get("SMTP_RELAY", "localhost")
-SMTP_PORT = int(os.environ.get("SMTP_PORT", 1025))
+SMTP_HOST = SETTINGS.SMTP_HOST
+SMTP_PORT = SETTINGS.SMTP_PORT
 
 # TODO: Add support for SMTP authentication if needed
 
@@ -47,9 +47,9 @@ def forward_email(
             )
     # TODO: DKIM sign here if enabled
     try:
-        with smtplib.SMTP(SMTP_RELAY, SMTP_PORT) as s:
+        with smtplib.SMTP(SMTP_HOST, SMTP_PORT) as s:
             s.send_message(msg, from_addr=mail_from, to_addrs=targets)
-        logger.info(f"Forwarded email to {targets} via {SMTP_RELAY}:{SMTP_PORT}")
+        logger.info(f"Forwarded email to {targets} via {SMTP_HOST}:{SMTP_PORT}")
     except Exception as e:
         logger.error(f"Failed to forward email: {e}")
         raise

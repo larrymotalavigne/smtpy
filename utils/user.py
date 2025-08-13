@@ -1,6 +1,7 @@
-import os
 import smtplib
 from email.message import EmailMessage
+
+from config import SETTINGS
 
 from fastapi import HTTPException
 from fastapi.requests import Request
@@ -46,9 +47,7 @@ def send_verification_email(to_email, token):
     msg["From"] = "no-reply@smtpy.local"
     msg["To"] = to_email
     msg.set_content(f"Click to verify: http://localhost/verify-email?token={token}")
-    with smtplib.SMTP(
-        os.environ.get("SMTP_HOST", "localhost"), int(os.environ.get("SMTP_PORT", 25))
-    ) as s:
+    with smtplib.SMTP(SETTINGS.SMTP_HOST, SETTINGS.SMTP_PORT) as s:
         s.send_message(msg)
 
 
@@ -60,7 +59,5 @@ def send_invitation_email(to_email, token):
     msg.set_content(
         f"You've been invited! Complete your registration: http://localhost/register?invite={token}"
     )
-    with smtplib.SMTP(
-        os.environ.get("SMTP_HOST", "localhost"), int(os.environ.get("SMTP_PORT", 25))
-    ) as s:
+    with smtplib.SMTP(SETTINGS.SMTP_HOST, SETTINGS.SMTP_PORT) as s:
         s.send_message(msg)
