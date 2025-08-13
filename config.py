@@ -38,6 +38,9 @@ class Settings(BaseSettings):
     DB_PATH: str = Field(
         default="smtpy.db", env="SMTPY_DB_PATH", description="Path to SQLite database file"
     )
+    DATABASE_URL: Optional[str] = Field(
+        default=None, env="SMTPY_DATABASE_URL", description="Database connection URL (overrides DB_PATH)"
+    )
 
     # SMTP Configuration
     SMTP_HOST: str = Field(default="localhost", env="SMTP_HOST", description="SMTP relay host")

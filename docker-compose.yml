@@ -3,15 +3,10 @@ services:
     container_name: smtpy
     image: registry.atomdev.fr/smtpy:latest
     environment:
-      - SMTPY_DB_PATH=/data/smtpy.db
+      - SMTPY_DATABASE_URL=postgresql://smtpy:smtpy@192.168.10.111:5432/smtpy
       - SMTP_RELAY=localhost
       - SMTP_PORT=1025
-    volumes:
-      - smtpy-data:/data
     ports:
       - "1001:8000"
       - "1025:1025"
     restart: unless-stopped
-
-volumes:
-  smtpy-data:

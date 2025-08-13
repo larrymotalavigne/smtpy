@@ -16,14 +16,23 @@ try:
 except Exception:  # pragma: no cover - test env may not have greenlet
     _GREENLET_AVAILABLE = False
 
-DB_PATH = SETTINGS.DB_PATH
+# Database URL configuration
+if SETTINGS.DATABASE_URL:
+    DATABASE_URL = SETTINGS.DATABASE_URL
+    # For async URL, convert postgres:// to postgresql+psycopg://
+    ASYNC_DATABASE_URL = DATABASE_URL.replace("postgresql://", "postgresql+psycopg://", 1) if DATABASE_URL.startswith("postgresql://") else DATABASE_URL
+else:
+    DB_PATH = SETTINGS.DB_PATH
+    DATABASE_URL = f"sqlite:///{DB_PATH}"
+    ASYNC_DATABASE_URL = f"sqlite+aiosqlite:///{DB_PATH}"
 
 # Sync database setup (default for app and tests)
-engine = create_engine(f"sqlite:///{DB_PATH}", connect_args={"check_same_thread": False})
+connect_args = {"check_same_thread": False} if DATABASE_URL.startswith("sqlite://") else {}
+engine = create_engine(DATABASE_URL, connect_args=connect_args)
 SessionLocal = sessionmaker(autocommit=False, autoflush=False, expire_on_commit=False, bind=engine)
 
 # Async database setup (available for async endpoints; tests may still use sync engine)
-async_engine = create_async_engine(f"sqlite+aiosqlite:///{DB_PATH}", echo=False, future=True)
+async_engine = create_async_engine(ASYNC_DATABASE_URL, echo=False, future=True)
 AsyncSessionLocal = async_sessionmaker(
     bind=async_engine,
     autoflush=False,
