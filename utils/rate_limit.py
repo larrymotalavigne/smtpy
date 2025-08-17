@@ -1,10 +1,11 @@
 """Rate limiting utilities for SMTPy."""
 
-import time
-from typing import Dict, Optional
-from collections import defaultdict, deque
-from fastapi import Request, HTTPException
 import threading
+import time
+from collections import defaultdict, deque
+from typing import Dict, Optional
+
+from fastapi import Request, HTTPException
 
 
 class RateLimiter:
@@ -141,7 +142,7 @@ def rate_limit_general(max_requests: int = 100, window_seconds: int = 60):
 
 
 def check_rate_limit(
-    request: Request, key_prefix: str, max_requests: int, window_seconds: int
+        request: Request, key_prefix: str, max_requests: int, window_seconds: int
 ) -> None:
     """
     Check rate limit and raise HTTPException if exceeded.

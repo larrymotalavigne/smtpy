@@ -1,5 +1,6 @@
 """Billing controller for Stripe billing operations."""
 
+import logging
 import os
 from datetime import datetime
 from typing import Dict, Any, Optional
@@ -19,9 +20,8 @@ from utils.error_handling import (
     ValidationError,
     ResourceNotFoundError,
 )
-from utils.logging_config import get_logger
 
-logger = get_logger("billing_controller")
+logger = logging.getLogger("smtpy.billing_controller")
 
 
 def log_activity(event_type: str, details: Dict[str, Any]) -> None:

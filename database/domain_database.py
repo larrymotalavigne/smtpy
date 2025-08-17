@@ -8,8 +8,8 @@ from __future__ import annotations
 
 from typing import List, Optional
 
-from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy import select
+from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.orm import selectinload
 from sqlalchemy.sql.functions import count
 
@@ -32,7 +32,7 @@ async def db_get_active_domain_by_name(session: AsyncSession, name: str) -> Opti
 
 
 async def db_list_user_domains(
-    session: AsyncSession, user_id: Optional[int] = None, include_aliases: bool = False
+        session: AsyncSession, user_id: Optional[int] = None, include_aliases: bool = False
 ) -> List[Domain]:
     stmt = select(Domain).where(Domain.is_deleted == False)
     if user_id is not None:
@@ -52,7 +52,7 @@ async def db_list_all_domains(session: AsyncSession, include_aliases: bool = Fal
 
 
 async def db_create_domain(
-    session: AsyncSession, name: str, owner_id: int, catch_all: Optional[str] = None
+        session: AsyncSession, name: str, owner_id: int, catch_all: Optional[str] = None
 ) -> Domain:
     domain = Domain(name=name, owner_id=owner_id, catch_all=catch_all)
     session.add(domain)

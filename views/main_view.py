@@ -12,8 +12,8 @@ from starlette.responses import RedirectResponse
 from config import template_response
 from controllers import dns_controller
 from database.models import User, Domain, Alias, ActivityLog
-from utils.db import get_db_dep
 from utils.csrf import validate_csrf
+from utils.db import get_db_dep
 from utils.error_handling import ValidationError
 
 # Backward-compatible alias for dependency usage throughout this module

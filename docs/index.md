@@ -3,6 +3,7 @@
 Welcome to the documentation for smtpy, an open-source addy.io alternative for custom email aliasing and forwarding.
 
 ## Table of Contents
+
 - [Setup & Installation](setup.md)
 - [Configuration](config.md)
 - [API Reference](api.md)

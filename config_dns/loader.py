@@ -1,7 +1,9 @@
-import yaml
 import os
 
+import yaml
+
 CONFIG_PATH = os.path.join(os.path.dirname(__file__), "aliases.yaml")
+
 
 def load_config(path=CONFIG_PATH):
     """
@@ -15,4 +17,4 @@ def load_config(path=CONFIG_PATH):
           sales: sales@gmail.com
     """
     with open(path, "r") as f:
-        return yaml.safe_load(f) 
+        return yaml.safe_load(f)

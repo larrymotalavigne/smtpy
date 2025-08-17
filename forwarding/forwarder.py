@@ -1,6 +1,7 @@
+import logging
 import smtplib
 from email.message import EmailMessage
-import logging
+
 from config import SETTINGS
 
 logger = logging.getLogger("smtpy.forwarder")
@@ -8,11 +9,12 @@ logger = logging.getLogger("smtpy.forwarder")
 SMTP_HOST = SETTINGS.SMTP_HOST
 SMTP_PORT = SETTINGS.SMTP_PORT
 
+
 # TODO: Add support for SMTP authentication if needed
 
 
 def forward_email(
-    original_msg: EmailMessage, targets, mail_from="noreply@localhost"
+        original_msg: EmailMessage, targets, mail_from="noreply@localhost"
 ):  # mail_from should be a valid sender
     """
     Forward the email to the target addresses, rewriting MAIL FROM as needed.

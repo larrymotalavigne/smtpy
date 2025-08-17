@@ -1,8 +1,9 @@
 """Input validation and sanitization utilities for SMTPy."""
 
-import re
 import html
-from typing import Optional, List
+import re
+from typing import List
+
 from fastapi import HTTPException
 
 

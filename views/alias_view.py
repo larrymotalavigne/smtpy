@@ -1,10 +1,9 @@
 from typing import List, Optional
 
 from fastapi import APIRouter, HTTPException, Path
-from starlette.requests import Request
-from starlette.responses import JSONResponse, RedirectResponse
 from pydantic import BaseModel
-from utils.user import require_login
+from starlette.requests import Request
+from starlette.responses import JSONResponse
 
 from controllers.alias_controller import (
     list_aliases,
@@ -15,6 +14,7 @@ from controllers.alias_controller import (
     test_alias,
 )
 from utils.db import adbDep
+from utils.user import require_login
 
 router = APIRouter(prefix="/alias")
 
@@ -42,8 +42,6 @@ async def get_alias_endpoint(request: Request, alias_id: int, db: adbDep = None)
         return await get_alias(db, alias_id)
     except LookupError:
         raise HTTPException(status_code=404, detail="Alias not found")
-
-
 
 
 @router.get("/by_domain/{domain_id}")

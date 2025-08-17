@@ -1,14 +1,14 @@
 """Domain controller for domain management operations."""
 
+import logging
 from datetime import datetime
 from typing import List, Optional, Dict, Any
 
 from database import domain_database
 from database.models import Domain
 from utils.db import get_db
-from utils.logging_config import get_logger
 
-logger = get_logger("domain_controller")
+logger = logging.getLogger("smtpy.domain_controller")
 
 
 def log_activity(event_type: str, details: Dict[str, Any]) -> None:

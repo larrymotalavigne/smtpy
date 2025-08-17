@@ -6,8 +6,8 @@ from email.message import EmailMessage
 
 from aiosmtpd.handlers import AsyncMessage
 
-from database.models import Domain, Alias, ActivityLog
 import forwarding.forwarder
+from database.models import Domain, Alias, ActivityLog
 from utils.db import get_async_session
 from utils.validation import validate_email, ValidationError
 
@@ -48,7 +48,6 @@ class SMTPHandler(AsyncMessage):
                 # Fallback: try to resolve using a domain with the same base suffix (e.g., example.com)
                 base = domain_name.split(".", 1)[1] if "." in domain_name else None
                 if base:
-                    from sqlalchemy import or_
 
                     candidate_domain_query = select(Domain).where(
                         Domain.is_deleted == False,

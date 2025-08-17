@@ -1,53 +1,59 @@
 {% extends "base.html" %}
 {% block content %}
-<div class="container-xl">
-  <h2>Aliases for {{ domain.name }}</h2>
-  <div class="card mb-4">
-    <div class="card-header"><h3 class="card-title">Manage Aliases</h3></div>
-    <div class="card-body">
-      <input type="text" id="alias-search" class="form-control mb-3" placeholder="Search by alias or destination email">
-      <table class="table" id="aliases-table">
-        <thead>
-          <tr><th>Status</th><th>Alias</th><th>Forwards To</th><th>Expires At</th><th>Actions</th></tr>
-        </thead>
-        <tbody></tbody>
-      </table>
-      <form id="add-alias-form" class="row g-2 align-items-end mt-3">
-        <div class="col">
-          <input type="text" id="new-local-part" class="form-control" placeholder="Local part (e.g. info, *)" required>
+    <div class="container-xl">
+        <h2>Aliases for {{ domain.name }}</h2>
+        <div class="card mb-4">
+            <div class="card-header"><h3 class="card-title">Manage Aliases</h3></div>
+            <div class="card-body">
+                <input type="text" id="alias-search" class="form-control mb-3" placeholder="Search by alias or destination email">
+                <table class="table" id="aliases-table">
+                    <thead>
+                    <tr>
+                        <th>Status</th>
+                        <th>Alias</th>
+                        <th>Forwards To</th>
+                        <th>Expires At</th>
+                        <th>Actions</th>
+                    </tr>
+                    </thead>
+                    <tbody></tbody>
+                </table>
+                <form id="add-alias-form" class="row g-2 align-items-end mt-3">
+                    <div class="col">
+                        <input type="text" id="new-local-part" class="form-control" placeholder="Local part (e.g. info, *)" required>
+                    </div>
+                    <div class="col">
+                        <input type="email" id="new-targets" class="form-control" placeholder="Target email(s), comma separated" required>
+                    </div>
+                    <div class="col">
+                        <input type="datetime-local" id="new-expires-at" class="form-control" placeholder="Expiration (optional)">
+                    </div>
+                    <div class="col-auto">
+                        <button type="submit" class="btn btn-primary">Add Alias</button>
+                    </div>
+                </form>
+            </div>
         </div>
-        <div class="col">
-          <input type="email" id="new-targets" class="form-control" placeholder="Target email(s), comma separated" required>
-        </div>
-        <div class="col">
-          <input type="datetime-local" id="new-expires-at" class="form-control" placeholder="Expiration (optional)">
-        </div>
-        <div class="col-auto">
-          <button type="submit" class="btn btn-primary">Add Alias</button>
-        </div>
-      </form>
+        <a href="/admin" class="btn btn-link">Back to Admin Panel</a>
     </div>
-  </div>
-  <a href="/admin" class="btn btn-link">Back to Admin Panel</a>
-</div>
-<script>
-function renderAliases(aliases) {
-  const tbody = document.querySelector('#aliases-table tbody');
-  tbody.innerHTML = '';
-  const now = new Date();
-  for (const a of aliases) {
-    let expired = false;
-    let expiresAtStr = '';
-    if (a.expires_at) {
-      const exp = new Date(a.expires_at);
-      expiresAtStr = exp.toLocaleString();
-      expired = exp < now;
-    }
-    const statusBadge = expired
-      ? '<span class="badge bg-warning">Expired</span>'
-      : '<span class="badge bg-success">Active</span>';
-    const tr = document.createElement('tr');
-    tr.innerHTML = `
+    <script>
+        function renderAliases(aliases) {
+            const tbody = document.querySelector('#aliases-table tbody');
+            tbody.innerHTML = '';
+            const now = new Date();
+            for (const a of aliases) {
+                let expired = false;
+                let expiresAtStr = '';
+                if (a.expires_at) {
+                    const exp = new Date(a.expires_at);
+                    expiresAtStr = exp.toLocaleString();
+                    expired = exp < now;
+                }
+                const statusBadge = expired
+                    ? '<span class="badge bg-warning">Expired</span>'
+                    : '<span class="badge bg-success">Active</span>';
+                const tr = document.createElement('tr');
+                tr.innerHTML = `
       <td>${statusBadge}</td>
       <td>${a.local_part === '*' ? '<b>*</b>' : a.local_part}@{{ domain.name }}</td>
       <td>${a.targets}</td>
@@ -57,53 +63,57 @@ function renderAliases(aliases) {
         <button class="btn btn-outline-danger btn-sm" onclick="deleteAlias(${a.id})">Delete</button>
       </td>
     `;
-    if (expired) tr.classList.add('table-warning');
-    tbody.appendChild(tr);
-  }
-}
-function loadAliases() {
-  fetch('/api/aliases/{{ domain.id }}')
-    .then(resp => resp.json())
-    .then(data => {
-      window._allAliases = data;
-      renderAliases(data);
-    });
-}
-function deleteAlias(id) {
-  if (!confirm('Delete this alias?')) return;
-  fetch(`/api/alias/${id}`, { method: 'DELETE' })
-    .then(() => loadAliases());
-}
-function testAlias(id) {
-  fetch(`/api/alias-test/${id}`, { method: 'POST' })
-    .then(resp => resp.json())
-    .then(data => {
-      alert(data.message || 'Test complete');
-    });
-}
-document.getElementById('add-alias-form').addEventListener('submit', function(e) {
-  e.preventDefault();
-  const local_part = document.getElementById('new-local-part').value;
-  const targets = document.getElementById('new-targets').value;
-  const expires_at = document.getElementById('new-expires-at').value;
-  fetch('/api/aliases/{{ domain.id }}', {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({ local_part, targets, expires_at: expires_at || null })
-  }).then(() => {
-    document.getElementById('new-local-part').value = '';
-    document.getElementById('new-targets').value = '';
-    document.getElementById('new-expires-at').value = '';
-    loadAliases();
-  });
-});
-document.getElementById('alias-search').addEventListener('input', function(e) {
-  const q = e.target.value.toLowerCase();
-  const filtered = (window._allAliases || []).filter(a =>
-    a.local_part.toLowerCase().includes(q) || a.targets.toLowerCase().includes(q)
-  );
-  renderAliases(filtered);
-});
-document.addEventListener('DOMContentLoaded', loadAliases);
-</script>
+                if (expired) tr.classList.add('table-warning');
+                tbody.appendChild(tr);
+            }
+        }
+
+        function loadAliases() {
+            fetch('/api/aliases/{{ domain.id }}')
+                .then(resp => resp.json())
+                .then(data => {
+                    window._allAliases = data;
+                    renderAliases(data);
+                });
+        }
+
+        function deleteAlias(id) {
+            if (!confirm('Delete this alias?')) return;
+            fetch(`/api/alias/${id}`, {method: 'DELETE'})
+                .then(() => loadAliases());
+        }
+
+        function testAlias(id) {
+            fetch(`/api/alias-test/${id}`, {method: 'POST'})
+                .then(resp => resp.json())
+                .then(data => {
+                    alert(data.message || 'Test complete');
+                });
+        }
+
+        document.getElementById('add-alias-form').addEventListener('submit', function (e) {
+            e.preventDefault();
+            const local_part = document.getElementById('new-local-part').value;
+            const targets = document.getElementById('new-targets').value;
+            const expires_at = document.getElementById('new-expires-at').value;
+            fetch('/api/aliases/{{ domain.id }}', {
+                method: 'POST',
+                headers: {'Content-Type': 'application/json'},
+                body: JSON.stringify({local_part, targets, expires_at: expires_at || null})
+            }).then(() => {
+                document.getElementById('new-local-part').value = '';
+                document.getElementById('new-targets').value = '';
+                document.getElementById('new-expires-at').value = '';
+                loadAliases();
+            });
+        });
+        document.getElementById('alias-search').addEventListener('input', function (e) {
+            const q = e.target.value.toLowerCase();
+            const filtered = (window._allAliases || []).filter(a =>
+                a.local_part.toLowerCase().includes(q) || a.targets.toLowerCase().includes(q)
+            );
+            renderAliases(filtered);
+        });
+        document.addEventListener('DOMContentLoaded', loadAliases);
+    </script>
 {% endblock %} 

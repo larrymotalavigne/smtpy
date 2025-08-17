@@ -1,11 +1,10 @@
-from logging.config import fileConfig
 import os
 import sys
-
-from sqlalchemy import engine_from_config
-from sqlalchemy import pool
+from logging.config import fileConfig
 
 from alembic import context
+from sqlalchemy import engine_from_config
+from sqlalchemy import pool
 
 # Add project root to path to import config
 sys.path.append(os.path.dirname(os.path.dirname(__file__)))
@@ -33,6 +32,7 @@ if config.config_file_name is not None:
 from database.models import Base
 
 target_metadata = Base.metadata
+
 
 # other values from the config, defined by the needs of env.py,
 # can be acquired:

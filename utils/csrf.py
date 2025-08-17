@@ -2,8 +2,10 @@
 
 import secrets
 from typing import Optional
-from itsdangerous import URLSafeTimedSerializer, BadSignature, SignatureExpired
+
 from fastapi import Request, HTTPException
+from itsdangerous import URLSafeTimedSerializer, BadSignature, SignatureExpired
+
 from config import SETTINGS
 
 

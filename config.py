@@ -5,10 +5,10 @@ from pathlib import Path
 from typing import Optional, List
 from urllib.parse import urlparse
 
+from fastapi import Request
 from pydantic import Field, field_validator, model_validator, ConfigDict
 from pydantic_settings import BaseSettings
 from starlette.templating import Jinja2Templates
-from fastapi import Request
 
 
 class Environment(str, Enum):
@@ -238,7 +238,6 @@ SETTINGS = Settings()
 def template_response(request: Request, template_name: str, context: dict = None):
     """Create a template response with CSRF token automatically included."""
     from utils.csrf import get_csrf_token
-    from starlette.responses import Response
 
     if context is None:
         context = {}

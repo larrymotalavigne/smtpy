@@ -1,6 +1,8 @@
-from aiosmtpd.controller import Controller
-from .handler import SMTPHandler
 import logging
+
+from aiosmtpd.controller import Controller
+
+from .handler import SMTPHandler
 
 logger = logging.getLogger("smtpy.smtp_server")
 

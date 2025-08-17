@@ -46,12 +46,12 @@ async def authenticate_user(username: str, password: str) -> Optional[User]:
 
 
 async def create_user(
-    self,
-    username: str,
-    password: str,
-    email: Optional[str] = None,
-    role: str = "user",
-    invited_by: Optional[int] = None,
+        self,
+        username: str,
+        password: str,
+        email: Optional[str] = None,
+        role: str = "user",
+        invited_by: Optional[int] = None,
 ) -> User:
     """Create a new user.
 
@@ -422,12 +422,12 @@ async def authenticate_user(username: str, password: str) -> Optional[User]:
 
 
 async def create_user(
-    self,
-    username: str,
-    password: str,
-    email: Optional[str] = None,
-    role: str = "user",
-    invited_by: Optional[int] = None,
+        self,
+        username: str,
+        password: str,
+        email: Optional[str] = None,
+        role: str = "user",
+        invited_by: Optional[int] = None,
 ) -> User:
     """Create a new user.
 
@@ -732,7 +732,7 @@ def get_all_users(current_user_role: str) -> List[User]:
 
 # Simple helper used by tests to create a user directly
 def create_user(
-    username: str, password: str, email: Optional[str] = None, role: str = "user"
+        username: str, password: str, email: Optional[str] = None, role: str = "user"
 ) -> User:
     with get_db() as session:
         user = User(

@@ -1,20 +1,21 @@
-from config import SETTINGS
 import asyncio
+import logging
 import os
 import subprocess
 from contextlib import contextmanager, asynccontextmanager
-from typing import Annotated, Optional
+from typing import Annotated
 
 from fastapi import Depends
 from sqlalchemy import create_engine
 from sqlalchemy.ext.asyncio import create_async_engine, AsyncSession, async_sessionmaker
 from sqlalchemy.orm import sessionmaker
 
+from config import SETTINGS
 from database.models import Base
-from utils.logging_config import get_logger
 
 try:
     import greenlet  # type: ignore
+
     _GREENLET_AVAILABLE = True
 except Exception:  # pragma: no cover - test env may not have greenlet
     _GREENLET_AVAILABLE = False
@@ -23,7 +24,8 @@ except Exception:  # pragma: no cover - test env may not have greenlet
 if SETTINGS.DATABASE_URL:
     DATABASE_URL = SETTINGS.DATABASE_URL
     # For async URL, convert postgres:// to postgresql+psycopg://
-    ASYNC_DATABASE_URL = DATABASE_URL.replace("postgresql://", "postgresql+psycopg://", 1) if DATABASE_URL.startswith("postgresql://") else DATABASE_URL
+    ASYNC_DATABASE_URL = DATABASE_URL.replace("postgresql://", "postgresql+psycopg://", 1) if DATABASE_URL.startswith(
+        "postgresql://") else DATABASE_URL
 else:
     DB_PATH = SETTINGS.DB_PATH
     DATABASE_URL = f"sqlite:///{DB_PATH}"
@@ -47,8 +49,8 @@ AsyncSessionLocal = async_sessionmaker(
 
 def init_db():
     """Initialize database by running alembic migrations and creating tables if needed."""
-    logger = get_logger("database")
-    
+    logger = logging.getLogger("smtpy.database")
+
     try:
         # Run alembic upgrade head to ensure database is up to date
         logger.info("Running alembic upgrade head...")
@@ -72,6 +74,7 @@ def init_db():
         logger.warning("Alembic command not found, falling back to creating tables directly with SQLAlchemy")
         # Fallback if alembic is not available
         Base.metadata.create_all(bind=engine)
+
 
 @contextmanager
 def get_db():
@@ -138,7 +141,6 @@ def _ensure_async_bind():
             class_=AsyncSession,
         )
         _async_bound_url = async_url
-
 
 
 class _ScalarOneOrNoneResult:

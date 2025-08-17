@@ -80,6 +80,11 @@ jobs:
             docker login registry.atomdev.fr -u ${{ secrets.REGISTRY_USERNAME }} -p ${{ secrets.REGISTRY_PASSWORD }}
             docker compose pull
             docker compose up -d --remove-orphans
+            
+            # Clean up unused images to prevent orphan images
+            echo "Cleaning up unused Docker images..."
+            docker image prune -f
+            echo "✅ Cleaned up unused Docker images"
 
   health-check:
     needs: deploy

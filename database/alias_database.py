@@ -9,8 +9,8 @@ from __future__ import annotations
 import datetime
 from typing import List, Optional
 
+from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
-from sqlalchemy import select, delete
 
 from .models import Alias
 
@@ -24,7 +24,7 @@ async def db_list_aliases(session: AsyncSession, domain_id: Optional[int] = None
 
 
 async def db_create_alias(
-    session: AsyncSession, local_part: str, targets: str, domain_id: int
+        session: AsyncSession, local_part: str, targets: str, domain_id: int
 ) -> Alias:
     alias = Alias(local_part=local_part, targets=targets, domain_id=domain_id)
     session.add(alias)
@@ -52,11 +52,11 @@ async def db_list_aliases_by_domain(session: AsyncSession, domain_id: int) -> Li
 
 
 async def db_add_alias(
-    session: AsyncSession,
-    domain_id: int,
-    local_part: str,
-    targets: str,
-    expires_at: Optional[datetime.datetime] = None,
+        session: AsyncSession,
+        domain_id: int,
+        local_part: str,
+        targets: str,
+        expires_at: Optional[datetime.datetime] = None,
 ) -> Alias:
     alias = Alias(
         local_part=local_part,

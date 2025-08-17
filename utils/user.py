@@ -1,13 +1,12 @@
 import smtplib
 from email.message import EmailMessage
 
-from config import SETTINGS
-
 from fastapi import HTTPException
 from fastapi.requests import Request
 from passlib.context import CryptContext
 from starlette import status
 
+from config import SETTINGS
 from database.models import User
 from utils.db import get_db
 

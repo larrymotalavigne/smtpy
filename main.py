@@ -1,3 +1,4 @@
+import logging
 import os
 import secrets
 from contextlib import asynccontextmanager
@@ -11,7 +12,6 @@ from config import SETTINGS, validate_configuration
 from database.models import User
 from utils.db import get_db, init_db
 from utils.error_handling import ErrorHandlingMiddleware
-from utils.logging_config import setup_logging, get_logger
 from views import domain_view, alias_view, billing_view, user_view, main_view
 
 
@@ -48,7 +48,6 @@ class SecurityHeadersMiddleware(BaseHTTPMiddleware):
 
 def create_default_admin():
     """Create default admin user with secure random password if no users exist."""
-    logger = get_logger("auth")
     from utils.user import hash_password
     with get_db() as session:
         if not session.query(User).first():
@@ -84,10 +83,7 @@ def create_default_admin():
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
-    # Initialize logging first
-    setup_logging()
-    logger = get_logger("main")
-    logger.info("Starting SMTPy application")
+    logging.info("Starting SMTPy application")
 
     # Validate configuration
     validate_configuration()
@@ -96,9 +92,9 @@ async def lifespan(app: FastAPI):
     init_db()
     create_default_admin()
 
-    logger.info("SMTPy application startup completed")
+    logging.info("SMTPy application startup completed")
     yield
-    logger.info("SMTPy application shutdown")
+    logging.info("SMTPy application shutdown")
 
 
 def create_app() -> FastAPI:

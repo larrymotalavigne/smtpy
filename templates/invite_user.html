@@ -1,17 +1,17 @@
 {% extends "base.html" %}
 {% block content %}
-<div class="container-xl">
-  <h2>Invite User</h2>
-  <form method="post" class="mb-3" style="max-width:400px;">
-    <div class="mb-3">
-      <label class="form-label">Email address</label>
-      <input type="email" name="email" class="form-control" required autofocus>
+    <div class="container-xl">
+        <h2>Invite User</h2>
+        <form method="post" class="mb-3" style="max-width:400px;">
+            <div class="mb-3">
+                <label class="form-label">Email address</label>
+                <input type="email" name="email" class="form-control" required autofocus>
+            </div>
+            <button type="submit" class="btn btn-primary">Send Invitation</button>
+        </form>
+        {% if error %}
+            <div class="alert alert-info">{{ error }}</div>
+        {% endif %}
+        <a href="/users" class="btn btn-link">Back to User Management</a>
     </div>
-    <button type="submit" class="btn btn-primary">Send Invitation</button>
-  </form>
-  {% if error %}
-    <div class="alert alert-info">{{ error }}</div>
-  {% endif %}
-  <a href="/users" class="btn btn-link">Back to User Management</a>
-</div>
 {% endblock %} 

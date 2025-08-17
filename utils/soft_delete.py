@@ -2,8 +2,9 @@
 
 from datetime import datetime
 from typing import Type, TypeVar, Optional
+
 from sqlalchemy.orm import Session
-from sqlalchemy import and_
+
 from database.models import Base, User, Domain, Alias
 
 T = TypeVar("T", bound=Base)
@@ -187,7 +188,7 @@ def get_active_domains(session: Session, owner_id: Optional[int] = None):
 
 
 def get_active_aliases(
-    session: Session, owner_id: Optional[int] = None, domain_id: Optional[int] = None
+        session: Session, owner_id: Optional[int] = None, domain_id: Optional[int] = None
 ):
     """
     Get all active (non-deleted) aliases, optionally filtered by owner or domain.

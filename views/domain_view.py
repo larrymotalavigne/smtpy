@@ -3,8 +3,8 @@ from typing import List, Optional
 
 from fastapi import APIRouter, Request, Form, Path, HTTPException
 from fastapi.responses import HTMLResponse, RedirectResponse, PlainTextResponse
-from sqlalchemy import select
 from pydantic import BaseModel
+from sqlalchemy import select
 
 from config import template_response
 from controllers import domain_controller
@@ -52,12 +52,12 @@ async def dashboard(request: Request, db: adbDep):
 @router.get("/admin", response_class=HTMLResponse)
 async def admin_panel(request: Request, db: adbDep):
     user = require_login(request)
-    
+
     domains_result = await db.execute(select(Domain).where(Domain.is_deleted == False))
     domains = domains_result.scalars().all()
     aliases_result = await db.execute(select(Alias).where(Alias.is_deleted == False))
     aliases = aliases_result.scalars().all()
-    
+
     domain_statuses = []
     for domain in domains:
         dns_results = check_dns_records(domain.name)

@@ -1,8 +1,10 @@
+from unittest.mock import patch
+
 import pytest
 from sqlalchemy import create_engine
 from sqlalchemy.orm import sessionmaker, clear_mappers
+
 from database.models import Base
-from unittest.mock import patch
 
 # Use a shared in-memory SQLite DB for all connections
 TEST_DATABASE_URL = "sqlite:///file::memory:?cache=shared&uri=true"

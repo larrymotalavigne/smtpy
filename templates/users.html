@@ -1,43 +1,45 @@
 {% extends "base.html" %}
 {% block content %}
-<div class="container-xl">
-  <h2>User Management</h2>
-  {% if user and user.role == 'admin' %}
-  <a href="/invite-user" class="btn btn-success mb-3">Invite User</a>
-  {% endif %}
-  <table class="table table-striped">
-    <thead>
-      <tr>
-        <th>Username</th>
-        <th>Email</th>
-        <th>Role</th>
-        <th>Actions</th>
-      </tr>
-    </thead>
-    <tbody>
-      {% for u in users %}
-      <tr>
-        <form method="post" action="/users/edit">
-          <input type="hidden" name="user_id" value="{{ u.id }}">
-          <td>{{ u.username }}</td>
-          <td><input type="email" name="email" value="{{ u.email or '' }}" class="form-control" style="max-width:200px;"></td>
-          <td>
-            <select name="role" class="form-select">
-              <option value="user" {% if u.role == 'user' %}selected{% endif %}>User</option>
-              <option value="admin" {% if u.role == 'admin' %}selected{% endif %}>Admin</option>
-            </select>
-          </td>
-          <td>
-            <button type="submit" class="btn btn-primary btn-sm">Save</button>
-        </form>
-        <form method="post" action="/users/delete" style="display:inline;">
-          <input type="hidden" name="user_id" value="{{ u.id }}">
-          <button type="submit" class="btn btn-danger btn-sm" onclick="return confirm('Delete user {{ u.username }}?');">Delete</button>
-        </form>
-          </td>
-      </tr>
-      {% endfor %}
-    </tbody>
-  </table>
-</div>
+    <div class="container-xl">
+        <h2>User Management</h2>
+        {% if user and user.role == 'admin' %}
+            <a href="/invite-user" class="btn btn-success mb-3">Invite User</a>
+        {% endif %}
+        <table class="table table-striped">
+            <thead>
+            <tr>
+                <th>Username</th>
+                <th>Email</th>
+                <th>Role</th>
+                <th>Actions</th>
+            </tr>
+            </thead>
+            <tbody>
+            {% for u in users %}
+                <tr>
+                    <form method="post" action="/users/edit">
+                        <input type="hidden" name="user_id" value="{{ u.id }}">
+                        <td>{{ u.username }}</td>
+                        <td><input type="email" name="email" value="{{ u.email or '' }}" class="form-control" style="max-width:200px;"></td>
+                        <td>
+                            <select name="role" class="form-select">
+                                <option value="user" {% if u.role == 'user' %}selected{% endif %}>User</option>
+                                <option value="admin" {% if u.role == 'admin' %}selected{% endif %}>Admin</option>
+                            </select>
+                        </td>
+                        <td>
+                            <button type="submit" class="btn btn-primary btn-sm">Save</button>
+                    </form>
+                    <form method="post" action="/users/delete" style="display:inline;">
+                        <input type="hidden" name="user_id" value="{{ u.id }}">
+                        <button type="submit" class="btn btn-danger btn-sm" onclick="return confirm('Delete user {{ u.username }}?');">
+                            Delete
+                        </button>
+                    </form>
+                    </td>
+                </tr>
+            {% endfor %}
+            </tbody>
+        </table>
+    </div>
 {% endblock %} 

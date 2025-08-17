@@ -7,13 +7,12 @@ and invitations are defined here to enforce architecture: views -> controllers -
 from __future__ import annotations
 
 from datetime import datetime
-from typing import Optional, List
+from typing import Optional
 
-from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy import select
+from sqlalchemy.ext.asyncio import AsyncSession
 
 from .models import User, Invitation
-from utils.soft_delete import get_active_users
 
 
 # User queries
@@ -75,7 +74,7 @@ async def db_get_invitation_by_token(session: AsyncSession, token: str) -> Optio
 
 
 async def db_create_invitation(
-    session: AsyncSession, email: str, token: str, expires_at: datetime, invited_by: Optional[int]
+        session: AsyncSession, email: str, token: str, expires_at: datetime, invited_by: Optional[int]
 ) -> Invitation:
     invitation = Invitation(email=email, token=token, expires_at=expires_at, invited_by=invited_by)
     session.add(invitation)
@@ -91,15 +90,15 @@ async def db_delete_invitation(session: AsyncSession, invitation: Invitation) ->
 
 # --- Additional creation helpers for users ---
 async def db_create_user(
-    session: AsyncSession,
-    username: str,
-    hashed_password: str,
-    email: Optional[str] = None,
-    role: str = "user",
-    is_active: bool = False,
-    email_verified: bool = False,
-    verification_token: Optional[str] = None,
-    invited_by: Optional[int] = None,
+        session: AsyncSession,
+        username: str,
+        hashed_password: str,
+        email: Optional[str] = None,
+        role: str = "user",
+        is_active: bool = False,
+        email_verified: bool = False,
+        verification_token: Optional[str] = None,
+        invited_by: Optional[int] = None,
 ) -> User:
     user = User(
         username=username,

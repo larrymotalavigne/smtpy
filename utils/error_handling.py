@@ -1,13 +1,14 @@
 """Comprehensive error handling utilities for SMTPy."""
 
+import logging
 import traceback
-from typing import Dict, Any, Optional
+from typing import Dict, Any
+
 from fastapi import Request, HTTPException
 from fastapi.responses import JSONResponse
 from starlette.middleware.base import BaseHTTPMiddleware
-from utils.logging_config import get_logger
 
-logger = get_logger("error_handler")
+logger = logging.getLogger("smtpy.error_handler")
 
 
 class SMTPyError(Exception):
@@ -63,11 +64,11 @@ class EmailProcessingError(SMTPyError):
 
 
 def create_error_response(
-    status_code: int,
-    message: str,
-    error_code: str = None,
-    details: Dict[str, Any] = None,
-    request_id: str = None,
+        status_code: int,
+        message: str,
+        error_code: str = None,
+        details: Dict[str, Any] = None,
+        request_id: str = None,
 ) -> JSONResponse:
     """Create a standardized error response."""
     error_data = {
@@ -86,10 +87,10 @@ def create_error_response(
 
 
 def log_error(
-    error: Exception,
-    request: Request = None,
-    user_id: int = None,
-    additional_context: Dict[str, Any] = None,
+        error: Exception,
+        request: Request = None,
+        user_id: int = None,
+        additional_context: Dict[str, Any] = None,
 ) -> str:
     """Log an error with comprehensive context information."""
     import uuid

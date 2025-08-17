@@ -1,7 +1,9 @@
-import pytest
 import uuid
 from datetime import datetime, timedelta
+
+import pytest
 from sqlalchemy.exc import IntegrityError
+
 from database.models import User, Domain, Alias, ForwardingRule, ActivityLog, Invitation
 from utils.db import get_db
 

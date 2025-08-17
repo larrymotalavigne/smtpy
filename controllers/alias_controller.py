@@ -1,5 +1,6 @@
 """Alias controller for email alias management operations."""
 
+import logging
 from datetime import datetime, timedelta
 from typing import List, Optional, Dict, Any
 
@@ -15,13 +16,12 @@ from database.alias_database import (
     db_add_alias,
 )
 from database.models import Alias, Domain, User, ActivityLog
+from utils.db import get_db
+from utils.error_handling import ValidationError, ResourceNotFoundError
 from utils.soft_delete import get_active_aliases, get_active_domains, soft_delete_alias
 from utils.validation import validate_alias_local_part, validate_email_list
-from utils.db import get_db
-from utils.logging_config import get_logger
-from utils.error_handling import ValidationError, ResourceNotFoundError
 
-logger = get_logger("alias_controller")
+logger = logging.getLogger("smtpy.alias_controller")
 
 
 def log_activity(event_type: str, details: Dict[str, Any]) -> None:

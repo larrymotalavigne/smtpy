@@ -1,17 +1,14 @@
 """Integration tests for email forwarding functionality."""
 
-import pytest
-import asyncio
-import smtplib
-from email.message import EmailMessage
-from email.mime.text import MIMEText
-from unittest.mock import patch, AsyncMock, MagicMock
 from datetime import datetime, timedelta
+from email.message import EmailMessage
+from unittest.mock import patch, MagicMock
 
-from smtp_server.handler import SMTPHandler
+import pytest
+
 from database.models import User, Domain, Alias, ActivityLog
+from smtp_server.handler import SMTPHandler
 from utils.db import get_db
-from forwarding.forwarder import forward_email
 
 
 class TestEmailForwardingIntegration:

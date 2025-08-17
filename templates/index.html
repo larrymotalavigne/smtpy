@@ -1,180 +1,190 @@
 {% extends "base.html" %}
 {% block title %}Admin - smtpy{% endblock %}
 {% block content %}
-<h1 class="mb-4">Admin Panel</h1>
-<div class="card mb-4">
-  <div class="card-header"><h2 class="card-title">Onboarding Checklist</h2></div>
-  <div class="card-body">
-    <ol class="list-group list-group-numbered mb-0">
-      <li class="list-group-item d-flex justify-content-between align-items-center">
-        1. Add your domain
-        {% if domains|length > 0 %}
-          <span class="badge bg-success">Done</span>
-        {% else %}
-          <span class="badge bg-secondary">Pending</span>
-        {% endif %}
-      </li>
-      <li class="list-group-item d-flex justify-content-between align-items-center">
-        2. Verify domain ownership (DNS TXT)
-        {% if domains|selectattr('verified', 'equalto', True)|list|length > 0 %}
-          <span class="badge bg-success">Done</span>
-        {% else %}
-          <span class="badge bg-secondary">Pending</span>
-        {% endif %}
-      </li>
-      <li class="list-group-item d-flex justify-content-between align-items-center">
-        3. Set MX record
-        {% if domains|selectattr('mx_valid', 'equalto', True)|list|length > 0 %}
-          <span class="badge bg-success">Done</span>
-        {% else %}
-          <span class="badge bg-secondary">Pending</span>
-        {% endif %}
-      </li>
-      <li class="list-group-item d-flex justify-content-between align-items-center">
-        4. Create your first alias
-        {% if aliases|length > 0 %}
-          <span class="badge bg-success">Done</span>
-        {% else %}
-          <span class="badge bg-secondary">Pending</span>
-        {% endif %}
-      </li>
-    </ol>
-    <div class="mt-3">
-      <a href="/docs/admin.md" target="_blank" class="btn btn-link">Getting Started Guide</a>
+    <h1 class="mb-4">Admin Panel</h1>
+    <div class="card mb-4">
+        <div class="card-header"><h2 class="card-title">Onboarding Checklist</h2></div>
+        <div class="card-body">
+            <ol class="list-group list-group-numbered mb-0">
+                <li class="list-group-item d-flex justify-content-between align-items-center">
+                    1. Add your domain
+                    {% if domains|length > 0 %}
+                        <span class="badge bg-success">Done</span>
+                    {% else %}
+                        <span class="badge bg-secondary">Pending</span>
+                    {% endif %}
+                </li>
+                <li class="list-group-item d-flex justify-content-between align-items-center">
+                    2. Verify domain ownership (DNS TXT)
+                    {% if domains|selectattr('verified', 'equalto', True)|list|length > 0 %}
+                        <span class="badge bg-success">Done</span>
+                    {% else %}
+                        <span class="badge bg-secondary">Pending</span>
+                    {% endif %}
+                </li>
+                <li class="list-group-item d-flex justify-content-between align-items-center">
+                    3. Set MX record
+                    {% if domains|selectattr('mx_valid', 'equalto', True)|list|length > 0 %}
+                        <span class="badge bg-success">Done</span>
+                    {% else %}
+                        <span class="badge bg-secondary">Pending</span>
+                    {% endif %}
+                </li>
+                <li class="list-group-item d-flex justify-content-between align-items-center">
+                    4. Create your first alias
+                    {% if aliases|length > 0 %}
+                        <span class="badge bg-success">Done</span>
+                    {% else %}
+                        <span class="badge bg-secondary">Pending</span>
+                    {% endif %}
+                </li>
+            </ol>
+            <div class="mt-3">
+                <a href="/docs/admin.md" target="_blank" class="btn btn-link">Getting Started Guide</a>
+            </div>
+        </div>
     </div>
-  </div>
-</div>
-{% for domain in domains %}
-<div class="card mb-4">
-  <div class="card-header"><h2 class="card-title">DNS Setup for {{ domain.name }}</h2></div>
-  <div class="card-body">
-    <ol class="mb-3">
-      <li>
-        <b>TXT (Verification):</b><br>
-        Name: <code>smtpy-verification</code><br>
-        Value: <code>verify-{{ domain.name }}</code>
-        <button class="btn btn-outline-secondary btn-sm ms-2" onclick="navigator.clipboard.writeText('verify-{{ domain.name }}')">Copy</button>
-      </li>
-      <li>
-        <b>MX Record:</b><br>
-        Host: <code>@</code> &nbsp; Type: <code>MX</code> &nbsp; Value: <code>mail.smtpy.app</code> &nbsp; Priority: <code>10</code>
-        <button class="btn btn-outline-secondary btn-sm ms-2" onclick="navigator.clipboard.writeText('mail.smtpy.app')">Copy</button>
-        {% if domain.mx_valid %}
-          <span class="badge bg-success ms-2">Valid</span>
-        {% else %}
-          <span class="badge bg-danger ms-2">Missing or Incorrect</span>
-        {% endif %}
-      </li>
-      <li>
-        <b>SPF:</b><br>
-        Type: <code>TXT</code> &nbsp; Name: <code>@</code> &nbsp; Value: <code>v=spf1 include:mail.smtpy.app ~all</code>
-        <button class="btn btn-outline-secondary btn-sm ms-2" onclick="navigator.clipboard.writeText('v=spf1 include:mail.smtpy.app ~all')">Copy</button>
-        {% if domain.spf_valid %}
-          <span class="badge bg-success ms-2">Valid</span>
-        {% else %}
-          <span class="badge bg-danger ms-2">Missing</span>
-        {% endif %}
-      </li>
-      <li>
-        <b>DKIM:</b><br>
-        Type: <code>TXT</code> &nbsp; Name: <code>mail._domainkey</code> &nbsp; Value: <span class="text-muted">(see DKIM section below)</span>
-        {% if domain.dkim_valid %}
-          <span class="badge bg-success ms-2">Valid</span>
-        {% else %}
-          <span class="badge bg-danger ms-2">Missing</span>
-        {% endif %}
-      </li>
-      <li>
-        <b>DMARC:</b><br>
-        Type: <code>TXT</code> &nbsp; Name: <code>_dmarc</code> &nbsp; Value: <code>v=DMARC1; p=none; rua=mailto:admin@{{ domain.name }}</code>
-        <button class="btn btn-outline-secondary btn-sm ms-2" onclick="navigator.clipboard.writeText('v=DMARC1; p=none; rua=mailto:admin@{{ domain.name }}')">Copy</button>
-        {% if domain.dmarc_valid %}
-          <span class="badge bg-success ms-2">Valid</span>
-        {% else %}
-          <span class="badge bg-danger ms-2">Missing</span>
-        {% endif %}
-      </li>
-    </ol>
-    <div class="text-muted">After updating DNS, changes may take up to 24 hours to propagate.</div>
-  </div>
-</div>
-{% endfor %}
-<div class="row">
-  <div class="col-md-6">
-    <div class="card">
-      <div class="card-header"><h2 class="card-title">Domains</h2></div>
-      <div class="card-body">
-        <ul class="list-group mb-3">
-          {% for domain in domains %}
-            <li class="list-group-item d-flex justify-content-between align-items-center">
-              <div>
-                <b>{{ domain.name }}</b>
-                <span class="text-muted">(Catch-all: {{ domain.catch_all or 'None' }})</span>
-              </div>
-              <form method="post" action="/edit-catchall" class="d-flex align-items-center mb-0 me-2">
-                <input type="hidden" name="domain_id" value="{{ domain.id }}">
-                <input type="email" name="catch_all" value="{{ domain.catch_all or '' }}" class="form-control form-control-sm me-2" placeholder="Set catch-all" style="max-width:180px;">
-                <button type="submit" class="btn btn-outline-primary btn-sm">Save</button>
-              </form>
-              <form method="post" action="/delete-domain" class="mb-0">
-                <input type="hidden" name="domain_id" value="{{ domain.id }}">
-                <button type="submit" class="btn btn-danger btn-sm"><span class="ti ti-trash"></span></button>
-              </form>
-            </li>
-          {% endfor %}
-        </ul>
-        <form method="post" action="/add-domain" class="row g-2 align-items-end">
-          <div class="col">
-            <input type="text" name="name" class="form-control" placeholder="Domain name" required>
-          </div>
-          <div class="col">
-            <input type="email" name="catch_all" class="form-control" placeholder="Catch-all target (optional)">
-          </div>
-          <div class="col-auto">
-            <button type="submit" class="btn btn-primary">Add Domain</button>
-          </div>
-        </form>
-      </div>
+    {% for domain in domains %}
+        <div class="card mb-4">
+            <div class="card-header"><h2 class="card-title">DNS Setup for {{ domain.name }}</h2></div>
+            <div class="card-body">
+                <ol class="mb-3">
+                    <li>
+                        <b>TXT (Verification):</b><br>
+                        Name: <code>smtpy-verification</code><br>
+                        Value: <code>verify-{{ domain.name }}</code>
+                        <button class="btn btn-outline-secondary btn-sm ms-2"
+                                onclick="navigator.clipboard.writeText('verify-{{ domain.name }}')">Copy
+                        </button>
+                    </li>
+                    <li>
+                        <b>MX Record:</b><br>
+                        Host: <code>@</code> &nbsp; Type: <code>MX</code> &nbsp; Value: <code>mail.smtpy.app</code> &nbsp; Priority: <code>10</code>
+                        <button class="btn btn-outline-secondary btn-sm ms-2" onclick="navigator.clipboard.writeText('mail.smtpy.app')">
+                            Copy
+                        </button>
+                        {% if domain.mx_valid %}
+                            <span class="badge bg-success ms-2">Valid</span>
+                        {% else %}
+                            <span class="badge bg-danger ms-2">Missing or Incorrect</span>
+                        {% endif %}
+                    </li>
+                    <li>
+                        <b>SPF:</b><br>
+                        Type: <code>TXT</code> &nbsp; Name: <code>@</code> &nbsp; Value: <code>v=spf1 include:mail.smtpy.app ~all</code>
+                        <button class="btn btn-outline-secondary btn-sm ms-2"
+                                onclick="navigator.clipboard.writeText('v=spf1 include:mail.smtpy.app ~all')">Copy
+                        </button>
+                        {% if domain.spf_valid %}
+                            <span class="badge bg-success ms-2">Valid</span>
+                        {% else %}
+                            <span class="badge bg-danger ms-2">Missing</span>
+                        {% endif %}
+                    </li>
+                    <li>
+                        <b>DKIM:</b><br>
+                        Type: <code>TXT</code> &nbsp; Name: <code>mail._domainkey</code> &nbsp; Value: <span class="text-muted">(see DKIM section below)</span>
+                        {% if domain.dkim_valid %}
+                            <span class="badge bg-success ms-2">Valid</span>
+                        {% else %}
+                            <span class="badge bg-danger ms-2">Missing</span>
+                        {% endif %}
+                    </li>
+                    <li>
+                        <b>DMARC:</b><br>
+                        Type: <code>TXT</code> &nbsp; Name: <code>_dmarc</code> &nbsp; Value: <code>v=DMARC1; p=none;
+                        rua=mailto:admin@{{ domain.name }}</code>
+                        <button class="btn btn-outline-secondary btn-sm ms-2"
+                                onclick="navigator.clipboard.writeText('v=DMARC1; p=none; rua=mailto:admin@{{ domain.name }}')">Copy
+                        </button>
+                        {% if domain.dmarc_valid %}
+                            <span class="badge bg-success ms-2">Valid</span>
+                        {% else %}
+                            <span class="badge bg-danger ms-2">Missing</span>
+                        {% endif %}
+                    </li>
+                </ol>
+                <div class="text-muted">After updating DNS, changes may take up to 24 hours to propagate.</div>
+            </div>
+        </div>
+    {% endfor %}
+    <div class="row">
+        <div class="col-md-6">
+            <div class="card">
+                <div class="card-header"><h2 class="card-title">Domains</h2></div>
+                <div class="card-body">
+                    <ul class="list-group mb-3">
+                        {% for domain in domains %}
+                            <li class="list-group-item d-flex justify-content-between align-items-center">
+                                <div>
+                                    <b>{{ domain.name }}</b>
+                                    <span class="text-muted">(Catch-all: {{ domain.catch_all or 'None' }})</span>
+                                </div>
+                                <form method="post" action="/edit-catchall" class="d-flex align-items-center mb-0 me-2">
+                                    <input type="hidden" name="domain_id" value="{{ domain.id }}">
+                                    <input type="email" name="catch_all" value="{{ domain.catch_all or '' }}"
+                                           class="form-control form-control-sm me-2" placeholder="Set catch-all" style="max-width:180px;">
+                                    <button type="submit" class="btn btn-outline-primary btn-sm">Save</button>
+                                </form>
+                                <form method="post" action="/delete-domain" class="mb-0">
+                                    <input type="hidden" name="domain_id" value="{{ domain.id }}">
+                                    <button type="submit" class="btn btn-danger btn-sm"><span class="ti ti-trash"></span></button>
+                                </form>
+                            </li>
+                        {% endfor %}
+                    </ul>
+                    <form method="post" action="/add-domain" class="row g-2 align-items-end">
+                        <div class="col">
+                            <input type="text" name="name" class="form-control" placeholder="Domain name" required>
+                        </div>
+                        <div class="col">
+                            <input type="email" name="catch_all" class="form-control" placeholder="Catch-all target (optional)">
+                        </div>
+                        <div class="col-auto">
+                            <button type="submit" class="btn btn-primary">Add Domain</button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-6">
+            <div class="card">
+                <div class="card-header"><h2 class="card-title">Aliases</h2></div>
+                <div class="card-body">
+                    <ul class="list-group mb-3">
+                        {% for alias in aliases %}
+                            <li class="list-group-item d-flex justify-content-between align-items-center">
+                                <div>
+                                    {{ alias.local_part }}@{{ alias.domain_id }} → {{ alias.target }}
+                                </div>
+                                <form method="post" action="/delete-alias" class="mb-0">
+                                    <input type="hidden" name="alias_id" value="{{ alias.id }}">
+                                    <button type="submit" class="btn btn-danger btn-sm"><span class="ti ti-trash"></span></button>
+                                </form>
+                            </li>
+                        {% endfor %}
+                    </ul>
+                    <form method="post" action="/add-alias" class="row g-2 align-items-end">
+                        <div class="col">
+                            <input type="text" name="local_part" class="form-control" placeholder="Local part (e.g. contact)" required>
+                        </div>
+                        <div class="col">
+                            <input type="email" name="target" class="form-control" placeholder="Target email" required>
+                        </div>
+                        <div class="col">
+                            <select name="domain_id" class="form-select" required>
+                                <option value="">Select domain</option>
+                                {% for domain in domains %}
+                                    <option value="{{ domain.id }}">{{ domain.name }}</option>
+                                {% endfor %}
+                            </select>
+                        </div>
+                        <div class="col-auto">
+                            <button type="submit" class="btn btn-primary">Add Alias</button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
     </div>
-  </div>
-  <div class="col-md-6">
-    <div class="card">
-      <div class="card-header"><h2 class="card-title">Aliases</h2></div>
-      <div class="card-body">
-        <ul class="list-group mb-3">
-          {% for alias in aliases %}
-            <li class="list-group-item d-flex justify-content-between align-items-center">
-              <div>
-                {{ alias.local_part }}@{{ alias.domain_id }} → {{ alias.target }}
-              </div>
-              <form method="post" action="/delete-alias" class="mb-0">
-                <input type="hidden" name="alias_id" value="{{ alias.id }}">
-                <button type="submit" class="btn btn-danger btn-sm"><span class="ti ti-trash"></span></button>
-              </form>
-            </li>
-          {% endfor %}
-        </ul>
-        <form method="post" action="/add-alias" class="row g-2 align-items-end">
-          <div class="col">
-            <input type="text" name="local_part" class="form-control" placeholder="Local part (e.g. contact)" required>
-          </div>
-          <div class="col">
-            <input type="email" name="target" class="form-control" placeholder="Target email" required>
-          </div>
-          <div class="col">
-            <select name="domain_id" class="form-select" required>
-              <option value="">Select domain</option>
-              {% for domain in domains %}
-                <option value="{{ domain.id }}">{{ domain.name }}</option>
-              {% endfor %}
-            </select>
-          </div>
-          <div class="col-auto">
-            <button type="submit" class="btn btn-primary">Add Alias</button>
-          </div>
-        </form>
-      </div>
-    </div>
-  </div>
-</div>
 {% endblock %} 
