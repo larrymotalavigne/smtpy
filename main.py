@@ -64,12 +64,12 @@ def create_default_admin():
             )
             session.add(user)
             session.commit()
-            logger.info("Created default admin user with temporary password")
+            logging.info("Created default admin user with temporary password")
             if SETTINGS.is_development:
-                logger.warning(
+                logging.warning(
                     f"Default admin credentials - Username: admin, Password: {temp_password}"
                 )
-                logger.warning(
+                logging.warning(
                     "SECURITY: Please change the default admin password immediately after first login!"
                 )
                 # Also print to console for immediate visibility (development only)
