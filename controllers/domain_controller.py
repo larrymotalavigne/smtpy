@@ -24,7 +24,7 @@ def log_activity(event_type: str, details: Dict[str, Any]) -> None:
             session.add(activity_log)
             session.commit()
     except Exception as e:
-        logger.error(f"Failed to log activity: {e}")
+        logging.error(f"Failed to log activity: {e}")
 
 
 def get_by_id_or_404(session, model_class, record_id: int):
@@ -112,7 +112,7 @@ def create_domain(name: str, owner_id: int, catch_all: Optional[str] = None) -> 
     except ValidationError:
         raise
     except Exception as e:
-        logger.error(f"Failed to create domain '{name}': {e}")
+        logging.error(f"Failed to create domain '{name}': {e}")
         raise
 
 
@@ -143,7 +143,7 @@ def get_user_domains(user_id: int, user_role: str = "user") -> List[Domain]:
             return domains
 
     except Exception as e:
-        logger.error(f"Failed to get domains for user {user_id}: {e}")
+        logging.error(f"Failed to get domains for user {user_id}: {e}")
         raise
 
 
@@ -218,7 +218,7 @@ def get_domain_with_status(
     except (ResourceNotFoundError, PermissionError):
         raise
     except Exception as e:
-        logger.error(f"Failed to get domain status for domain {domain_id}: {e}")
+        logging.error(f"Failed to get domain status for domain {domain_id}: {e}")
         raise
 
 
@@ -272,7 +272,7 @@ def update_domain(domain_id: int, user_id: int, user_role: str = "user", **kwarg
     except (ResourceNotFoundError, PermissionError, ValidationError):
         raise
     except Exception as e:
-        logger.error(f"Failed to update domain {domain_id}: {e}")
+        logging.error(f"Failed to update domain {domain_id}: {e}")
         raise
 
 
@@ -308,7 +308,7 @@ def delete_domain(domain_id: int, user_id: int, user_role: str = "user") -> bool
     except (ResourceNotFoundError, PermissionError):
         raise
     except Exception as e:
-        logger.error(f"Failed to delete domain {domain_id}: {e}")
+        logging.error(f"Failed to delete domain {domain_id}: {e}")
         raise
 
 
@@ -337,7 +337,7 @@ def check_domain_dns(domain_name: str) -> Dict[str, Any]:
     except ValidationError:
         raise
     except Exception as e:
-        logger.error(f"Failed to check DNS for domain '{domain_name}': {e}")
+        logging.error(f"Failed to check DNS for domain '{domain_name}': {e}")
         raise
 
 
@@ -391,7 +391,7 @@ def get_domain_statistics(user_id: int, user_role: str = "user") -> Dict[str, An
             return stats
 
     except Exception as e:
-        logger.error(f"Failed to get domain statistics for user {user_id}: {e}")
+        logging.error(f"Failed to get domain statistics for user {user_id}: {e}")
         raise
 
 
@@ -421,7 +421,7 @@ def validate_domain_ownership(
             return domain.owner_id == user_id
 
     except Exception as e:
-        logger.error(f"Failed to validate domain ownership for '{domain_name}': {e}")
+        logging.error(f"Failed to validate domain ownership for '{domain_name}': {e}")
         return False
 
 
@@ -503,7 +503,7 @@ def create_domain(name: str, owner_id: int, catch_all: Optional[str] = None) -> 
     except ValidationError:
         raise
     except Exception as e:
-        logger.error(f"Failed to create domain '{name}': {e}")
+        logging.error(f"Failed to create domain '{name}': {e}")
         raise
 
 
@@ -534,7 +534,7 @@ def get_user_domains(user_id: int, user_role: str = "user") -> List[Domain]:
             return domains
 
     except Exception as e:
-        logger.error(f"Failed to get domains for user {user_id}: {e}")
+        logging.error(f"Failed to get domains for user {user_id}: {e}")
         raise
 
 

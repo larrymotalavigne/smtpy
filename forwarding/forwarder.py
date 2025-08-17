@@ -51,7 +51,7 @@ def forward_email(
     try:
         with smtplib.SMTP(SMTP_HOST, SMTP_PORT) as s:
             s.send_message(msg, from_addr=mail_from, to_addrs=targets)
-        logger.info(f"Forwarded email to {targets} via {SMTP_HOST}:{SMTP_PORT}")
+        logging.info(f"Forwarded email to {targets} via {SMTP_HOST}:{SMTP_PORT}")
     except Exception as e:
-        logger.error(f"Failed to forward email: {e}")
+        logging.error(f"Failed to forward email: {e}")
         raise

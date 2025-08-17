@@ -126,7 +126,7 @@ def log_error(
         context.update(additional_context)
 
     # Log the error with full context
-    logger.error(f"Error {error_id}: {str(error)}", extra=context, exc_info=True)
+    logging.error(f"Error {error_id}: {str(error)}", extra=context, exc_info=True)
 
     return error_id
 
@@ -196,7 +196,7 @@ def handle_database_error(func):
             return func(*args, **kwargs)
         except Exception as e:
             # Log the database error
-            logger.error(f"Database error in {func.__name__}: {str(e)}", exc_info=True)
+            logging.error(f"Database error in {func.__name__}: {str(e)}", exc_info=True)
 
             # Convert to our custom exception
             raise DatabaseError(
@@ -231,7 +231,7 @@ def safe_execute(operation_name: str, func, *args, **kwargs):
         # Re-raise our custom exceptions
         raise
     except Exception as e:
-        logger.error(f"Error in {operation_name}: {str(e)}", exc_info=True)
+        logging.error(f"Error in {operation_name}: {str(e)}", exc_info=True)
         raise SMTPyError(
             message=f"Operation '{operation_name}' failed: {str(e)}",
             error_code="OPERATION_FAILED",

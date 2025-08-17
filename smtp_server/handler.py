@@ -23,7 +23,7 @@ class SMTPHandler(AsyncMessage):
         try:
             recipient = validate_email(recipient.strip())
         except ValidationError as e:
-            logger.warning(f"Invalid recipient email format: {recipient} - {e}")
+            logging.warning(f"Invalid recipient email format: {recipient} - {e}")
             return []
 
         # Parse the validated email address
@@ -73,7 +73,7 @@ class SMTPHandler(AsyncMessage):
                                     try:
                                         validated_targets.append(validate_email(target))
                                     except ValidationError as e:
-                                        logger.warning(
+                                        logging.warning(
                                             f"Invalid target email in alias: {target} - {e}"
                                         )
                             if validated_targets:
@@ -86,7 +86,7 @@ class SMTPHandler(AsyncMessage):
                                 validated_catch_all = validate_email(cand.catch_all)
                                 return [validated_catch_all]
                             except ValidationError as e:
-                                logger.warning(
+                                logging.warning(
                                     f"Invalid catch-all email: {cand.catch_all} - {e}"
                                 )
 
@@ -109,7 +109,7 @@ class SMTPHandler(AsyncMessage):
                             validated_target = validate_email(target)
                             validated_targets.append(validated_target)
                         except ValidationError as e:
-                            logger.warning(f"Invalid target email in alias: {target} - {e}")
+                            logging.warning(f"Invalid target email in alias: {target} - {e}")
                 return validated_targets
 
             if domain.catch_all:
@@ -117,7 +117,7 @@ class SMTPHandler(AsyncMessage):
                     validated_catch_all = validate_email(domain.catch_all)
                     return [validated_catch_all]
                 except ValidationError as e:
-                    logger.warning(f"Invalid catch-all email: {domain.catch_all} - {e}")
+                    logging.warning(f"Invalid catch-all email: {domain.catch_all} - {e}")
 
         return []
 
@@ -152,7 +152,7 @@ class SMTPHandler(AsyncMessage):
             try:
                 sender = validate_email(sender_raw.strip())
             except ValidationError as e:
-                logger.warning(f"Invalid sender email format: {sender_raw} - {e}")
+                logging.warning(f"Invalid sender email format: {sender_raw} - {e}")
                 sender = sender_raw.strip()  # Keep original for logging but mark as invalid
 
         # Parse and validate recipient email addresses (support multiple recipients in one header)
@@ -166,10 +166,10 @@ class SMTPHandler(AsyncMessage):
                     recipient = validate_email(recipient_raw.strip())
                     recipients.append(recipient)
                 except ValidationError as e:
-                    logger.warning(f"Invalid recipient email format: {recipient_raw} - {e}")
+                    logging.warning(f"Invalid recipient email format: {recipient_raw} - {e}")
                     # Skip invalid recipients
 
-        logger.info(f"Received email from {sender} to {recipients} with subject '{subject}'")
+        logging.info(f"Received email from {sender} to {recipients} with subject '{subject}'")
 
         all_targets = set()
         for r in recipients:
@@ -177,7 +177,7 @@ class SMTPHandler(AsyncMessage):
             if targets:
                 all_targets.update(targets)
             else:
-                logger.warning(f"No valid target for recipient {r}")
+                logging.warning(f"No valid target for recipient {r}")
                 await self.log_activity(
                     event_type="bounce",
                     sender=sender,
@@ -188,8 +188,8 @@ class SMTPHandler(AsyncMessage):
                 )
 
         if not all_targets:
-            logger.warning(f"No valid recipients for message from {sender} to {recipients}")
-            logger.info(
+            logging.warning(f"No valid recipients for message from {sender} to {recipients}")
+            logging.info(
                 f"Rejected email: No valid recipients in {recipients}",
                 extra={
                     "sender": sender,
@@ -211,7 +211,7 @@ class SMTPHandler(AsyncMessage):
         # Forward email to all resolved targets
         try:
             forwarding.forwarder.forward_email(message, list(all_targets), mail_from="noreply@localhost")
-            logger.info(
+            logging.info(
                 f"Email forwarded successfully",
                 extra={
                     "sender": sender,
@@ -230,7 +230,7 @@ class SMTPHandler(AsyncMessage):
                     message="Email forwarded successfully",
                 )
         except Exception as e:
-            logger.error(
+            logging.error(
                 f"Failed to forward email: {e}",
                 extra={
                     "sender": sender,

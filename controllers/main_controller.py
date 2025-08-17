@@ -51,7 +51,7 @@ def create_invitation(admin_user_id: int, email: str) -> Dict[str, Any]:
     except (PermissionError, ValidationError):
         raise
     except Exception as e:
-        logger.error(f"Failed to create invitation for {email}: {e}")
+        logging.error(f"Failed to create invitation for {email}: {e}")
         raise
 
 
@@ -140,7 +140,7 @@ def register_user(
     except ValidationError:
         raise
     except Exception as e:
-        logger.error(f"Failed to register user {username}: {e}")
+        logging.error(f"Failed to register user {username}: {e}")
         raise
 
 
@@ -175,7 +175,7 @@ def verify_email(token: str) -> Dict[str, Any]:
     except ValidationError:
         raise
     except Exception as e:
-        logger.error(f"Failed to verify email with token {token}: {e}")
+        logging.error(f"Failed to verify email with token {token}: {e}")
         raise
 
 
@@ -211,7 +211,7 @@ def authenticate_user(username: str, password: str) -> Dict[str, Any]:
     except ValidationError:
         raise
     except Exception as e:
-        logger.error(f"Failed to authenticate user {username}: {e}")
+        logging.error(f"Failed to authenticate user {username}: {e}")
         raise
 
 
@@ -279,7 +279,7 @@ def get_dashboard_data(user_id: int) -> Dict[str, Any]:
     except NotFoundError:
         raise
     except Exception as e:
-        logger.error(f"Failed to get dashboard data for user {user_id}: {e}")
+        logging.error(f"Failed to get dashboard data for user {user_id}: {e}")
         raise
 
 
@@ -367,7 +367,7 @@ def get_admin_panel_data(user_id: int) -> Dict[str, Any]:
     except (NotFoundError, PermissionError):
         raise
     except Exception as e:
-        logger.error(f"Failed to get admin panel data for user {user_id}: {e}")
+        logging.error(f"Failed to get admin panel data for user {user_id}: {e}")
         raise
 
 
@@ -412,7 +412,7 @@ def get_users_list(admin_user_id: int) -> List[Dict[str, Any]]:
     except (NotFoundError, PermissionError):
         raise
     except Exception as e:
-        logger.error(f"Failed to get users list for admin {admin_user_id}: {e}")
+        logging.error(f"Failed to get users list for admin {admin_user_id}: {e}")
         raise
 
 
@@ -453,7 +453,7 @@ def get_dkim_public_key(domain: str) -> str:
     except (ValidationError, NotFoundError):
         raise
     except Exception as e:
-        logger.error(f"Failed to get DKIM key for domain {domain}: {e}")
+        logging.error(f"Failed to get DKIM key for domain {domain}: {e}")
         raise NotFoundError(f"DKIM public key for {domain} not found")
 
 
@@ -504,7 +504,7 @@ def get_domain_dns_info(domain_id: int, user_id: int) -> Dict[str, Any]:
     except (NotFoundError, PermissionError):
         raise
     except Exception as e:
-        logger.error(f"Failed to get DNS info for domain {domain_id}: {e}")
+        logging.error(f"Failed to get DNS info for domain {domain_id}: {e}")
         raise
 
 
@@ -569,7 +569,7 @@ def get_domain_aliases_info(domain_id: int, user_id: int) -> Dict[str, Any]:
     except (NotFoundError, PermissionError):
         raise
     except Exception as e:
-        logger.error(f"Failed to get aliases info for domain {domain_id}: {e}")
+        logging.error(f"Failed to get aliases info for domain {domain_id}: {e}")
         raise
 
 
@@ -603,7 +603,7 @@ def check_readiness(self) -> Dict[str, Any]:
             "timestamp": datetime.utcnow().isoformat(),
         }
     except Exception as e:
-        logger.error(f"Readiness check failed: {e}")
+        logging.error(f"Readiness check failed: {e}")
         raise Exception(f"Service not ready: {e}")
 
 
@@ -640,7 +640,7 @@ def get_activity_stats(self) -> Dict[str, Any]:
             }
 
     except Exception as e:
-        logger.error(f"Failed to get activity stats: {e}")
+        logging.error(f"Failed to get activity stats: {e}")
         raise
 
 
@@ -694,7 +694,7 @@ def edit_user(admin_user_id: int, user_id: int, email: str, role: str) -> Dict[s
     except (PermissionError, NotFoundError):
         raise
     except Exception as e:
-        logger.error(f"Failed to edit user {user_id}: {e}")
+        logging.error(f"Failed to edit user {user_id}: {e}")
         raise
 
 

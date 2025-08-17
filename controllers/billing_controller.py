@@ -37,7 +37,7 @@ def log_activity(event_type: str, details: Dict[str, Any]) -> None:
             session.add(activity_log)
             session.commit()
     except Exception as e:
-        logger.error(f"Failed to log activity: {e}")
+        logging.error(f"Failed to log activity: {e}")
 
 
 def get_by_id_or_404(session, model_class, record_id: int):
@@ -82,7 +82,7 @@ def get_or_create_stripe_customer(user_id: int) -> str:
     except ResourceNotFoundError:
         raise
     except Exception as e:
-        logger.error(f"Failed to get/create Stripe customer for user {user_id}: {e}")
+        logging.error(f"Failed to get/create Stripe customer for user {user_id}: {e}")
         raise
 
 
@@ -113,7 +113,7 @@ def create_billing_portal_session(user_id: int) -> str:
         return portal_session.url
 
     except Exception as e:
-        logger.error(f"Failed to create billing portal session for user {user_id}: {e}")
+        logging.error(f"Failed to create billing portal session for user {user_id}: {e}")
         raise
 
 
@@ -173,7 +173,7 @@ def create_checkout_session(user_id: int, plan: str) -> str:
     except (ResourceNotFoundError, ValidationError):
         raise
     except Exception as e:
-        logger.error(f"Failed to create checkout session for user {user_id}, plan {plan}: {e}")
+        logging.error(f"Failed to create checkout session for user {user_id}, plan {plan}: {e}")
         raise
 
 
@@ -197,7 +197,7 @@ def handle_webhook_event(payload: bytes, signature: str) -> Dict[str, Any]:
         try:
             event = stripe.Webhook.construct_event(payload, signature, endpoint_secret)
         except Exception as e:
-            logger.error(f"Webhook signature verification failed: {e}")
+            logging.error(f"Webhook signature verification failed: {e}")
             raise ValidationError(f"Invalid webhook signature: {e}")
 
         # Process subscription events
@@ -215,7 +215,7 @@ def handle_webhook_event(payload: bytes, signature: str) -> Dict[str, Any]:
     except ValidationError:
         raise
     except Exception as e:
-        logger.error(f"Failed to handle webhook event: {e}")
+        logging.error(f"Failed to handle webhook event: {e}")
         raise
 
 
@@ -260,7 +260,7 @@ def _handle_subscription_event(event: Dict[str, Any]) -> Dict[str, Any]:
                     "status_updated": True,
                 }
             else:
-                logger.warning(f"No user found for Stripe customer {customer_id}")
+                logging.warning(f"No user found for Stripe customer {customer_id}")
 
                 log_activity(
                     "subscription_event_no_user",
@@ -280,7 +280,7 @@ def _handle_subscription_event(event: Dict[str, Any]) -> Dict[str, Any]:
                 }
 
     except Exception as e:
-        logger.error(f"Failed to handle subscription event: {e}")
+        logging.error(f"Failed to handle subscription event: {e}")
         raise
 
 
@@ -333,7 +333,7 @@ def get_user_billing_info(user_id: int) -> Dict[str, Any]:
                         }
                     )
                 except Exception as e:
-                    logger.warning(
+                    logging.warning(
                         f"Failed to retrieve Stripe info for customer {user.stripe_customer_id}: {e}"
                     )
                     billing_info["stripe_error"] = str(e)
@@ -348,7 +348,7 @@ def get_user_billing_info(user_id: int) -> Dict[str, Any]:
     except ResourceNotFoundError:
         raise
     except Exception as e:
-        logger.error(f"Failed to get billing info for user {user_id}: {e}")
+        logging.error(f"Failed to get billing info for user {user_id}: {e}")
         raise
 
 
@@ -401,7 +401,7 @@ def cancel_subscription(user_id: int, subscription_id: str) -> Dict[str, Any]:
     except (ResourceNotFoundError, PermissionError, ValidationError):
         raise
     except Exception as e:
-        logger.error(
+        logging.error(
             f"Failed to cancel subscription {subscription_id} for user {user_id}: {e}"
         )
         raise

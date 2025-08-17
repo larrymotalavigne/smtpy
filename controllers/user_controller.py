@@ -23,25 +23,25 @@ async def authenticate_user(username: str, password: str) -> Optional[User]:
             user = await db_get_active_user_by_username(session, username)
 
             if not user:
-                logger.warning(f"Authentication failed: user '{username}' not found")
+                logging.warning(f"Authentication failed: user '{username}' not found")
                 return None
 
             if not user.is_active:
-                logger.warning(f"Authentication failed: user '{username}' is inactive")
+                logging.warning(f"Authentication failed: user '{username}' is inactive")
                 return None
 
             if not pwd_context.verify(password, user.hashed_password):
-                logger.warning(
+                logging.warning(
                     f"Authentication failed: invalid password for user '{username}'"
                 )
                 return None
 
-            logger.info(f"User '{username}' authenticated successfully")
+            logging.info(f"User '{username}' authenticated successfully")
             log_activity("user_login", {"username": username, "user_id": user.id})
             return user
 
     except Exception as e:
-        logger.error(f"Authentication error for user '{username}': {e}")
+        logging.error(f"Authentication error for user '{username}': {e}")
         return None
 
 
@@ -121,7 +121,7 @@ async def create_user(
     except ValidationError:
         raise
     except Exception as e:
-        logger.error(f"Failed to create user '{username}': {e}")
+        logging.error(f"Failed to create user '{username}': {e}")
         raise
 
 
@@ -139,19 +139,19 @@ def verify_email(token: str) -> Optional[User]:
             user = db_get_user_by_verification_token(session, token)
 
             if not user:
-                logger.warning(f"Email verification failed: invalid token")
+                logging.warning(f"Email verification failed: invalid token")
                 return None
 
             # Update user
             db_set_user_verified(session, user)
 
-            logger.info(f"Email verified for user '{user.username}'")
+            logging.info(f"Email verified for user '{user.username}'")
             log_activity("email_verified", {"user_id": user.id, "username": user.username})
 
             return user
 
     except Exception as e:
-        logger.error(f"Email verification error: {e}")
+        logging.error(f"Email verification error: {e}")
         return None
 
 
@@ -199,7 +199,7 @@ def create_invitation(email: str, invited_by_id: int) -> Invitation:
     except ValidationError:
         raise
     except Exception as e:
-        logger.error(f"Failed to create invitation for '{email}': {e}")
+        logging.error(f"Failed to create invitation for '{email}': {e}")
         raise
 
 
@@ -220,13 +220,13 @@ def get_user_by_invitation_token(token: str) -> Optional[Invitation]:
                 return None
 
             if invitation.expires_at < datetime.utcnow():
-                logger.warning(f"Invitation token expired for email '{invitation.email}'")
+                logging.warning(f"Invitation token expired for email '{invitation.email}'")
                 return None
 
             return invitation
 
     except Exception as e:
-        logger.error(f"Error retrieving invitation: {e}")
+        logging.error(f"Error retrieving invitation: {e}")
         return None
 
 
@@ -285,7 +285,7 @@ def update_user(user_id: int, current_user_id: int, current_user_role: str, **kw
     except (NotFoundError, PermissionError, ValidationError):
         raise
     except Exception as e:
-        logger.error(f"Failed to update user {user_id}: {e}")
+        logging.error(f"Failed to update user {user_id}: {e}")
         raise
 
 
@@ -327,7 +327,7 @@ def delete_user(user_id: int, current_user_id: int, current_user_role: str) -> b
     except (NotFoundError, PermissionError, ValidationError):
         raise
     except Exception as e:
-        logger.error(f"Failed to delete user {user_id}: {e}")
+        logging.error(f"Failed to delete user {user_id}: {e}")
         raise
 
 
@@ -350,7 +350,7 @@ def get_all_users(current_user_role: str) -> List[User]:
         with self.get_db_session() as session:
             return get_active_users(session).all()
     except Exception as e:
-        logger.error(f"Failed to get all users: {e}")
+        logging.error(f"Failed to get all users: {e}")
         raise
 
 
@@ -399,25 +399,25 @@ async def authenticate_user(username: str, password: str) -> Optional[User]:
             user = await db_get_active_user_by_username(session, username)
 
             if not user:
-                logger.warning(f"Authentication failed: user '{username}' not found")
+                logging.warning(f"Authentication failed: user '{username}' not found")
                 return None
 
             if not user.is_active:
-                logger.warning(f"Authentication failed: user '{username}' is inactive")
+                logging.warning(f"Authentication failed: user '{username}' is inactive")
                 return None
 
             if not pwd_context.verify(password, user.hashed_password):
-                logger.warning(
+                logging.warning(
                     f"Authentication failed: invalid password for user '{username}'"
                 )
                 return None
 
-            logger.info(f"User '{username}' authenticated successfully")
+            logging.info(f"User '{username}' authenticated successfully")
             log_activity("user_login", {"username": username, "user_id": user.id})
             return user
 
     except Exception as e:
-        logger.error(f"Authentication error for user '{username}': {e}")
+        logging.error(f"Authentication error for user '{username}': {e}")
         return None
 
 
@@ -497,7 +497,7 @@ async def create_user(
     except ValidationError:
         raise
     except Exception as e:
-        logger.error(f"Failed to create user '{username}': {e}")
+        logging.error(f"Failed to create user '{username}': {e}")
         raise
 
 

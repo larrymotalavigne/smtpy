@@ -5,10 +5,17 @@ from pathlib import Path
 from typing import Optional, List
 from urllib.parse import urlparse
 
+from alembic.config import Config
 from fastapi import Request
 from pydantic import Field, field_validator, model_validator, ConfigDict
 from pydantic_settings import BaseSettings
 from starlette.templating import Jinja2Templates
+
+ALEMBIC_CONFIG = Config(os.path.realpath("alembic.ini"))
+ALEMBIC_CONFIG.set_main_option(
+    "script_location",
+    os.path.realpath("alembic"),
+)
 
 
 class Environment(str, Enum):

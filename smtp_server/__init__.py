@@ -14,6 +14,6 @@ def start_smtp_server(host="127.0.0.1", port=1025):
     handler = SMTPHandler()
     controller = Controller(handler, hostname=host, port=port)
     controller.start()
-    logger.info(f"SMTP server started on {host}:{port}")
+    logging.info(f"SMTP server started on {host}:{port}")
     print(f"SMTP server running on {host}:{port}")
     return controller

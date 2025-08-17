@@ -37,7 +37,7 @@ def log_activity(event_type: str, details: Dict[str, Any]) -> None:
             session.add(activity_log)
             session.commit()
     except Exception as e:
-        logger.error(f"Failed to log activity: {e}")
+        logging.error(f"Failed to log activity: {e}")
 
 
 def create_alias_record(session, **alias_data) -> Alias:
@@ -162,7 +162,7 @@ def create_alias(
     except (ValidationError, PermissionError):
         raise
     except Exception as e:
-        logger.error(f"Failed to create alias '{local_part}': {e}")
+        logging.error(f"Failed to create alias '{local_part}': {e}")
         raise
 
 
@@ -204,7 +204,7 @@ def get_user_aliases(
             return aliases
 
     except Exception as e:
-        logger.error(f"Failed to get aliases for user {user_id}: {e}")
+        logging.error(f"Failed to get aliases for user {user_id}: {e}")
         raise
 
 
@@ -270,7 +270,7 @@ def get_alias_with_details(
     except (ResourceNotFoundError, PermissionError):
         raise
     except Exception as e:
-        logger.error(f"Failed to get alias details for alias {alias_id}: {e}")
+        logging.error(f"Failed to get alias details for alias {alias_id}: {e}")
         raise
 
 
@@ -336,7 +336,7 @@ def update_alias(alias_id: int, user_id: int, user_role: str = "user", **kwargs)
     except (ResourceNotFoundError, PermissionError, ValidationError):
         raise
     except Exception as e:
-        logger.error(f"Failed to update alias {alias_id}: {e}")
+        logging.error(f"Failed to update alias {alias_id}: {e}")
         raise
 
 
@@ -376,7 +376,7 @@ def delete_alias(alias_id: int, user_id: int, user_role: str = "user") -> bool:
     except (ResourceNotFoundError, PermissionError):
         raise
     except Exception as e:
-        logger.error(f"Failed to delete alias {alias_id}: {e}")
+        logging.error(f"Failed to delete alias {alias_id}: {e}")
         raise
 
 
@@ -408,7 +408,7 @@ def get_expired_aliases(user_id: Optional[int] = None) -> List[Alias]:
             return expired_aliases
 
     except Exception as e:
-        logger.error(f"Failed to get expired aliases: {e}")
+        logging.error(f"Failed to get expired aliases: {e}")
         raise
 
 
@@ -466,7 +466,7 @@ def get_alias_statistics(user_id: int, user_role: str = "user") -> Dict[str, Any
             return stats
 
     except Exception as e:
-        logger.error(f"Failed to get alias statistics for user {user_id}: {e}")
+        logging.error(f"Failed to get alias statistics for user {user_id}: {e}")
         raise
 
 
@@ -546,7 +546,7 @@ def test_alias_forwarding(
     except (ResourceNotFoundError, PermissionError):
         raise
     except Exception as e:
-        logger.error(f"Failed to test alias forwarding for alias {alias_id}: {e}")
+        logging.error(f"Failed to test alias forwarding for alias {alias_id}: {e}")
         raise
 
 
@@ -605,7 +605,7 @@ def cleanup_expired_aliases(dry_run: bool = True) -> Dict[str, Any]:
             return cleanup_results
 
     except Exception as e:
-        logger.error(f"Failed to cleanup expired aliases: {e}")
+        logging.error(f"Failed to cleanup expired aliases: {e}")
         raise
 
 
