@@ -19,4 +19,4 @@ COPY . .
 # Expose ports
 EXPOSE 8000 1025
 
-CMD ["uv", "run", "main_combined.py"]
+CMD ["python", "main_combined.py"]

@@ -10,7 +10,21 @@ import sys
 import threading
 import time
 
-from smtp_server import start_smtp_server
+try:
+    from smtp_server import start_smtp_server
+except ImportError as e:
+    print(f"FATAL: Failed to import smtp_server: {e}")
+    print("This usually means dependencies are not installed correctly.")
+    sys.exit(1)
+
+# Initialize logging configuration
+logging.basicConfig(
+    level=logging.INFO,
+    format='%(asctime)s - %(name)s - %(levelname)s - %(message)s',
+    handlers=[
+        logging.StreamHandler(sys.stdout)
+    ]
+)
 
 logger = logging.getLogger("smtpy.combined")
 
