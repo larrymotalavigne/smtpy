@@ -11,7 +11,7 @@ from sqlalchemy.ext.asyncio import create_async_engine, AsyncSession, async_sess
 from sqlalchemy.orm import sessionmaker
 
 from config import SETTINGS
-from database.models import Base
+from database.models import Base, User, Domain, Alias, ForwardingRule, ActivityLog, Invitation
 
 try:
     import greenlet  # type: ignore
@@ -51,6 +51,8 @@ def init_db():
     """Initialize database by running alembic migrations and creating tables if needed."""
     logger = logging.getLogger("smtpy.database")
 
+    # Always try alembic first
+    alembic_success = False
     try:
         # Run alembic upgrade head to ensure database is up to date
         logger.info("Running alembic upgrade head...")
@@ -64,16 +66,18 @@ def init_db():
         logger.info("Alembic upgrade completed successfully")
         if result.stdout:
             logger.debug(f"Alembic output: {result.stdout}")
+        alembic_success = True
     except subprocess.CalledProcessError as e:
         logger.warning(f"Alembic upgrade failed: {e}")
         logger.warning(f"Alembic stderr: {e.stderr}")
-        logger.info("Falling back to creating tables directly with SQLAlchemy")
-        # Fallback to creating tables directly if alembic fails
-        Base.metadata.create_all(bind=engine)
     except FileNotFoundError:
-        logger.warning("Alembic command not found, falling back to creating tables directly with SQLAlchemy")
-        # Fallback if alembic is not available
-        Base.metadata.create_all(bind=engine)
+        logger.warning("Alembic command not found")
+    
+    # Always create tables with SQLAlchemy to ensure they exist
+    # This is safe to call even if tables already exist
+    logger.info("Ensuring all tables exist with SQLAlchemy...")
+    Base.metadata.create_all(bind=engine)
+    logger.info("Database initialization completed")
 
 
 @contextmanager
