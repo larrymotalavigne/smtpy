@@ -131,4 +131,3 @@ if __name__ == "__main__":
         logger.info("Received keyboard interrupt, shutting down...")
     except Exception as e:
         logger.error(f"Fatal error: {e}")
-        sys.exit(1)
