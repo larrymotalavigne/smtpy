@@ -10,12 +10,7 @@ import sys
 import threading
 import time
 
-try:
-    from smtp_server import start_smtp_server
-except ImportError as e:
-    print(f"FATAL: Failed to import smtp_server: {e}")
-    print("This usually means dependencies are not installed correctly.")
-    sys.exit(1)
+from smtp_server import start_smtp_server
 
 # Initialize logging configuration
 logging.basicConfig(
