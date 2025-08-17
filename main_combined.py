@@ -4,6 +4,7 @@ Combined entry point for running both FastAPI API server and SMTP server togethe
 This is designed for Docker containers where both services need to run in the same process.
 """
 import logging
+import os
 import signal
 import subprocess
 import sys
@@ -35,16 +36,44 @@ class CombinedServer:
         self.smtp_failed = threading.Event()
 
     def start_smtp(self):
-        """Start SMTP server in a separate thread."""
+        """Start SMTP server in a separate thread with isolated event loop."""
+        import asyncio
+        
+        def run_smtp_with_loop():
+            """Run SMTP server in its own event loop."""
+            # Create a new event loop for this thread
+            loop = asyncio.new_event_loop()
+            asyncio.set_event_loop(loop)
+            
+            try:
+                # Use 0.0.0.0 for Docker container accessibility
+                self.smtp_controller = start_smtp_server(host="0.0.0.0", port=1025)
+                logging.info("SMTP server started successfully")
+                self.smtp_ready.set()
+                
+                # Keep the event loop running until shutdown
+                while not self.shutdown_flag:
+                    time.sleep(0.1)
+                    
+            except Exception as e:
+                logging.error(f"Failed to start SMTP server: {e}")
+                self.smtp_failed.set()
+                self.shutdown_flag = True
+            finally:
+                # Properly close the event loop
+                try:
+                    if loop.is_running():
+                        loop.stop()
+                    if not loop.is_closed():
+                        loop.close()
+                except Exception as e:
+                    logging.error(f"Error closing SMTP event loop: {e}")
+        
         try:
-            # Use 0.0.0.0 for Docker container accessibility
-            self.smtp_controller = start_smtp_server(host="0.0.0.0", port=1025)
-            logging.info("SMTP server started successfully")
-            self.smtp_ready.set()
+            run_smtp_with_loop()
         except Exception as e:
-            logging.error(f"Failed to start SMTP server: {e}")
+            logging.error(f"Error in SMTP thread: {e}")
             self.smtp_failed.set()
-            # Set shutdown flag to terminate the main process if SMTP fails
             self.shutdown_flag = True
 
     def stop_smtp(self):
@@ -67,6 +96,7 @@ class CombinedServer:
         signal.signal(signal.SIGINT, self.signal_handler_sync)
         signal.signal(signal.SIGTERM, self.signal_handler_sync)
 
+        api_process = None
         try:
             # Start SMTP server in background thread
             smtp_thread = threading.Thread(target=self.start_smtp, daemon=True)
@@ -95,25 +125,45 @@ class CombinedServer:
                 "--host", "0.0.0.0",
                 "--port", "8000",
                 "--factory"
-            ])
+            ], 
+            # Prevent asyncio event loop inheritance issues
+            preexec_fn=None if sys.platform == "win32" else os.setsid,
+            # Close file descriptors to prevent conflicts
+            close_fds=True)
 
             # Keep process alive and monitor both services
             while not self.shutdown_flag:
                 # Check if API process is still running
-                if api_process.poll() is not None:
-                    logging.error("API server process died unexpectedly")
+                poll_result = api_process.poll()
+                if poll_result is not None:
+                    logging.error(f"API server process died unexpectedly with exit code {poll_result}")
+                    # Give some time for proper cleanup before breaking
+                    time.sleep(2)
                     break
                 time.sleep(1)
 
         except Exception as e:
             logging.error(f"Error in combined server: {e}")
-            raise
+            import traceback
+            logging.error(traceback.format_exc())
         finally:
-            # Clean shutdown
-            if 'api_process' in locals() and api_process.poll() is None:
-                logging.info("Terminating API server...")
-                api_process.terminate()
-                api_process.wait(timeout=5)
+            # Clean shutdown with proper process handling
+            if api_process is not None:
+                try:
+                    if api_process.poll() is None:
+                        logging.info("Terminating API server...")
+                        # Try graceful shutdown first
+                        api_process.terminate()
+                        try:
+                            api_process.wait(timeout=5)
+                        except subprocess.TimeoutExpired:
+                            logging.warning("API server didn't terminate gracefully, killing...")
+                            api_process.kill()
+                            api_process.wait(timeout=2)
+                except Exception as e:
+                    logging.error(f"Error during API server shutdown: {e}")
+                    
+            # Stop SMTP server
             self.stop_smtp()
             logging.info("Combined server shutdown complete")
 
