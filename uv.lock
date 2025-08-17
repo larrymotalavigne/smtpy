@@ -32,6 +32,20 @@ wheels = [
 ]
 
 [[package]]
+name = "alembic"
+version = "1.14.1"
+source = { registry = "https://pypi.org/simple" }
+dependencies = [
+    { name = "mako" },
+    { name = "sqlalchemy" },
+    { name = "typing-extensions" },
+]
+sdist = { url = "https://files.pythonhosted.org/packages/99/09/f844822e4e847a3f0bd41797f93c4674cd4d2462a3f6c459aa528cdf786e/alembic-1.14.1.tar.gz", hash = "sha256:496e888245a53adf1498fcab31713a469c65836f8de76e01399aa1c3e90dd213", size = 1918219, upload-time = "2025-01-19T23:15:30.12Z" }
+wheels = [
+    { url = "https://files.pythonhosted.org/packages/54/7e/ac0991d1745f7d755fc1cd381b3990a45b404b4d008fc75e2a983516fbfe/alembic-1.14.1-py3-none-any.whl", hash = "sha256:1acdd7a3a478e208b0503cd73614d5e4c6efafa4e73518bb60e4f2846a37b1c5", size = 233565, upload-time = "2025-01-19T23:15:32.523Z" },
+]
+
+[[package]]
 name = "annotated-types"
 version = "0.7.0"
 source = { registry = "https://pypi.org/simple" }
@@ -589,6 +603,18 @@ wheels = [
 ]
 
 [[package]]
+name = "mako"
+version = "1.3.10"
+source = { registry = "https://pypi.org/simple" }
+dependencies = [
+    { name = "markupsafe" },
+]
+sdist = { url = "https://files.pythonhosted.org/packages/9e/38/bd5b78a920a64d708fe6bc8e0a2c075e1389d53bef8413725c63ba041535/mako-1.3.10.tar.gz", hash = "sha256:99579a6f39583fa7e5630a28c3c1f440e4e97a414b80372649c0ce338da2ea28", size = 392474, upload-time = "2025-04-10T12:44:31.16Z" }
+wheels = [
+    { url = "https://files.pythonhosted.org/packages/87/fb/99f81ac72ae23375f22b7afdb7642aba97c00a713c217124420147681a2f/mako-1.3.10-py3-none-any.whl", hash = "sha256:baef24a52fc4fc514a0887ac600f9f1cff3d82c61d4d700a1fa84d597b88db59", size = 78509, upload-time = "2025-04-10T12:50:53.297Z" },
+]
+
+[[package]]
 name = "markupsafe"
 version = "3.0.2"
 source = { registry = "https://pypi.org/simple" }
@@ -1074,6 +1100,15 @@ wheels = [
 ]
 
 [[package]]
+name = "python-json-logger"
+version = "2.0.7"
+source = { registry = "https://pypi.org/simple" }
+sdist = { url = "https://files.pythonhosted.org/packages/4f/da/95963cebfc578dabd323d7263958dfb68898617912bb09327dd30e9c8d13/python-json-logger-2.0.7.tar.gz", hash = "sha256:23e7ec02d34237c5aa1e29a070193a4ea87583bb4e7f8fd06d3de8264c4b2e1c", size = 10508, upload-time = "2023-02-21T17:40:06.209Z" }
+wheels = [
+    { url = "https://files.pythonhosted.org/packages/35/a6/145655273568ee78a581e734cf35beb9e33a370b29c5d3c8fee3744de29f/python_json_logger-2.0.7-py3-none-any.whl", hash = "sha256:f380b826a991ebbe3de4d897aeec42760035ac760345e57b812938dc8b35e2bd", size = 8067, upload-time = "2023-02-21T17:40:05.117Z" },
+]
+
+[[package]]
 name = "python-multipart"
 version = "0.0.20"
 source = { registry = "https://pypi.org/simple" }
@@ -1182,6 +1217,7 @@ source = { editable = "." }
 dependencies = [
     { name = "aiosmtpd" },
     { name = "aiosqlite" },
+    { name = "alembic" },
     { name = "dkimpy" },
     { name = "dnspython" },
     { name = "fastapi" },
@@ -1191,6 +1227,7 @@ dependencies = [
     { name = "passlib", extra = ["bcrypt"] },
     { name = "psycopg", extra = ["binary", "pool"] },
     { name = "pydantic-settings" },
+    { name = "python-json-logger" },
     { name = "python-multipart" },
     { name = "sqlalchemy" },
     { name = "starlette" },
@@ -1214,6 +1251,7 @@ dev = [
 requires-dist = [
     { name = "aiosmtpd", specifier = "~=1.4.6" },
     { name = "aiosqlite", specifier = "~=0.20.0" },
+    { name = "alembic", specifier = "~=1.14.0" },
     { name = "black", marker = "extra == 'dev'", specifier = "~=24.10.0" },
     { name = "dkimpy", specifier = "~=1.1.8" },
     { name = "dnspython", specifier = "~=2.7.0" },
@@ -1230,6 +1268,7 @@ requires-dist = [
     { name = "pytest", marker = "extra == 'dev'", specifier = "~=8.4.1" },
     { name = "pytest-asyncio", marker = "extra == 'dev'", specifier = "~=0.24.0" },
     { name = "pytest-cov", marker = "extra == 'dev'", specifier = "~=6.0.0" },
+    { name = "python-json-logger", specifier = "~=2.0.7" },
     { name = "python-multipart", specifier = "~=0.0.17" },
     { name = "ruff", marker = "extra == 'dev'", specifier = "~=0.8.4" },
     { name = "sqlalchemy", specifier = "~=2.0.41" },

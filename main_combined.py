@@ -23,6 +23,8 @@ class CombinedServer:
         self.smtp_controller = None
         self.api_server = None
         self.shutdown_flag = False
+        self.smtp_ready = threading.Event()
+        self.smtp_failed = threading.Event()
         
     def start_smtp(self):
         """Start SMTP server in a separate thread."""
@@ -30,9 +32,12 @@ class CombinedServer:
             # Use 0.0.0.0 for Docker container accessibility
             self.smtp_controller = start_smtp_server(host="0.0.0.0", port=1025)
             logger.info("SMTP server started successfully")
+            self.smtp_ready.set()
         except Exception as e:
             logger.error(f"Failed to start SMTP server: {e}")
-            raise
+            self.smtp_failed.set()
+            # Set shutdown flag to terminate the main process if SMTP fails
+            self.shutdown_flag = True
             
     def stop_smtp(self):
         """Stop SMTP server."""
@@ -58,6 +63,21 @@ class CombinedServer:
             # Start SMTP server in background thread
             smtp_thread = threading.Thread(target=self.start_smtp, daemon=True)
             smtp_thread.start()
+            
+            # Wait for SMTP server to start or fail (max 10 seconds)
+            logger.info("Waiting for SMTP server to start...")
+            ready_events = [self.smtp_ready, self.smtp_failed]
+            for _ in range(100):  # 10 seconds total
+                if any(event.is_set() for event in ready_events):
+                    break
+                time.sleep(0.1)
+            
+            if self.smtp_failed.is_set():
+                logger.error("SMTP server failed to start, exiting...")
+                return
+            elif not self.smtp_ready.is_set():
+                logger.error("SMTP server startup timed out, exiting...")
+                return
             
             # Start API server using subprocess
             logger.info("Starting FastAPI server via subprocess...")

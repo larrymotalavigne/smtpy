@@ -19,31 +19,48 @@ def get_logging_config() -> Dict[str, Any]:
     # Determine if we're in production
     is_production = os.environ.get("SMTPY_ENV", "development").lower() == "production"
 
+    # Try to determine if JSON logging is available
+    json_formatter_available = False
+    try:
+        from pythonjsonlogger.jsonlogger import JsonFormatter
+        json_formatter_available = True
+    except ImportError:
+        # JSON logging not available, use detailed formatter instead
+        pass
+
+    formatters = {
+        "detailed": {
+            "format": "%(asctime)s - %(name)s - %(levelname)s - %(filename)s:%(lineno)d - %(message)s",
+            "datefmt": "%Y-%m-%d %H:%M:%S",
+        },
+        "simple": {"format": "%(levelname)s - %(name)s - %(message)s"},
+    }
+    
+    # Only add JSON formatter if available
+    if json_formatter_available:
+        formatters["json"] = {
+            "()": "pythonjsonlogger.jsonlogger.JsonFormatter",
+            "format": "%(asctime)s %(name)s %(levelname)s %(filename)s %(lineno)d %(message)s",
+        }
+
+    # Use JSON formatter in production if available, otherwise use detailed
+    production_formatter = "json" if (is_production and json_formatter_available) else "detailed"
+
     config = {
         "version": 1,
         "disable_existing_loggers": False,
-        "formatters": {
-            "detailed": {
-                "format": "%(asctime)s - %(name)s - %(levelname)s - %(filename)s:%(lineno)d - %(message)s",
-                "datefmt": "%Y-%m-%d %H:%M:%S",
-            },
-            "simple": {"format": "%(levelname)s - %(name)s - %(message)s"},
-            "json": {
-                "()": "pythonjsonlogger.jsonlogger.JsonFormatter",
-                "format": "%(asctime)s %(name)s %(levelname)s %(filename)s %(lineno)d %(message)s",
-            },
-        },
+        "formatters": formatters,
         "handlers": {
             "console": {
                 "class": "logging.StreamHandler",
                 "level": log_level,
-                "formatter": "json" if is_production else "detailed",
+                "formatter": production_formatter,
                 "stream": sys.stdout,
             },
             "file": {
                 "class": "logging.handlers.RotatingFileHandler",
                 "level": log_level,
-                "formatter": "json" if is_production else "detailed",
+                "formatter": production_formatter,
                 "filename": os.environ.get("SMTPY_LOG_FILE", "smtpy.log"),
                 "maxBytes": 10485760,  # 10MB
                 "backupCount": 5,
