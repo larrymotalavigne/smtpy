@@ -80,3 +80,40 @@ jobs:
             docker login registry.atomdev.fr -u ${{ secrets.REGISTRY_USERNAME }} -p ${{ secrets.REGISTRY_PASSWORD }}
             docker compose pull
             docker compose up -d --remove-orphans
+
+  health-check:
+    needs: deploy
+    runs-on: ubuntu-latest
+    if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+    steps:
+      - name: Health Check Services
+        uses: appleboy/ssh-action@v1.0.3
+        with:
+          host: ${{ secrets.UNRAID_SSH_HOST }}
+          port: 2345
+          username: ${{ secrets.UNRAID_SSH_USER }}
+          key: ${{ secrets.UNRAID_SSH_KEY }}
+          script: |
+            # Wait for services to start
+            echo "Waiting for services to start..."
+            sleep 10
+            
+            # Check if API is running and responding
+            echo "Checking API health..."
+            if curl -f -s http://smtpy.fr/ > /dev/null; then
+              echo "✅ API is running and responding on port 1001"
+            else
+              echo "❌ API health check failed"
+              exit 1
+            fi
+            
+            # Check if SMTP server is running
+            echo "Checking SMTP server..."
+            if nc -z smtp.smtpy.fr 1025; then
+              echo "✅ SMTP server is running and listening on port 1025"
+            else
+              echo "❌ SMTP server health check failed"
+              exit 1
+            fi
+            
+            echo "🎉 All services are running successfully!"

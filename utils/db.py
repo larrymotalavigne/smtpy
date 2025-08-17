@@ -1,5 +1,7 @@
 from config import SETTINGS
 import asyncio
+import os
+import subprocess
 from contextlib import contextmanager, asynccontextmanager
 from typing import Annotated, Optional
 
@@ -9,6 +11,7 @@ from sqlalchemy.ext.asyncio import create_async_engine, AsyncSession, async_sess
 from sqlalchemy.orm import sessionmaker
 
 from database.models import Base
+from utils.logging_config import get_logger
 
 try:
     import greenlet  # type: ignore
@@ -43,7 +46,32 @@ AsyncSessionLocal = async_sessionmaker(
 
 
 def init_db():
-    Base.metadata.create_all(bind=engine)
+    """Initialize database by running alembic migrations and creating tables if needed."""
+    logger = get_logger("database")
+    
+    try:
+        # Run alembic upgrade head to ensure database is up to date
+        logger.info("Running alembic upgrade head...")
+        result = subprocess.run(
+            ["alembic", "upgrade", "head"],
+            cwd=os.path.dirname(os.path.dirname(__file__)),  # Go to project root
+            capture_output=True,
+            text=True,
+            check=True
+        )
+        logger.info("Alembic upgrade completed successfully")
+        if result.stdout:
+            logger.debug(f"Alembic output: {result.stdout}")
+    except subprocess.CalledProcessError as e:
+        logger.warning(f"Alembic upgrade failed: {e}")
+        logger.warning(f"Alembic stderr: {e.stderr}")
+        logger.info("Falling back to creating tables directly with SQLAlchemy")
+        # Fallback to creating tables directly if alembic fails
+        Base.metadata.create_all(bind=engine)
+    except FileNotFoundError:
+        logger.warning("Alembic command not found, falling back to creating tables directly with SQLAlchemy")
+        # Fallback if alembic is not available
+        Base.metadata.create_all(bind=engine)
 
 @contextmanager
 def get_db():

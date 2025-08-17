@@ -1,13 +1,25 @@
 from logging.config import fileConfig
+import os
+import sys
 
 from sqlalchemy import engine_from_config
 from sqlalchemy import pool
 
 from alembic import context
 
+# Add project root to path to import config
+sys.path.append(os.path.dirname(os.path.dirname(__file__)))
+from config import SETTINGS
+
 # this is the Alembic Config object, which provides
 # access to the values within the .ini file in use.
 config = context.config
+
+# Override the sqlalchemy.url from the config file with the application's DATABASE_URL
+if SETTINGS.DATABASE_URL:
+    config.set_main_option("sqlalchemy.url", SETTINGS.DATABASE_URL)
+else:
+    config.set_main_option("sqlalchemy.url", f"sqlite:///{SETTINGS.DB_PATH}")
 
 # Interpret the config file for Python logging.
 # This line sets up loggers basically.
