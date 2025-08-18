@@ -87,6 +87,23 @@ async def lifespan(app: FastAPI):
 
     # Validate configuration
     validate_configuration()
+    
+    # Log key configuration for debugging
+    logging.info(f"Environment: {SETTINGS.ENVIRONMENT.value}")
+    logging.info(f"Debug mode: {SETTINGS.DEBUG}")
+    logging.info(f"Log level: {SETTINGS.LOG_LEVEL}")
+    
+    # Log database configuration summary
+    if SETTINGS.DATABASE_URL:
+        if SETTINGS.DATABASE_URL.startswith("postgresql://") or SETTINGS.DATABASE_URL.startswith("postgresql+"):
+            db_type = "PostgreSQL"
+        elif SETTINGS.DATABASE_URL.startswith("sqlite://"):
+            db_type = "SQLite"
+        else:
+            db_type = "Unknown"
+        logging.info(f"Database: {db_type} (from DATABASE_URL)")
+    else:
+        logging.info(f"Database: SQLite (from DB_PATH: {SETTINGS.DB_PATH})")
 
     # Initialize database and create default admin
     init_db()

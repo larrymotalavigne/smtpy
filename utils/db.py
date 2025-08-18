@@ -20,15 +20,34 @@ except Exception:  # pragma: no cover - test env may not have greenlet
     _GREENLET_AVAILABLE = False
 
 # Database URL configuration
+logger = logging.getLogger("smtpy.db")
+
 if SETTINGS.DATABASE_URL:
     DATABASE_URL = SETTINGS.DATABASE_URL
     # For async URL, convert postgres:// to postgresql+psycopg://
     ASYNC_DATABASE_URL = DATABASE_URL.replace("postgresql://", "postgresql+psycopg://", 1) if DATABASE_URL.startswith(
         "postgresql://") else DATABASE_URL
+    
+    # Detect database type for logging
+    if DATABASE_URL.startswith("postgresql://") or DATABASE_URL.startswith("postgresql+"):
+        db_type = "PostgreSQL"
+    elif DATABASE_URL.startswith("sqlite://"):
+        db_type = "SQLite"
+    else:
+        db_type = "Unknown"
+    
+    logger.info(f"Database URL configuration: Using {db_type} database")
+    logger.debug(f"Sync database URL: {DATABASE_URL}")
+    logger.debug(f"Async database URL: {ASYNC_DATABASE_URL}")
 else:
     DB_PATH = SETTINGS.DB_PATH
     DATABASE_URL = f"sqlite:///{DB_PATH}"
     ASYNC_DATABASE_URL = f"sqlite+aiosqlite:///{DB_PATH}"
+    
+    logger.info(f"Database URL configuration: Using SQLite database (default)")
+    logger.debug(f"SQLite path: {DB_PATH}")
+    logger.debug(f"Sync database URL: {DATABASE_URL}")
+    logger.debug(f"Async database URL: {ASYNC_DATABASE_URL}")
 
 # Sync database setup (default for app and tests)
 connect_args = {"check_same_thread": False} if DATABASE_URL.startswith("sqlite://") else {}

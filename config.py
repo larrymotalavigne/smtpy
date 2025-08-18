@@ -181,7 +181,25 @@ class Settings(BaseSettings):
     @model_validator(mode="after")
     def validate_environment_specific_settings(self) -> "Settings":
         """Validate environment-specific settings."""
+        import logging
+        logger = logging.getLogger("smtpy.config")
+        
         env = self.ENVIRONMENT
+        
+        # Log database configuration
+        if self.DATABASE_URL:
+            # Detect database type for logging
+            if self.DATABASE_URL.startswith("postgresql://") or self.DATABASE_URL.startswith("postgresql+"):
+                db_type = "PostgreSQL"
+            elif self.DATABASE_URL.startswith("sqlite://"):
+                db_type = "SQLite"
+            else:
+                db_type = "Unknown"
+            logger.info(f"Database configuration: Using {db_type} from DATABASE_URL")
+            logger.debug(f"Database URL: {self.DATABASE_URL}")
+        else:
+            logger.info(f"Database configuration: Using SQLite with DB_PATH")
+            logger.debug(f"SQLite path: {self.DB_PATH}")
 
         if env == Environment.PRODUCTION:
             # Production-specific validations

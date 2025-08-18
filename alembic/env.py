@@ -15,13 +15,30 @@ config = context.config
 
 # Override the sqlalchemy.url from the config file with the application's DATABASE_URL
 # Read environment variables directly to ensure we get the current values
+import logging
+logger = logging.getLogger("alembic.env")
+
 database_url = os.getenv("SMTPY_DATABASE_URL")
 if database_url:
+    # Detect database type for logging
+    if database_url.startswith("postgresql://") or database_url.startswith("postgresql+"):
+        db_type = "PostgreSQL"
+    elif database_url.startswith("sqlite://"):
+        db_type = "SQLite"
+    else:
+        db_type = "Unknown"
+    
+    logger.info(f"Using {db_type} database from SMTPY_DATABASE_URL environment variable")
+    logger.debug(f"Database URL: {database_url}")
     config.set_main_option("sqlalchemy.url", database_url)
 else:
     # Fall back to SQLite with default or configured path
     db_path = os.getenv("SMTPY_DB_PATH", "smtpy.db")
-    config.set_main_option("sqlalchemy.url", f"sqlite:///{db_path}")
+    sqlite_url = f"sqlite:///{db_path}"
+    logger.info(f"Using SQLite database (default fallback)")
+    logger.debug(f"SQLite path: {db_path}")
+    logger.debug(f"Database URL: {sqlite_url}")
+    config.set_main_option("sqlalchemy.url", sqlite_url)
 
 # Interpret the config file for Python logging.
 # This line sets up loggers basically.
