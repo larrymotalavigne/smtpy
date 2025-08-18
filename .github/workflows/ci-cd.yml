@@ -40,14 +40,23 @@ jobs:
           username: ${{ secrets.REGISTRY_USERNAME }}
           password: ${{ secrets.REGISTRY_PASSWORD }}
 
-      - name: Build and push Docker image
+      - name: Build and push SMTP Docker image
         uses: docker/build-push-action@v5
         with:
-          context: .
+          context: ./back/smtp
           push: true
           tags: |
-            registry.atomdev.fr/smtpy:${{ github.sha }}
-            registry.atomdev.fr/smtpy:latest
+            registry.atomdev.fr/smtpy-smtp:${{ github.sha }}
+            registry.atomdev.fr/smtpy-smtp:latest
+
+      - name: Build and push API Docker image
+        uses: docker/build-push-action@v5
+        with:
+          context: ./back/api
+          push: true
+          tags: |
+            registry.atomdev.fr/smtpy-api:${{ github.sha }}
+            registry.atomdev.fr/smtpy-api:latest
 
   deploy:
     needs: build-and-push

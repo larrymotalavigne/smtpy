@@ -1,12 +1,28 @@
 services:
-  app:
-    container_name: smtpy
-    image: registry.atomdev.fr/smtpy:latest
+  smtp:
+    container_name: smtpy-smtp
+    image: registry.atomdev.fr/smtpy-smtp:latest
+    build:
+      context: ./back/smtp
     environment:
       - SMTPY_DATABASE_URL=postgresql://postgres:postgres@192.168.10.111:5432/smtpy
       - SMTP_RELAY=localhost
       - SMTP_PORT=1025
     ports:
-      - "1001:8000"
       - "1025:1025"
     restart: unless-stopped
+
+  api:
+    container_name: smtpy-api
+    image: registry.atomdev.fr/smtpy-api:latest
+    build:
+      context: ./back/api
+    environment:
+      - SMTPY_DATABASE_URL=postgresql://postgres:postgres@192.168.10.111:5432/smtpy
+      - SMTP_HOST=smtp
+      - SMTP_PORT=1025
+    ports:
+      - "1001:8000"
+    restart: unless-stopped
+    depends_on:
+      - smtp

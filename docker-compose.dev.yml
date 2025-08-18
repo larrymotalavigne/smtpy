@@ -1,16 +1,29 @@
 services:
-  app:
+  smtp:
     image: python:3.13-slim
     working_dir: /app
     volumes:
-      - ./:/app
-    command: bash -c "pip install uv && uv sync && python main_combined.py"
+      - ./back/smtp:/app
+    command: bash -c "pip install uv && uv sync && source .venv/bin/activate && python main.py"
     environment:
       - SMTPY_DB_PATH=/app/dev.db
       - SMTP_HOST=localhost
       - SMTP_PORT=1025
     ports:
-      - "8000:8000"
       - "1025:1025"
-    depends_on: [ ]
-    # Add more dev dependencies/services as needed 
+
+  api:
+    image: python:3.13-slim
+    working_dir: /app
+    volumes:
+      - ./back/api:/app
+    command: bash -c "pip install uv && uv sync && source .venv/bin/activate && uvicorn main:create_app --host 0.0.0.0 --port 8000 --factory --reload"
+    environment:
+      - SMTPY_DB_PATH=/app/dev.db
+      - SMTP_HOST=smtp
+      - SMTP_PORT=1025
+    ports:
+      - "8000:8000"
+    depends_on:
+      - smtp
+    # Add more dev dependencies/services as needed
