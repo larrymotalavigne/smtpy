@@ -11,10 +11,13 @@ from pydantic import Field, field_validator, model_validator, ConfigDict
 from pydantic_settings import BaseSettings
 from starlette.templating import Jinja2Templates
 
-ALEMBIC_CONFIG = Config(os.path.realpath("alembic.ini"))
+# Get the directory where this config.py file is located
+_CONFIG_DIR = Path(__file__).parent
+
+ALEMBIC_CONFIG = Config(str(_CONFIG_DIR / "alembic.ini"))
 ALEMBIC_CONFIG.set_main_option(
     "script_location",
-    os.path.realpath("alembic"),
+    str(_CONFIG_DIR / "alembic"),
 )
 
 
