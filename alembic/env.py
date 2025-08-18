@@ -8,17 +8,20 @@ from sqlalchemy import pool
 
 # Add project root to path to import config
 sys.path.append(os.path.dirname(os.path.dirname(__file__)))
-from config import SETTINGS
 
 # this is the Alembic Config object, which provides
 # access to the values within the .ini file in use.
 config = context.config
 
 # Override the sqlalchemy.url from the config file with the application's DATABASE_URL
-if SETTINGS.DATABASE_URL:
-    config.set_main_option("sqlalchemy.url", SETTINGS.DATABASE_URL)
+# Read environment variables directly to ensure we get the current values
+database_url = os.getenv("SMTPY_DATABASE_URL")
+if database_url:
+    config.set_main_option("sqlalchemy.url", database_url)
 else:
-    config.set_main_option("sqlalchemy.url", f"sqlite:///{SETTINGS.DB_PATH}")
+    # Fall back to SQLite with default or configured path
+    db_path = os.getenv("SMTPY_DB_PATH", "smtpy.db")
+    config.set_main_option("sqlalchemy.url", f"sqlite:///{db_path}")
 
 # Interpret the config file for Python logging.
 # This line sets up loggers basically.

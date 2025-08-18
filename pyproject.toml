@@ -38,6 +38,8 @@ dev = [
     "ruff~=0.8.4",
     "mypy~=1.13.0",
     "pre-commit~=4.0.1",
+    "testcontainers~=4.8.2",
+    "psycopg2-binary~=2.9.9",
 ]
 
 [tool.uv]
