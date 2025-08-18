@@ -3,7 +3,8 @@ services:
     container_name: smtpy-smtp
     image: registry.atomdev.fr/smtpy-smtp:latest
     build:
-      context: ./back/smtp
+      context: .
+      dockerfile: ./back/smtp/Dockerfile
     environment:
       - SMTPY_DATABASE_URL=postgresql://postgres:postgres@192.168.10.111:5432/smtpy
       - SMTP_RELAY=localhost
@@ -16,7 +17,8 @@ services:
     container_name: smtpy-api
     image: registry.atomdev.fr/smtpy-api:latest
     build:
-      context: ./back/api
+      context: .
+      dockerfile: ./back/api/Dockerfile
     environment:
       - SMTPY_DATABASE_URL=postgresql://postgres:postgres@192.168.10.111:5432/smtpy
       - SMTP_HOST=smtp

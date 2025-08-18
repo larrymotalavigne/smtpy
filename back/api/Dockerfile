@@ -6,7 +6,7 @@ WORKDIR /app
 RUN apt-get update && apt-get clean
 
 # Install uv and Python dependencies first for better caching
-COPY pyproject.toml uv.lock ./
+COPY ./pyproject.toml ./uv.lock ./
 RUN pip install uv
 RUN uv sync --frozen
 
@@ -14,7 +14,8 @@ RUN uv sync --frozen
 ENV PATH="/app/.venv/bin:$PATH"
 
 # Copy the rest of the application code
-COPY . .
+COPY ./back/api/ ./
+COPY ./back/core/ ./back/core/
 
 # Expose API port only
 EXPOSE 8000
