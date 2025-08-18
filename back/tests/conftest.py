@@ -11,7 +11,7 @@ from back.api.database.models import Base
 @pytest.fixture(scope="session", autouse=True)
 def setup_test_db():
     # Start PostgreSQL container
-    postgres = PostgresContainer("postgres:15-alpine")
+    postgres = PostgresContainer("postgres:15-alpine", driver="psycopg")
     postgres.start()
     
     try:
