@@ -1,11 +1,11 @@
 """Domain controller for domain management operations."""
 
 import logging
-from datetime import datetime
+from datetime import datetime, UTC
 from typing import List, Optional, Dict, Any
 
-from back.api.database import domain_database
-from back.api.database.models import Domain
+from back.core.database import domain_database
+from back.core.database.models import Domain
 from back.core.utils.db import get_db
 
 
@@ -15,8 +15,8 @@ def log_activity(event_type: str, details: Dict[str, Any]) -> None:
         with get_db() as session:
             activity_log = ActivityLog(
                 event_type=event_type,
-                timestamp=datetime.utcnow(),
-                details=str(details),
+                timestamp=datetime.now(UTC),
+                message=str(details),
                 status="success"
             )
             session.add(activity_log)
@@ -431,13 +431,13 @@ from back.core.utils.error_handling import (
     ValidationError,
     ResourceNotFoundError,
 )
-from back.api.database.models import Domain, ActivityLog
+from back.core.database.models import Domain, ActivityLog
 from back.core.utils.validation import validate_domain_name, validate_email
 from back.core.utils.soft_delete import get_active_domains, soft_delete_domain
 from back.api.controllers.dns_controller import check_dns_records
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy import select
-from back.api.database.domain_database import (
+from back.core.database.domain_database import (
     db_get_user_by_id,
     db_get_active_domain_by_name,
     db_list_user_domains,
@@ -920,9 +920,9 @@ async def activity_stats_simple(session: AsyncSession) -> Dict[str, List[int]]:
         ActivityLog.timestamp >= (select(ActivityLog.timestamp).scalar_subquery())
     )
     # Simpler approach: fetch last 30 days in Python using now - 30d
-    from datetime import datetime, timedelta
+    from datetime import timedelta
 
-    cutoff = datetime.utcnow() - timedelta(days=30)
+    cutoff = datetime.now(UTC) - timedelta(days=30)
     result = await session.execute(select(ActivityLog).where(ActivityLog.timestamp >= cutoff))
     logs = list(result.scalars().all())
     from collections import defaultdict

@@ -3,17 +3,22 @@ from unittest.mock import patch
 import pytest
 from sqlalchemy import create_engine
 from sqlalchemy.orm import sessionmaker, clear_mappers
+from testcontainers.postgres import PostgresContainer
 
 from back.core.database.models import Base, User, Domain, Alias, ActivityLog, ForwardingRule, Invitation
 
 
 @pytest.fixture(scope="session", autouse=True)
 def setup_test_db():
-    # Use file-based SQLite database for better compatibility
-    test_database_url = "sqlite:///test_database.db"
+    # Start PostgreSQL container
+    postgres_container = PostgresContainer("postgres:15")
+    postgres_container.start()
     
-    # Create test engine with better isolation
-    test_engine = create_engine(test_database_url, connect_args={"check_same_thread": False}, echo=False)
+    # Get connection URL from container
+    test_database_url = postgres_container.get_connection_url(driver="psycopg")
+    
+    # Create test engine
+    test_engine = create_engine(test_database_url, echo=False)
     TestSession = sessionmaker(autocommit=False, autoflush=False, expire_on_commit=False, bind=test_engine)
     
     # Patch db module directly - store original values
@@ -40,14 +45,12 @@ def setup_test_db():
         mock_csrf.return_value = None
         yield
         
-    # Clean up test database file and restore original db settings
+    # Clean up test database and restore original db settings
     Base.metadata.drop_all(test_engine)
     test_engine.dispose()
     
-    # Remove test database file
-    import os
-    if os.path.exists("test_database.db"):
-        os.remove("test_database.db")
+    # Stop PostgreSQL container
+    postgres_container.stop()
         
     db.engine = original_engine
     db.SessionLocal = original_session
