@@ -13,7 +13,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.orm import selectinload
 from sqlalchemy.sql.functions import count
 
-from .models import Domain, User
+from back.core.database.models import Domain, User
 
 
 async def db_get_domain_by_id(session: AsyncSession, domain_id: int) -> Optional[Domain]:

@@ -12,7 +12,7 @@ from typing import List, Optional
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from .models import Alias
+from back.core.database.models import Alias
 
 
 async def db_list_aliases(session: AsyncSession, domain_id: Optional[int] = None) -> List[Alias]:

@@ -1,10 +1,10 @@
 import uuid
-from datetime import datetime, timedelta
+from datetime import datetime, timedelta, UTC
 
 import pytest
 from sqlalchemy.exc import IntegrityError
 
-from back.api.database.models import User, Domain, Alias, ForwardingRule, ActivityLog, Invitation
+from back.core.database.models import User, Domain, Alias, ForwardingRule, ActivityLog, Invitation
 from back.core.utils.db import get_db
 
 
@@ -60,7 +60,7 @@ class TestUserModel:
 
             # Soft delete
             user.is_deleted = True
-            user.deleted_at = datetime.utcnow()
+            user.deleted_at = datetime.now(UTC)
             session.commit()
 
             assert user.is_deleted is True
@@ -166,7 +166,7 @@ class TestAliasModel:
                 targets="target1@example.com,target2@example.com",
                 domain_id=domain.id,
                 owner_id=user.id,
-                expires_at=datetime.utcnow() + timedelta(days=30),
+                expires_at=datetime.now(UTC) + timedelta(days=30),
             )
             session.add(alias)
             session.commit()
@@ -224,7 +224,7 @@ class TestAliasModel:
                 targets="test@example.com",
                 domain_id=domain.id,
                 owner_id=user.id,
-                expires_at=datetime.utcnow() - timedelta(days=1),
+                expires_at=datetime.now(UTC) - timedelta(days=1),
             )
 
             # Non-expired alias
@@ -233,14 +233,14 @@ class TestAliasModel:
                 targets="test@example.com",
                 domain_id=domain.id,
                 owner_id=user.id,
-                expires_at=datetime.utcnow() + timedelta(days=30),
+                expires_at=datetime.now(UTC) + timedelta(days=30),
             )
 
             session.add_all([expired_alias, active_alias])
             session.commit()
 
-            assert expired_alias.expires_at < datetime.utcnow()
-            assert active_alias.expires_at > datetime.utcnow()
+            assert expired_alias.expires_at < datetime.now(UTC)
+            assert active_alias.expires_at > datetime.now(UTC)
 
 
 class TestForwardingRuleModel:
@@ -354,7 +354,7 @@ class TestInvitationModel:
             invitation = Invitation(
                 email=f"{unique_name('newuser')}@example.com",
                 token=unique_name("invitation_token"),
-                expires_at=datetime.utcnow() + timedelta(days=7),
+                expires_at=datetime.now(UTC) + timedelta(days=7),
                 invited_by=inviter.id,
             )
             session.add(invitation)
@@ -362,7 +362,7 @@ class TestInvitationModel:
 
             assert invitation.id is not None
             assert "@example.com" in invitation.email
-            assert invitation.expires_at > datetime.utcnow()
+            assert invitation.expires_at > datetime.now(UTC)
             assert invitation.invited_by == inviter.id
             assert invitation.created_at is not None
 
@@ -377,13 +377,13 @@ class TestInvitationModel:
             inv1 = Invitation(
                 email=f"{unique_name('user1')}@example.com",
                 token=duplicate_token,
-                expires_at=datetime.utcnow() + timedelta(days=7),
+                expires_at=datetime.now(UTC) + timedelta(days=7),
                 invited_by=inviter.id,
             )
             inv2 = Invitation(
                 email=f"{unique_name('user2')}@example.com",
                 token=duplicate_token,
-                expires_at=datetime.utcnow() + timedelta(days=7),
+                expires_at=datetime.now(UTC) + timedelta(days=7),
                 invited_by=inviter.id,
             )
 
@@ -405,7 +405,7 @@ class TestInvitationModel:
             invitation = Invitation(
                 email=f"{unique_name('newuser')}@example.com",
                 token=unique_name("token"),
-                expires_at=datetime.utcnow() + timedelta(days=7),
+                expires_at=datetime.now(UTC) + timedelta(days=7),
                 invited_by=inviter.id,
             )
             session.add(invitation)

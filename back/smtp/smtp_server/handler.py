@@ -1,13 +1,13 @@
 import logging
 import os
 import re
-from datetime import datetime
+from datetime import datetime, UTC
 from email.message import EmailMessage
 
 from aiosmtpd.handlers import AsyncMessage
 
 import back.smtp.forwarding.forwarder
-from back.smtp.database.models import Domain, Alias, ActivityLog
+from back.core.database.models import Domain, Alias, ActivityLog
 from back.core.utils.db import get_async_session
 from back.core.utils.validation import validate_email, ValidationError
 
@@ -30,7 +30,7 @@ class SMTPHandler(AsyncMessage):
             return []
         local, domain_name = match.groups()
 
-        now = datetime.utcnow()
+        now = datetime.now(UTC)
         async with get_async_session() as session:
             # Use async queries with proper await
             from sqlalchemy import select
@@ -63,7 +63,7 @@ class SMTPHandler(AsyncMessage):
                         )
                         alias_result2 = await session.execute(alias_query2)
                         alias2 = alias_result2.scalar_one_or_none()
-                        if alias2 and (alias2.expires_at is None or alias2.expires_at > now):
+                        if alias2 and (alias2.expires_at is None or alias2.expires_at.replace(tzinfo=UTC) > now):
                             validated_targets = []
                             for target in alias2.targets.split(","):
                                 target = target.strip()
@@ -97,7 +97,7 @@ class SMTPHandler(AsyncMessage):
             alias_result = await session.execute(alias_query)
             alias = alias_result.scalar_one_or_none()
 
-            if alias and (alias.expires_at is None or alias.expires_at > now):
+            if alias and (alias.expires_at is None or alias.expires_at.replace(tzinfo=UTC) > now):
                 # Validate each target email address
                 validated_targets = []
                 for target in alias.targets.split(","):

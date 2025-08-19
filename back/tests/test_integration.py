@@ -1,12 +1,12 @@
 """Integration tests for email forwarding functionality."""
 
-from datetime import datetime, timedelta
+from datetime import datetime, timedelta, UTC
 from email.message import EmailMessage
 from unittest.mock import patch, MagicMock
 
 import pytest
 
-from back.api.database.models import User, Domain, Alias, ActivityLog
+from back.core.database.models import User, Domain, Alias, ActivityLog
 from back.smtp.smtp_server.handler import SMTPHandler
 from back.core.utils.db import get_db
 
@@ -100,7 +100,7 @@ class TestEmailForwardingIntegration:
                 targets="expired@external.com",
                 domain_id=self.test_domain.id,
                 owner_id=self.test_user.id,
-                expires_at=datetime.utcnow() - timedelta(days=1),
+                expires_at=datetime.now(UTC) - timedelta(days=1),
             )
             session.add(expired_alias)
             session.commit()

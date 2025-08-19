@@ -18,7 +18,7 @@ from back.api.controllers.domain_controller import (
     get_dns_status_simple,
     activity_stats_simple,
 )
-from back.api.database.models import Domain, Alias, ActivityLog
+from back.core.database.models import Domain, Alias, ActivityLog
 from back.core.utils.csrf import validate_csrf
 from back.core.utils.db import adbDep
 from back.core.utils.user import require_login, get_current_user

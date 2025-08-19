@@ -9,7 +9,7 @@ from starlette.middleware.base import BaseHTTPMiddleware
 from starlette.middleware.sessions import SessionMiddleware
 
 from back.core.config import SETTINGS, validate_configuration
-from back.api.database.models import User
+from back.core.database.models import User
 from back.core.utils.db import get_db, init_db
 from back.core.utils.error_handling import ErrorHandlingMiddleware
 from back.api.views import domain_view, alias_view, billing_view, user_view, main_view

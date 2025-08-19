@@ -2,7 +2,7 @@
 
 from typing import Optional, List
 
-from back.api.database.models import User, Invitation
+from back.core.database.models import User, Invitation
 from back.api.views.main_view import pwd_context
 
 
@@ -180,12 +180,12 @@ def create_invitation(email: str, invited_by_id: int) -> Invitation:
 
             # Check if invitation already exists
             existing_invitation = db_get_invitation_by_email(session, email)
-            if existing_invitation and existing_invitation.expires_at > datetime.utcnow():
+            if existing_invitation and existing_invitation.expires_at > datetime.now(UTC):
                 raise ValidationError(f"Invitation already sent to '{email}'")
 
             # Create invitation
             token = secrets.token_urlsafe(32)
-            expires_at = datetime.utcnow() + timedelta(hours=24)
+            expires_at = datetime.now(UTC) + timedelta(hours=24)
 
             invitation = db_create_invitation(
                 session, email=email, token=token, expires_at=expires_at, invited_by=invited_by_id
@@ -220,7 +220,7 @@ def get_user_by_invitation_token(token: str) -> Optional[Invitation]:
             if not invitation:
                 return None
 
-            if invitation.expires_at < datetime.utcnow():
+            if invitation.expires_at < datetime.now(UTC):
                 logging.warning(f"Invitation token expired for email '{invitation.email}'")
                 return None
 
@@ -358,7 +358,7 @@ def get_all_users(current_user_role: str) -> List[User]:
 """User controller for authentication and user management."""
 
 import secrets
-from datetime import datetime, timedelta
+from datetime import datetime, timedelta, UTC
 from typing import Optional, List
 
 from utils.error_handling import (
@@ -556,12 +556,12 @@ def create_invitation(email: str, invited_by_id: int) -> Invitation:
 
             # Check if invitation already exists
             existing_invitation = db_get_invitation_by_email(session, email)
-            if existing_invitation and existing_invitation.expires_at > datetime.utcnow():
+            if existing_invitation and existing_invitation.expires_at > datetime.now(UTC):
                 raise ValidationError(f"Invitation already sent to '{email}'")
 
             # Create invitation
             token = secrets.token_urlsafe(32)
-            expires_at = datetime.utcnow() + timedelta(hours=24)
+            expires_at = datetime.now(UTC) + timedelta(hours=24)
 
             invitation = db_create_invitation(
                 session, email=email, token=token, expires_at=expires_at, invited_by=invited_by_id
@@ -596,7 +596,7 @@ def get_user_by_invitation_token(token: str) -> Optional[Invitation]:
             if not invitation:
                 return None
 
-            if invitation.expires_at < datetime.utcnow():
+            if invitation.expires_at < datetime.now(UTC):
                 logger.warning(f"Invitation token expired for email '{invitation.email}'")
                 return None
 

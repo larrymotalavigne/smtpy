@@ -1,5 +1,5 @@
 import os
-from datetime import datetime, timedelta
+from datetime import datetime, timedelta, UTC
 
 from fastapi import APIRouter, Request, HTTPException, BackgroundTasks, Form, Depends
 from fastapi.responses import HTMLResponse
@@ -9,9 +9,9 @@ from passlib.hash import bcrypt
 from sqlalchemy.orm import selectinload, Session
 from starlette.responses import RedirectResponse
 
-from back.core.config import template_response
 from back.api.controllers import dns_controller
-from back.api.database.models import User, Domain, Alias, ActivityLog
+from back.core.config import template_response
+from back.core.database.models import User, Domain, Alias, ActivityLog
 from back.core.utils.csrf import validate_csrf
 from back.core.utils.db import get_db_dep
 from back.core.utils.error_handling import ValidationError
@@ -333,7 +333,7 @@ def health_check():
         content={
             "status": "healthy",
             "service": "smtpy",
-            "timestamp": datetime.utcnow().isoformat(),
+            "timestamp": datetime.now(UTC).isoformat(),
         },
     )
 
@@ -351,7 +351,7 @@ def readiness_check(session: Session = Depends(get_db_dep)):
                 "status": "ready",
                 "service": "smtpy",
                 "database": "connected",
-                "timestamp": datetime.utcnow().isoformat(),
+                "timestamp": datetime.now(UTC).isoformat(),
             },
         )
     except Exception as e:
@@ -362,7 +362,7 @@ def readiness_check(session: Session = Depends(get_db_dep)):
                 "service": "smtpy",
                 "database": "disconnected",
                 "error": str(e),
-                "timestamp": datetime.utcnow().isoformat(),
+                "timestamp": datetime.now(UTC).isoformat(),
             },
         )
 
@@ -379,7 +379,7 @@ def api_dns_check_root(domain: str):
 def api_activity_stats_root(session: Session = Depends(get_db)):
     from collections import defaultdict
 
-    cutoff = datetime.utcnow() - timedelta(days=30)
+    cutoff = datetime.now(UTC) - timedelta(days=30)
     logs = session.query(ActivityLog).filter(ActivityLog.timestamp >= cutoff).all()
     stats = defaultdict(lambda: {"forward": 0, "bounce": 0, "error": 0})
     for log in logs:

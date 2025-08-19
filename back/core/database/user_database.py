@@ -12,7 +12,7 @@ from typing import Optional
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from .models import User, Invitation
+from back.core.database.models import User, Invitation
 
 
 # User queries

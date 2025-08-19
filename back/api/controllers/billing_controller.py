@@ -2,19 +2,19 @@
 
 import logging
 import os
-from datetime import datetime
+from datetime import datetime, UTC
 from typing import Dict, Any, Optional
 
 import stripe
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from back.core.config import SETTINGS
-from back.api.database.billing_database import (
+from back.core.database.billing_database import (
     db_get_user_by_stripe_customer_id,
     db_set_user_stripe_customer_id,
     db_update_user_subscription_status,
 )
-from back.api.database.models import User, ActivityLog
+from back.core.database.models import User, ActivityLog
 from back.core.utils.db import get_db
 from back.core.utils.error_handling import (
     ValidationError,
@@ -28,7 +28,7 @@ def log_activity(event_type: str, details: Dict[str, Any]) -> None:
         with get_db() as session:
             activity_log = ActivityLog(
                 event_type=event_type,
-                timestamp=datetime.utcnow(),
+                timestamp=datetime.now(UTC),
                 details=str(details),
                 status="success"
             )

@@ -1,13 +1,13 @@
 """Alias controller for email alias management operations."""
 
 import logging
-from datetime import datetime, timedelta
+from datetime import datetime, timedelta, UTC
 from typing import List, Optional, Dict, Any
 
 # Merged async thin operations (formerly in controllers.alias_ops)
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from back.api.database.alias_database import (
+from back.core.database.alias_database import (
     db_list_aliases,
     db_create_alias,
     db_get_alias,
@@ -15,7 +15,7 @@ from back.api.database.alias_database import (
     db_list_aliases_by_domain,
     db_add_alias,
 )
-from back.api.database.models import Alias, Domain, User, ActivityLog
+from back.core.database.models import Alias, Domain, User, ActivityLog
 from back.core.utils.db import get_db
 from back.core.utils.error_handling import ValidationError, ResourceNotFoundError
 from back.core.utils.soft_delete import get_active_aliases, get_active_domains, soft_delete_alias
@@ -28,7 +28,7 @@ def log_activity(event_type: str, details: Dict[str, Any]) -> None:
         with get_db() as session:
             activity_log = ActivityLog(
                 event_type=event_type,
-                timestamp=datetime.utcnow(),
+                timestamp=datetime.now(UTC),
                 details=str(details),
                 status="success"
             )
@@ -128,7 +128,7 @@ def create_alias(
                 raise ValidationError(f"Alias '{local_part}@{domain.name}' already exists")
 
             # Validate expiration date
-            if expires_at and expires_at <= datetime.utcnow():
+            if expires_at and expires_at <= datetime.now(UTC):
                 raise ValidationError("Expiration date must be in the future")
 
             # Create alias
@@ -234,7 +234,7 @@ def get_alias_with_details(
             domain = session.get(Domain, alias.domain_id)
 
             # Check if alias is expired
-            is_expired = alias.expires_at and alias.expires_at <= datetime.utcnow()
+            is_expired = alias.expires_at and alias.expires_at <= datetime.now(UTC)
 
             # Parse targets
             target_emails = [email.strip() for email in alias.targets.split(",") if email.strip()]
@@ -317,7 +317,7 @@ def update_alias(alias_id: int, user_id: int, user_role: str = "user", **kwargs)
                 kwargs["targets"] = ", ".join(target_emails)
 
             if "expires_at" in kwargs and kwargs["expires_at"]:
-                if kwargs["expires_at"] <= datetime.utcnow():
+                if kwargs["expires_at"] <= datetime.now(UTC):
                     raise ValidationError("Expiration date must be in the future")
             elif "expires_at" in kwargs and not kwargs["expires_at"]:
                 kwargs["expires_at"] = None
@@ -390,7 +390,7 @@ def get_expired_aliases(user_id: Optional[int] = None) -> List[Alias]:
     try:
         with get_db() as session:
             query = get_active_aliases(session).filter(
-                Alias.expires_at.isnot(None), Alias.expires_at <= datetime.utcnow()
+                Alias.expires_at.isnot(None), Alias.expires_at <= datetime.now(UTC)
             )
 
             if user_id:
@@ -432,13 +432,13 @@ def get_alias_statistics(user_id: int, user_role: str = "user") -> Dict[str, Any
             # Calculate statistics
             total_aliases = len(aliases)
             expired_aliases = sum(
-                1 for a in aliases if a.expires_at and a.expires_at <= datetime.utcnow()
+                1 for a in aliases if a.expires_at and a.expires_at <= datetime.now(UTC)
             )
             expiring_soon = sum(
                 1
                 for a in aliases
                 if a.expires_at
-                and datetime.utcnow() <= a.expires_at <= datetime.utcnow() + timedelta(days=7)
+                and datetime.now(UTC) <= a.expires_at <= datetime.now(UTC) + timedelta(days=7)
             )
 
             # Count aliases by domain
@@ -500,7 +500,7 @@ def test_alias_forwarding(
             target_emails = [email.strip() for email in alias.targets.split(",") if email.strip()]
 
             # Check if alias is expired
-            is_expired = alias.expires_at and alias.expires_at <= datetime.utcnow()
+            is_expired = alias.expires_at and alias.expires_at <= datetime.now(UTC)
 
             # Validate target emails
             valid_targets = []
@@ -562,7 +562,7 @@ def cleanup_expired_aliases(dry_run: bool = True) -> Dict[str, Any]:
             # Get expired aliases
             expired_aliases = (
                 get_active_aliases(session)
-                .filter(Alias.expires_at.isnot(None), Alias.expires_at <= datetime.utcnow())
+                .filter(Alias.expires_at.isnot(None), Alias.expires_at <= datetime.now(UTC))
                 .all()
             )
 

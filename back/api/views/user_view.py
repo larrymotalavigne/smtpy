@@ -1,7 +1,7 @@
 import os
 import secrets
 import smtplib
-from datetime import datetime, timedelta
+from datetime import datetime, timedelta, UTC
 from email.message import EmailMessage
 
 from fastapi import APIRouter, Request, Form, BackgroundTasks, HTTPException
@@ -15,7 +15,7 @@ from back.api.controllers.main_controller import (
     verify_email_simple,
     authenticate_simple,
 )
-from back.api.database.models import User
+from back.core.database.models import User
 from back.core.utils.csrf import validate_csrf
 from back.core.utils.db import adbDep
 from back.core.utils.user import (
@@ -203,7 +203,7 @@ async def forgot_password_post(
             {"request": request, "error": "If the email exists, a reset link will be sent."},
         )
     token = secrets.token_urlsafe(32)
-    expiry = datetime.utcnow() + timedelta(hours=1)
+    expiry = datetime.now(UTC) + timedelta(hours=1)
     user.password_reset_token = token
     user.password_reset_expiry = expiry
     await db.commit()
@@ -240,7 +240,7 @@ async def reset_password_post(request: Request, token: str = Form(...), password
     if (
             not user
             or not user.password_reset_expiry
-            or user.password_reset_expiry < datetime.utcnow()
+            or user.password_reset_expiry < datetime.now(UTC)
     ):
         return request.app.TEMPLATES.TemplateResponse(
             "reset_password.html",

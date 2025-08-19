@@ -13,11 +13,13 @@ from starlette.templating import Jinja2Templates
 
 # Get the directory where this config.py file is located
 _CONFIG_DIR = Path(__file__).parent
+# Get the project root directory (two levels up from back/core/)
+_PROJECT_ROOT = _CONFIG_DIR.parent.parent
 
-ALEMBIC_CONFIG = Config(str(_CONFIG_DIR / "alembic.ini"))
+ALEMBIC_CONFIG = Config(str(_PROJECT_ROOT / "back" / "alembic.ini"))
 ALEMBIC_CONFIG.set_main_option(
     "script_location",
-    str(_CONFIG_DIR / "alembic"),
+    str(_PROJECT_ROOT / "alembic"),
 )
 
 
@@ -34,66 +36,66 @@ class Settings(BaseSettings):
 
     # Environment
     ENVIRONMENT: Environment = Field(
-        default=Environment.DEVELOPMENT, env="SMTPY_ENV", description="Application environment"
+        default=Environment.DEVELOPMENT, description="Application environment", json_schema_extra={"env": "SMTPY_ENV"}
     )
 
     # Security
     SECRET_KEY: str = Field(
         default="",
-        env="SMTPY_SECRET_KEY",
         description="Secret key for session management and CSRF protection",
+        json_schema_extra={"env": "SMTPY_SECRET_KEY"}
     )
 
     # Database
     DB_PATH: str = Field(
-        default="smtpy.db", env="SMTPY_DB_PATH", description="Path to SQLite database file"
+        default="smtpy.db", description="Path to SQLite database file", json_schema_extra={"env": "SMTPY_DB_PATH"}
     )
     DATABASE_URL: Optional[str] = Field(
-        default=None, env="SMTPY_DATABASE_URL", description="Database connection URL (overrides DB_PATH)"
+        default=None, description="Database connection URL (overrides DB_PATH)", json_schema_extra={"env": "SMTPY_DATABASE_URL"}
     )
 
     # SMTP Configuration
-    SMTP_HOST: str = Field(default="localhost", env="SMTP_HOST", description="SMTP relay host")
+    SMTP_HOST: str = Field(default="localhost", description="SMTP relay host", json_schema_extra={"env": "SMTP_HOST"})
     SMTP_PORT: int = Field(
-        default=25, env="SMTP_PORT", ge=1, le=65535, description="SMTP relay port"
+        default=25, ge=1, le=65535, description="SMTP relay port", json_schema_extra={"env": "SMTP_PORT"}
     )
 
     # Stripe Configuration
     STRIPE_TEST_API_KEY: str = Field(
-        default="sk_test_...", env="STRIPE_TEST_API_KEY", description="Stripe API key for billing"
+        default="sk_test_...", description="Stripe API key for billing", json_schema_extra={"env": "STRIPE_TEST_API_KEY"}
     )
     STRIPE_BILLING_PORTAL_RETURN_URL: str = Field(
         default="http://localhost:8000/billing",
-        env="STRIPE_BILLING_PORTAL_RETURN_URL",
         description="Stripe billing portal return URL",
+        json_schema_extra={"env": "STRIPE_BILLING_PORTAL_RETURN_URL"}
     )
 
     # Logging
-    LOG_LEVEL: str = Field(default="INFO", env="SMTPY_LOG_LEVEL", description="Logging level")
+    LOG_LEVEL: str = Field(default="INFO", description="Logging level", json_schema_extra={"env": "SMTPY_LOG_LEVEL"})
     LOG_FILE: Optional[str] = Field(
-        default=None, env="SMTPY_LOG_FILE", description="Log file path (optional)"
+        default=None, description="Log file path (optional)", json_schema_extra={"env": "SMTPY_LOG_FILE"}
     )
 
     # Application Settings
-    DEBUG: bool = Field(default=False, env="SMTPY_DEBUG", description="Enable debug mode")
+    DEBUG: bool = Field(default=False, description="Enable debug mode", json_schema_extra={"env": "SMTPY_DEBUG"})
     ALLOWED_HOSTS: List[str] = Field(
         default=["localhost", "127.0.0.1"],
-        env="SMTPY_ALLOWED_HOSTS",
         description="Allowed hosts for the application",
+        json_schema_extra={"env": "SMTPY_ALLOWED_HOSTS"}
     )
 
     # Session Configuration
     SESSION_MAX_AGE: int = Field(
         default=3600,
-        env="SMTPY_SESSION_MAX_AGE",
         ge=300,
         le=86400,
         description="Session timeout in seconds (5 minutes to 24 hours)",
+        json_schema_extra={"env": "SMTPY_SESSION_MAX_AGE"}
     )
 
     # Rate Limiting
     RATE_LIMIT_ENABLED: bool = Field(
-        default=True, env="SMTPY_RATE_LIMIT_ENABLED", description="Enable rate limiting"
+        default=True, description="Enable rate limiting", json_schema_extra={"env": "SMTPY_RATE_LIMIT_ENABLED"}
     )
 
     model_config = ConfigDict(env_file=".env", env_file_encoding="utf-8", case_sensitive=True)

@@ -30,12 +30,12 @@ def create_invitation(admin_user_id: int, email: str) -> Dict[str, Any]:
 
             # Check if invitation already exists
             existing_invitation = session.query(Invitation).filter_by(email=email).first()
-            if existing_invitation and existing_invitation.expires_at > datetime.utcnow():
+            if existing_invitation and existing_invitation.expires_at > datetime.now(UTC):
                 raise ValidationError("Invitation already sent")
 
             # Create invitation
             token = secrets.token_urlsafe(32)
-            expires = datetime.utcnow() + timedelta(hours=24)
+            expires = datetime.now(UTC) + timedelta(hours=24)
             invitation = Invitation(
                 email=email, token=token, expires_at=expires, invited_by=admin_user_id
             )
@@ -81,7 +81,7 @@ def register_user(
             invitation = None
             if invite_val:
                 invitation = session.query(Invitation).filter_by(token=invite_val).first()
-                if not invitation or invitation.expires_at < datetime.utcnow():
+                if not invitation or invitation.expires_at < datetime.now(UTC):
                     raise ValidationError("Invalid or expired invitation")
                 email_val = invitation.email
 
@@ -579,7 +579,7 @@ def check_health(self) -> Dict[str, Any]:
     Returns:
         Dictionary containing health status
     """
-    return {"status": "healthy", "service": "smtpy", "timestamp": datetime.utcnow().isoformat()}
+    return {"status": "healthy", "service": "smtpy", "timestamp": datetime.now(UTC).isoformat()}
 
 
 def check_readiness(self) -> Dict[str, Any]:
@@ -600,7 +600,7 @@ def check_readiness(self) -> Dict[str, Any]:
             "status": "ready",
             "service": "smtpy",
             "database": "connected",
-            "timestamp": datetime.utcnow().isoformat(),
+            "timestamp": datetime.now(UTC).isoformat(),
         }
     except Exception as e:
         logging.error(f"Readiness check failed: {e}")
@@ -615,7 +615,7 @@ def get_activity_stats(self) -> Dict[str, Any]:
     """
     try:
         with get_db() as session:
-            cutoff = datetime.utcnow() - timedelta(days=30)
+            cutoff = datetime.now(UTC) - timedelta(days=30)
             logs = session.query(ActivityLog).filter(ActivityLog.timestamp >= cutoff).all()
 
             stats = defaultdict(lambda: {"forward": 0, "bounce": 0, "error": 0})
@@ -733,12 +733,12 @@ def create_invitation(admin_user_id: int, email: str) -> Dict[str, Any]:
 
             # Check if invitation already exists
             existing_invitation = session.query(Invitation).filter_by(email=email).first()
-            if existing_invitation and existing_invitation.expires_at > datetime.utcnow():
+            if existing_invitation and existing_invitation.expires_at > datetime.now(UTC):
                 raise ValidationError("Invitation already sent")
 
             # Create invitation
             token = secrets.token_urlsafe(32)
-            expires = datetime.utcnow() + timedelta(hours=24)
+            expires = datetime.now(UTC) + timedelta(hours=24)
             invitation = Invitation(
                 email=email, token=token, expires_at=expires, invited_by=admin_user_id
             )
@@ -784,7 +784,7 @@ def register_user(
             invitation = None
             if invite_val:
                 invitation = session.query(Invitation).filter_by(token=invite_val).first()
-                if not invitation or invitation.expires_at < datetime.utcnow():
+                if not invitation or invitation.expires_at < datetime.now(UTC):
                     raise ValidationError("Invalid or expired invitation")
                 email_val = invitation.email
 
@@ -1282,7 +1282,7 @@ def check_health(self) -> Dict[str, Any]:
     Returns:
         Dictionary containing health status
     """
-    return {"status": "healthy", "service": "smtpy", "timestamp": datetime.utcnow().isoformat()}
+    return {"status": "healthy", "service": "smtpy", "timestamp": datetime.now(UTC).isoformat()}
 
 
 def check_readiness(self) -> Dict[str, Any]:
@@ -1303,7 +1303,7 @@ def check_readiness(self) -> Dict[str, Any]:
             "status": "ready",
             "service": "smtpy",
             "database": "connected",
-            "timestamp": datetime.utcnow().isoformat(),
+            "timestamp": datetime.now(UTC).isoformat(),
         }
     except Exception as e:
         logger.error(f"Readiness check failed: {e}")
@@ -1318,7 +1318,7 @@ def get_activity_stats(self) -> Dict[str, Any]:
     """
     try:
         with get_session() as session:
-            cutoff = datetime.utcnow() - timedelta(days=30)
+            cutoff = datetime.now(UTC) - timedelta(days=30)
             logs = session.query(ActivityLog).filter(ActivityLog.timestamp >= cutoff).all()
 
             stats = defaultdict(lambda: {"forward": 0, "bounce": 0, "error": 0})
@@ -1414,10 +1414,10 @@ async def invite_user_simple(
         raise ValidationError("Email already registered")
     # Check existing invitation
     existing_inv = await db_get_invitation_by_email(session, email)
-    if existing_inv and existing_inv.expires_at > datetime.utcnow():
+    if existing_inv and existing_inv.expires_at > datetime.now(UTC):
         raise ValidationError("Invitation already sent")
     token = secrets.token_urlsafe(32)
-    expires_at = datetime.utcnow() + timedelta(hours=24)
+    expires_at = datetime.now(UTC) + timedelta(hours=24)
     invitation = await db_create_invitation(
         session, email=email, token=token, expires_at=expires_at, invited_by=invited_by_id
     )
@@ -1436,7 +1436,7 @@ async def register_user_simple(
     invitation = None
     if invite_token:
         invitation = await db_get_invitation_by_token(session, invite_token)
-        if not invitation or invitation.expires_at < datetime.utcnow():
+        if not invitation or invitation.expires_at < datetime.now(UTC):
             raise ValidationError("Invalid or expired invitation")
         email_val = invitation.email
 
@@ -1495,14 +1495,14 @@ async def authenticate_simple(session: AsyncSession, username: str, password: st
 
 import os
 import secrets
-from datetime import datetime, timedelta
+from datetime import datetime, timedelta, UTC
 from typing import Dict, Any, Optional
 from collections import defaultdict
 
 from back.core.utils.error_handling import (
     ValidationError,
 )
-from back.api.database.models import User, Invitation, Domain, ActivityLog
+from back.core.database.models import User, Invitation, Domain, ActivityLog
 from back.core.utils.db import get_db
 from sqlalchemy.orm import selectinload, Session
 from back.core.utils.user import hash_password
@@ -1514,7 +1514,7 @@ from back.core.utils.soft_delete import (
 from back.api.controllers.dns_controller import check_dns_records
 from passlib.context import CryptContext
 from sqlalchemy.ext.asyncio import AsyncSession
-from back.api.database.user_database import (
+from back.core.database.user_database import (
     db_get_active_user_by_username,
     db_get_active_user_by_email,
     db_get_invitation_by_email,
@@ -1540,10 +1540,10 @@ async def invite_user_simple(
         raise ValidationError("Email already registered")
     # Check existing invitation
     existing_inv = await db_get_invitation_by_email(session, email)
-    if existing_inv and existing_inv.expires_at > datetime.utcnow():
+    if existing_inv and existing_inv.expires_at > datetime.now(UTC):
         raise ValidationError("Invitation already sent")
     token = secrets.token_urlsafe(32)
-    expires_at = datetime.utcnow() + timedelta(hours=24)
+    expires_at = datetime.now(UTC) + timedelta(hours=24)
     invitation = await db_create_invitation(
         session, email=email, token=token, expires_at=expires_at, invited_by=invited_by_id
     )
@@ -1562,7 +1562,7 @@ async def register_user_simple(
     invitation = None
     if invite_token:
         invitation = await db_get_invitation_by_token(session, invite_token)
-        if not invitation or invitation.expires_at < datetime.utcnow():
+        if not invitation or invitation.expires_at < datetime.now(UTC):
             raise ValidationError("Invalid or expired invitation")
         email_val = invitation.email
 
@@ -1626,13 +1626,13 @@ def invite_user_simple_sync(session: Session, email: str, invited_by_id: int) ->
     if get_active_users(session).filter_by(email=email).first():
         raise ValidationError("Email already registered")
     existing = session.query(Invitation).filter_by(email=email).first()
-    if existing and existing.expires_at > datetime.utcnow():
+    if existing and existing.expires_at > datetime.now(UTC):
         raise ValidationError("Invitation already sent")
     token = secrets.token_urlsafe(32)
     invitation = Invitation(
         email=email,
         token=token,
-        expires_at=datetime.utcnow() + timedelta(hours=24),
+        expires_at=datetime.now(UTC) + timedelta(hours=24),
         invited_by=invited_by_id,
     )
     session.add(invitation)
@@ -1651,7 +1651,7 @@ def register_user_simple_sync(
     invitation = None
     if invite_token:
         invitation = session.query(Invitation).filter_by(token=invite_token).first()
-        if not invitation or invitation.expires_at < datetime.utcnow():
+        if not invitation or invitation.expires_at < datetime.now(UTC):
             raise ValidationError("Invalid or expired invitation")
         email_val = invitation.email
     if get_active_users(session).filter_by(username=username).first():

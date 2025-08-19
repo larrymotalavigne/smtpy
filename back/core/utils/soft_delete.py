@@ -1,11 +1,11 @@
 """Soft delete utilities for SMTPy."""
 
-from datetime import datetime
+from datetime import datetime, UTC
 from typing import Type, TypeVar, Optional
 
 from sqlalchemy.orm import Session
 
-from back.api.database.models import Base, User, Domain, Alias
+from back.core.database.models import Base, User, Domain, Alias
 
 T = TypeVar("T", bound=Base)
 
@@ -22,7 +22,7 @@ def soft_delete(session: Session, model_instance: T) -> T:
         The updated model instance
     """
     model_instance.is_deleted = True
-    model_instance.deleted_at = datetime.utcnow()
+    model_instance.deleted_at = datetime.now(UTC)
     session.commit()
     return model_instance
 
