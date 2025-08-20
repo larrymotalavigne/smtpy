@@ -72,13 +72,13 @@ def create_default_admin():
                 logging.warning(
                     "SECURITY: Please change the default admin password immediately after first login!"
                 )
-                # Also print to console for immediate visibility (development only)
-                print(f"\n\033[92mCreated default admin user with temporary password:\033[0m")
-                print(f"\033[92mUsername: admin\033[0m")
-                print(f"\033[92mPassword: {temp_password}\033[0m")
-                print(
-                    f"\033[93mWARNING: Please change this password immediately after first login!\033[0m\n"
-                )
+                # Log credentials for immediate visibility in development
+                logging.info("=" * 60)
+                logging.info("DEFAULT ADMIN CREDENTIALS CREATED")
+                logging.info(f"Username: admin")
+                logging.info(f"Password: {temp_password}")
+                logging.info("IMPORTANT: Change this password immediately after first login!")
+                logging.info("=" * 60)
 
 
 @asynccontextmanager
