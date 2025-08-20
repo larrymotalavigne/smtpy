@@ -6,10 +6,10 @@ from fastapi.responses import HTMLResponse, RedirectResponse, PlainTextResponse
 from pydantic import BaseModel
 from sqlalchemy import select
 
-from back.core.config import template_response
-from back.api.controllers import domain_controller
-from back.api.controllers.dns_controller import check_dns_records
-from back.api.controllers.domain_controller import (
+from core.config import template_response
+from api.controllers import domain_controller
+from api.controllers.dns_controller import check_dns_records
+from api.controllers.domain_controller import (
     list_domains_simple,
     create_domain_simple,
     get_domain_simple,
@@ -18,10 +18,10 @@ from back.api.controllers.domain_controller import (
     get_dns_status_simple,
     activity_stats_simple,
 )
-from back.core.database.models import Domain, Alias, ActivityLog
-from back.core.utils.csrf import validate_csrf
-from back.core.utils.db import adbDep
-from back.core.utils.user import require_login, get_current_user
+from core.database.models import Domain, Alias, ActivityLog
+from core.utils.csrf import validate_csrf
+from core.utils.db import dbDep
+from core.utils.user import require_login, get_current_user
 
 router = APIRouter(
     prefix="/domain",
@@ -29,7 +29,7 @@ router = APIRouter(
 
 
 @router.get("/dashboard", response_class=HTMLResponse)
-async def dashboard(request: Request, db: adbDep):
+async def dashboard(request: Request, db: dbDep):
     user = require_login(request)
 
     num_domains = await domain_controller.get_domain_count(db)
@@ -50,7 +50,7 @@ async def dashboard(request: Request, db: adbDep):
 
 
 @router.get("/admin", response_class=HTMLResponse)
-async def admin_panel(request: Request, db: adbDep):
+async def admin_panel(request: Request, db: dbDep):
     user = require_login(request)
 
     domains_result = await db.execute(select(Domain).where(Domain.is_deleted == False))
@@ -95,7 +95,7 @@ async def add_domain(
         name: str = Form(...),
         catch_all: str = Form(None),
         csrf_token: str = Form(...),
-        db: adbDep = None,
+        db: dbDep = None,
 ):
     # Validate CSRF token
     validate_csrf(request, csrf_token)
@@ -110,7 +110,7 @@ async def add_domain(
 
 @router.delete("/")
 async def delete_domain(
-        request: Request, domain_id: int = Form(...), csrf_token: str = Form(...), db: adbDep = None
+        request: Request, domain_id: int = Form(...), csrf_token: str = Form(...), db: dbDep = None
 ):
     # Validate CSRF token
     validate_csrf(request, csrf_token)
@@ -138,7 +138,7 @@ async def edit_catchall(
         domain_id: int = Form(...),
         catch_all: str = Form(""),
         csrf_token: str = Form(...),
-        db: adbDep = None,
+        db: dbDep = None,
 ):
     # Validate CSRF token
     validate_csrf(request, csrf_token)
@@ -180,12 +180,12 @@ def get_dkim_public_key(domain: str):
 
 
 @router.get("/activity-stats")
-async def activity_stats(db: adbDep = None):
+async def activity_stats(db: dbDep = None):
     return await activity_stats_simple(db)
 
 
 @router.get("/domain-dns/{domain_id}", response_class=HTMLResponse)
-async def domain_dns_settings(request: Request, domain_id: int = Path(...), db: adbDep = None):
+async def domain_dns_settings(request: Request, domain_id: int = Path(...), db: dbDep = None):
     user = require_login(request)
     domain = await get_domain_simple(db, domain_id)
     if not domain:
@@ -226,7 +226,7 @@ async def domain_dns_settings(request: Request, domain_id: int = Path(...), db: 
 
 
 @router.get("/dns-status/{domain_id}")
-async def api_dns_status(domain_id: int = Path(...), db: adbDep = None):
+async def api_dns_status(domain_id: int = Path(...), db: dbDep = None):
     results = await get_dns_status_simple(db, domain_id)
     if results is None:
         return {"error": "Domain not found"}
@@ -234,7 +234,7 @@ async def api_dns_status(domain_id: int = Path(...), db: adbDep = None):
 
 
 @router.get("/domain-aliases/{domain_id}", response_class=HTMLResponse)
-async def domain_aliases(request: Request, domain_id: int = Path(...), db: adbDep = None):
+async def domain_aliases(request: Request, domain_id: int = Path(...), db: dbDep = None):
     user = require_login(request)
     domain = await get_domain_simple(db, domain_id)
     if not domain:
@@ -245,7 +245,7 @@ async def domain_aliases(request: Request, domain_id: int = Path(...), db: adbDe
 
 
 @router.get("/domains", response_model=List[dict])
-async def list_domains(db: adbDep = None):
+async def list_domains(db: dbDep = None):
     return await list_domains_simple(db)
 
 
@@ -255,7 +255,7 @@ class DomainCreate(BaseModel):
 
 
 @router.post("/domains", response_model=dict)
-async def create_domain_api(request: Request, domain: DomainCreate, db: adbDep = None):
+async def create_domain_api(request: Request, domain: DomainCreate, db: dbDep = None):
     user = require_login(request)
     created = await create_domain_simple(
         db, name=domain.name, owner_id=user["id"], catch_all=domain.catch_all
@@ -264,7 +264,7 @@ async def create_domain_api(request: Request, domain: DomainCreate, db: adbDep =
 
 
 @router.get("/domains/{domain_id}", response_model=dict)
-async def get_domain_api(domain_id: int, db: adbDep = None):
+async def get_domain_api(domain_id: int, db: dbDep = None):
     domain = await get_domain_simple(db, domain_id)
     if not domain:
         raise HTTPException(status_code=404, detail="Domain not found")
@@ -272,7 +272,7 @@ async def get_domain_api(domain_id: int, db: adbDep = None):
 
 
 @router.delete("/domains/{domain_id}")
-async def delete_domain_api(domain_id: int, db: adbDep = None):
+async def delete_domain_api(domain_id: int, db: dbDep = None):
     ok = await delete_domain_simple(db, domain_id)
     if not ok:
         raise HTTPException(status_code=404, detail="Domain not found")

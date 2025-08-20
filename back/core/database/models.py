@@ -20,7 +20,7 @@ class User(Base):
     is_active: Mapped[bool] = mapped_column(Boolean, default=True)
     email_verified: Mapped[bool] = mapped_column(Boolean, default=False)
     verification_token: Mapped[Optional[str]] = mapped_column(String(64), nullable=True)
-    invited_by: Mapped[Optional[int]] = mapped_column(ForeignKey("user.id"), nullable=True)
+    invited_by: Mapped[Optional[int]] = mapped_column(ForeignKey("users.id"), nullable=True)
     password_reset_token: Mapped[Optional[str]] = mapped_column(String(64), nullable=True)
     password_reset_expiry: Mapped[Optional[datetime.datetime]] = mapped_column(
         DateTime, nullable=True
@@ -53,7 +53,7 @@ class Domain(Base):
     catch_all: Mapped[Optional[str]] = mapped_column(
         String(255), nullable=True
     )  # Email address for catch-all alias (if set)
-    owner_id: Mapped[int] = mapped_column(ForeignKey("user.id"), index=True)
+    owner_id: Mapped[int] = mapped_column(ForeignKey("users.id"), index=True)
     is_deleted: Mapped[bool] = mapped_column(Boolean, default=False, index=True)
     deleted_at: Mapped[Optional[datetime.datetime]] = mapped_column(
         DateTime, nullable=True, index=True
@@ -81,7 +81,7 @@ class Alias(Base):
         DateTime, nullable=True, index=True
     )
     domain_id: Mapped[int] = mapped_column(ForeignKey("domain.id"), index=True)
-    owner_id: Mapped[int] = mapped_column(ForeignKey("user.id"), index=True)
+    owner_id: Mapped[int] = mapped_column(ForeignKey("users.id"), index=True)
     is_deleted: Mapped[bool] = mapped_column(Boolean, default=False, index=True)
     deleted_at: Mapped[Optional[datetime.datetime]] = mapped_column(
         DateTime, nullable=True, index=True

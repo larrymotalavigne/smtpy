@@ -7,7 +7,7 @@ from typing import List, Optional, Dict, Any
 # Merged async thin operations (formerly in controllers.alias_ops)
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from back.core.database.alias_database import (
+from core.database.alias_database import (
     db_list_aliases,
     db_create_alias,
     db_get_alias,
@@ -15,11 +15,11 @@ from back.core.database.alias_database import (
     db_list_aliases_by_domain,
     db_add_alias,
 )
-from back.core.database.models import Alias, Domain, User, ActivityLog
-from back.core.utils.db import get_db
-from back.core.utils.error_handling import ValidationError, ResourceNotFoundError
-from back.core.utils.soft_delete import get_active_aliases, get_active_domains, soft_delete_alias
-from back.core.utils.validation import validate_alias_local_part, validate_email_list
+from core.database.models import Alias, Domain, User, ActivityLog
+from core.utils.db import get_db
+from core.utils.error_handling import ValidationError, ResourceNotFoundError
+from core.utils.soft_delete import get_active_aliases, get_active_domains, soft_delete_alias
+from core.utils.validation import validate_alias_local_part, validate_email_list
 
 
 def log_activity(event_type: str, details: Dict[str, Any]) -> None:
@@ -508,7 +508,7 @@ def test_alias_forwarding(
 
             for target in target_emails:
                 try:
-                    from back.core.utils.validation import validate_email
+                    from core.utils.validation import validate_email
 
                     validate_email(target)
                     valid_targets.append(target)

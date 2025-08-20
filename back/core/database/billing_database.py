@@ -11,7 +11,7 @@ from typing import Optional
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from back.core.database.models import User
+from core.database.models import User
 
 
 async def db_get_user_by_stripe_customer_id(

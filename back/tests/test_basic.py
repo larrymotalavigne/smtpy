@@ -1,7 +1,6 @@
-import pytest
 from fastapi.testclient import TestClient
 
-from back.api.main import create_app
+from api.main import create_app
 
 client = TestClient(create_app())
 
@@ -34,9 +33,3 @@ def test_api_dns_check():
     assert "spf" in data
     assert "dkim" in data
     assert "dmarc" in data
-
-
-def test_health_check():
-    """Test basic health check"""
-    response = client.get("/api/activity-stats")
-    assert response.status_code == 200

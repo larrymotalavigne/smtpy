@@ -6,10 +6,10 @@ from email.message import EmailMessage
 
 from aiosmtpd.handlers import AsyncMessage
 
-import back.smtp.forwarding.forwarder
-from back.core.database.models import Domain, Alias, ActivityLog
-from back.core.utils.db import get_async_session
-from back.core.utils.validation import validate_email, ValidationError
+import smtp.forwarding.forwarder
+from core.database.models import Domain, Alias, ActivityLog
+from core.utils.db import get_db
+from core.utils.validation import validate_email, ValidationError
 
 
 class SMTPHandler(AsyncMessage):
@@ -31,7 +31,7 @@ class SMTPHandler(AsyncMessage):
         local, domain_name = match.groups()
 
         now = datetime.now(UTC)
-        async with get_async_session() as session:
+        async with get_db() as session:
             # Use async queries with proper await
             from sqlalchemy import select
 
@@ -208,7 +208,7 @@ class SMTPHandler(AsyncMessage):
 
         # Forward email to all resolved targets
         try:
-            back.smtp.forwarding.forwarder.forward_email(message, list(all_targets), mail_from="noreply@localhost")
+            smtp.forwarding.forwarder.forward_email(message, list(all_targets), mail_from="noreply@localhost")
             logging.info(
                 f"Email forwarded successfully",
                 extra={

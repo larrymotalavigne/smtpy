@@ -2,9 +2,10 @@ import os
 import sys
 from logging.config import fileConfig
 
-from alembic import context
 from sqlalchemy import engine_from_config
 from sqlalchemy import pool
+
+from alembic import context
 
 # Add project root to path to import config
 sys.path.append(os.path.dirname(os.path.dirname(__file__)))
@@ -14,50 +15,34 @@ sys.path.append(os.path.dirname(os.path.dirname(__file__)))
 config = context.config
 
 # Override the sqlalchemy.url from the config file with the application's DATABASE_URL
-# Read environment variables directly to ensure we get the current values
+# Use the same configuration as the main application
 import logging
+
 logger = logging.getLogger("alembic.env")
 
-database_url = os.getenv("SMTPY_DATABASE_URL")
-if database_url:
-    # Detect database type for logging
-    if database_url.startswith("postgresql://") or database_url.startswith("postgresql+"):
-        db_type = "PostgreSQL"
-    elif database_url.startswith("sqlite://"):
-        db_type = "SQLite"
-    else:
-        db_type = "Unknown"
-    
-    logger.info(f"Using {db_type} database from SMTPY_DATABASE_URL environment variable")
-    logger.debug(f"Database URL: {database_url}")
-    config.set_main_option("sqlalchemy.url", database_url)
+# Import the settings to get the default DATABASE_URL
+from core.config import SETTINGS
+
+from core.database.models import Base
+
+database_url = SETTINGS.DATABASE_URL
+
+# Detect database type for logging
+if database_url.startswith("postgresql://") or database_url.startswith("postgresql+"):
+    db_type = "PostgreSQL"
 else:
-    # Fall back to SQLite with default or configured path
-    db_path = os.getenv("SMTPY_DB_PATH", "smtpy.db")
-    sqlite_url = f"sqlite:///{db_path}"
-    logger.info(f"Using SQLite database (default fallback)")
-    logger.debug(f"SQLite path: {db_path}")
-    logger.debug(f"Database URL: {sqlite_url}")
-    config.set_main_option("sqlalchemy.url", sqlite_url)
+    db_type = "Unknown"
+
+logger.info(f"Using {db_type} database from application settings")
+logger.debug(f"Database URL: {database_url}")
+config.set_main_option("sqlalchemy.url", database_url)
 
 # Interpret the config file for Python logging.
 # This line sets up loggers basically.
 if config.config_file_name is not None:
     fileConfig(config.config_file_name)
 
-# add your model's MetaData object here
-# for 'autogenerate' support
-# from myapp import mymodel
-# target_metadata = mymodel.Base.metadata
-from database.models import Base
-
 target_metadata = Base.metadata
-
-
-# other values from the config, defined by the needs of env.py,
-# can be acquired:
-# my_important_option = config.get_main_option("my_important_option")
-# ... etc.
 
 
 def run_migrations_offline() -> None:

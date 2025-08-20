@@ -8,11 +8,11 @@ from fastapi.staticfiles import StaticFiles
 from starlette.middleware.base import BaseHTTPMiddleware
 from starlette.middleware.sessions import SessionMiddleware
 
-from back.core.config import SETTINGS, validate_configuration
-from back.core.database.models import User
-from back.core.utils.db import get_db, init_db
-from back.core.utils.error_handling import ErrorHandlingMiddleware
-from back.api.views import domain_view, alias_view, billing_view, user_view, main_view
+from core.config import SETTINGS, validate_configuration
+from core.database.models import User
+from core.utils.db import get_sync_db
+from core.utils.error_handling import ErrorHandlingMiddleware
+from api.views import domain_view, alias_view, billing_view, user_view, main_view
 
 
 class SecurityHeadersMiddleware(BaseHTTPMiddleware):
@@ -48,8 +48,8 @@ class SecurityHeadersMiddleware(BaseHTTPMiddleware):
 
 def create_default_admin():
     """Create default admin user with secure random password if no users exist."""
-    from back.core.utils.user import hash_password
-    with get_db() as session:
+    from core.utils.user import hash_password
+    with get_sync_db() as session:
         if not session.query(User).first():
             # Generate a secure random password
             temp_password = secrets.token_urlsafe(16)
@@ -94,19 +94,18 @@ async def lifespan(app: FastAPI):
     logging.info(f"Log level: {SETTINGS.LOG_LEVEL}")
     
     # Log database configuration summary
-    if SETTINGS.DATABASE_URL:
-        if SETTINGS.DATABASE_URL.startswith("postgresql://") or SETTINGS.DATABASE_URL.startswith("postgresql+"):
+    if SETTINGS.ASYNC_SQLALCHEMY_DATABASE_URI:
+        if SETTINGS.ASYNC_SQLALCHEMY_DATABASE_URI.startswith("postgresql://") or SETTINGS.ASYNC_SQLALCHEMY_DATABASE_URI.startswith("postgresql+"):
             db_type = "PostgreSQL"
-        elif SETTINGS.DATABASE_URL.startswith("sqlite://"):
+        elif SETTINGS.ASYNC_SQLALCHEMY_DATABASE_URI.startswith("sqlite://"):
             db_type = "SQLite"
         else:
             db_type = "Unknown"
-        logging.info(f"Database: {db_type} (from DATABASE_URL)")
+        logging.info(f"Database: {db_type} (from ASYNC_SQLALCHEMY_DATABASE_URI)")
     else:
         logging.info(f"Database: SQLite (from DB_PATH: {SETTINGS.DB_PATH})")
 
     # Initialize database and create default admin
-    init_db()
     create_default_admin()
 
     logging.info("SMTPy application startup completed")

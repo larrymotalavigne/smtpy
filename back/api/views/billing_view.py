@@ -1,14 +1,14 @@
 from fastapi import APIRouter, Request, Form
 from fastapi.responses import HTMLResponse, RedirectResponse, JSONResponse
 
-from back.core.config import template_response
-from back.api.controllers.billing_controller import (
+from core.config import template_response
+from api.controllers.billing_controller import (
     create_billing_portal,
     create_checkout,
     handle_webhook,
 )
-from back.core.utils.db import adbDep
-from back.core.utils.user import require_login
+from core.utils.db import dbDep
+from core.utils.user import require_login
 
 router = APIRouter(prefix="")
 
@@ -20,7 +20,7 @@ async def billing(request: Request):
 
 
 @router.post("/billing/stripe-portal")
-async def billing_stripe_portal(request: Request, db: adbDep = None):
+async def billing_stripe_portal(request: Request, db: dbDep = None):
     user = require_login(request)
     try:
         url = await create_billing_portal(db, user["id"])
@@ -30,7 +30,7 @@ async def billing_stripe_portal(request: Request, db: adbDep = None):
 
 
 @router.post("/billing/checkout")
-async def billing_checkout(request: Request, plan: str = Form(...), db: adbDep = None):
+async def billing_checkout(request: Request, plan: str = Form(...), db: dbDep = None):
     user = require_login(request)
     try:
         url = await create_checkout(db, user["id"], plan)
@@ -40,7 +40,7 @@ async def billing_checkout(request: Request, plan: str = Form(...), db: adbDep =
 
 
 @router.post("/stripe/webhook")
-async def stripe_webhook(request: Request, db: adbDep = None):
+async def stripe_webhook(request: Request, db: dbDep = None):
     payload = await request.body()
     sig_header = request.headers.get("stripe-signature")
     try:

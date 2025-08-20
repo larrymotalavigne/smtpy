@@ -168,7 +168,7 @@ class ErrorHandlingMiddleware(BaseHTTPMiddleware):
             error_id = log_error(e, request)
 
             # Don't expose internal error details in production
-            from back.core.config import SETTINGS
+            from core.config import SETTINGS
 
             if SETTINGS.is_production:
                 message = "An internal server error occurred"

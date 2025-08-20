@@ -5,7 +5,7 @@ from pydantic import BaseModel
 from starlette.requests import Request
 from starlette.responses import JSONResponse
 
-from back.api.controllers.alias_controller import (
+from api.controllers.alias_controller import (
     list_aliases,
     create_alias,
     get_alias,
@@ -13,8 +13,8 @@ from back.api.controllers.alias_controller import (
     list_aliases_by_domain,
     test_alias,
 )
-from back.core.utils.db import adbDep
-from back.core.utils.user import require_login
+from core.utils.db import dbDep
+from core.utils.user import require_login
 
 router = APIRouter(prefix="/alias")
 
@@ -26,17 +26,17 @@ class AliasCreate(BaseModel):
 
 
 @router.get("/", response_model=List[dict])
-async def list_aliases_endpoint(domain_id: Optional[int] = None, db: adbDep = None):
+async def list_aliases_endpoint(domain_id: Optional[int] = None, db: dbDep = None):
     return await list_aliases(db, domain_id=domain_id)
 
 
 @router.post("/", response_model=dict)
-async def create_alias_endpoint(alias: AliasCreate, db: adbDep = None):
+async def create_alias_endpoint(alias: AliasCreate, db: dbDep = None):
     return await create_alias(db, alias.local_part, alias.targets, alias.domain_id)
 
 
 @router.get("/{alias_id}", response_model=dict)
-async def get_alias_endpoint(request: Request, alias_id: int, db: adbDep = None):
+async def get_alias_endpoint(request: Request, alias_id: int, db: dbDep = None):
     require_login(request)
     try:
         return await get_alias(db, alias_id)
@@ -45,12 +45,12 @@ async def get_alias_endpoint(request: Request, alias_id: int, db: adbDep = None)
 
 
 @router.get("/by_domain/{domain_id}")
-async def api_list_aliases_endpoint(domain_id: int = Path(...), db: adbDep = None):
+async def api_list_aliases_endpoint(domain_id: int = Path(...), db: dbDep = None):
     return await list_aliases_by_domain(db, domain_id)
 
 
 @router.delete("/by_alias/{alias_id}")
-async def api_delete_alias_endpoint(request: Request, alias_id: int = Path(...), db: adbDep = None):
+async def api_delete_alias_endpoint(request: Request, alias_id: int = Path(...), db: dbDep = None):
     user = require_login(request)
     ok = await delete_alias(db, alias_id)
     if ok:
@@ -59,7 +59,7 @@ async def api_delete_alias_endpoint(request: Request, alias_id: int = Path(...),
 
 
 @router.post("/test/{alias_id}")
-async def api_test_alias_endpoint(alias_id: int = Path(...), db: adbDep = None):
+async def api_test_alias_endpoint(alias_id: int = Path(...), db: dbDep = None):
     try:
         result = await test_alias(db, alias_id)
     except LookupError:

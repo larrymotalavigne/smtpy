@@ -1,11 +1,13 @@
 """Soft delete utilities for SMTPy."""
 
 from datetime import datetime, UTC
-from typing import Type, TypeVar, Optional
+from typing import Type, TypeVar, Optional, Union
 
+from sqlalchemy import select
 from sqlalchemy.orm import Session
+from sqlalchemy.ext.asyncio import AsyncSession
 
-from back.core.database.models import Base, User, Domain, Alias
+from core.database.models import Base, User, Domain, Alias
 
 T = TypeVar("T", bound=Base)
 
@@ -44,18 +46,18 @@ def restore(session: Session, model_instance: T) -> T:
     return model_instance
 
 
-def get_active_query(session: Session, model_class: Type[T]):
+def get_active_query(session: Union[Session, AsyncSession], model_class: Type[T]):
     """
     Get a query that filters out soft-deleted records.
 
     Args:
-        session: SQLAlchemy session
+        session: SQLAlchemy session (sync or async)
         model_class: The model class to query
 
     Returns:
-        SQLAlchemy query with soft-deleted records filtered out
+        SQLAlchemy select statement with soft-deleted records filtered out
     """
-    return session.query(model_class).filter(model_class.is_deleted == False)
+    return select(model_class).where(model_class.is_deleted == False)
 
 
 def get_deleted_query(session: Session, model_class: Type[T]):
@@ -170,53 +172,53 @@ def is_soft_deleted(model_instance: T) -> bool:
     return getattr(model_instance, "is_deleted", False)
 
 
-def get_active_domains(session: Session, owner_id: Optional[int] = None):
+def get_active_domains(session: Union[Session, AsyncSession], owner_id: Optional[int] = None):
     """
     Get all active (non-deleted) domains, optionally filtered by owner.
 
     Args:
-        session: SQLAlchemy session
+        session: SQLAlchemy session (sync or async)
         owner_id: Optional owner ID to filter by
 
     Returns:
-        Query for active domains
+        Select statement for active domains
     """
-    query = get_active_query(session, Domain)
+    stmt = get_active_query(session, Domain)
     if owner_id:
-        query = query.filter(Domain.owner_id == owner_id)
-    return query
+        stmt = stmt.where(Domain.owner_id == owner_id)
+    return stmt
 
 
 def get_active_aliases(
-        session: Session, owner_id: Optional[int] = None, domain_id: Optional[int] = None
+        session: Union[Session, AsyncSession], owner_id: Optional[int] = None, domain_id: Optional[int] = None
 ):
     """
     Get all active (non-deleted) aliases, optionally filtered by owner or domain.
 
     Args:
-        session: SQLAlchemy session
+        session: SQLAlchemy session (sync or async)
         owner_id: Optional owner ID to filter by
         domain_id: Optional domain ID to filter by
 
     Returns:
-        Query for active aliases
+        Select statement for active aliases
     """
-    query = get_active_query(session, Alias)
+    stmt = get_active_query(session, Alias)
     if owner_id:
-        query = query.filter(Alias.owner_id == owner_id)
+        stmt = stmt.where(Alias.owner_id == owner_id)
     if domain_id:
-        query = query.filter(Alias.domain_id == domain_id)
-    return query
+        stmt = stmt.where(Alias.domain_id == domain_id)
+    return stmt
 
 
-def get_active_users(session: Session):
+def get_active_users(session: Union[Session, AsyncSession]):
     """
     Get all active (non-deleted) users.
 
     Args:
-        session: SQLAlchemy session
+        session: SQLAlchemy session (sync or async)
 
     Returns:
-        Query for active users
+        Select statement for active users
     """
     return get_active_query(session, User)

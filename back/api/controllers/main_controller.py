@@ -1499,22 +1499,22 @@ from datetime import datetime, timedelta, UTC
 from typing import Dict, Any, Optional
 from collections import defaultdict
 
-from back.core.utils.error_handling import (
+from core.utils.error_handling import (
     ValidationError,
 )
-from back.core.database.models import User, Invitation, Domain, ActivityLog
-from back.core.utils.db import get_db
+from core.database.models import User, Invitation, Domain, ActivityLog
+from core.utils.db import get_db
 from sqlalchemy.orm import selectinload, Session
-from back.core.utils.user import hash_password
-from back.core.utils.soft_delete import (
+from core.utils.user import hash_password
+from core.utils.soft_delete import (
     get_active_domains,
     get_active_aliases,
     get_active_users,
 )
-from back.api.controllers.dns_controller import check_dns_records
+from api.controllers.dns_controller import check_dns_records
 from passlib.context import CryptContext
 from sqlalchemy.ext.asyncio import AsyncSession
-from back.core.database.user_database import (
+from core.database.user_database import (
     db_get_active_user_by_username,
     db_get_active_user_by_email,
     db_get_invitation_by_email,
@@ -1623,7 +1623,8 @@ _pwd_ctx_sync = _pwd_ctx
 
 
 def invite_user_simple_sync(session: Session, email: str, invited_by_id: int) -> Dict[str, Any]:
-    if get_active_users(session).filter_by(email=email).first():
+    users_result = session.execute(get_active_users(session).where(User.email == email))
+    if users_result.scalars().first():
         raise ValidationError("Email already registered")
     existing = session.query(Invitation).filter_by(email=email).first()
     if existing and existing.expires_at > datetime.now(UTC):
@@ -1654,10 +1655,13 @@ def register_user_simple_sync(
         if not invitation or invitation.expires_at < datetime.now(UTC):
             raise ValidationError("Invalid or expired invitation")
         email_val = invitation.email
-    if get_active_users(session).filter_by(username=username).first():
+    users_result = session.execute(get_active_users(session).where(User.username == username))
+    if users_result.scalars().first():
         raise ValidationError("Username already exists")
-    if email_val and get_active_users(session).filter_by(email=email_val).first():
-        raise ValidationError("Email already registered")
+    if email_val:
+        users_result = session.execute(get_active_users(session).where(User.email == email_val))
+        if users_result.scalars().first():
+            raise ValidationError("Email already registered")
     verification_token = None if invite_token else secrets.token_urlsafe(32)
     user = User(
         username=username,
@@ -1690,7 +1694,8 @@ def verify_email_simple_sync(session: Session, token: str) -> bool:
 
 
 def authenticate_simple_sync(session: Session, username: str, password: str) -> Optional[int]:
-    user = get_active_users(session).filter_by(username=username).first()
+    users_result = session.execute(get_active_users(session).where(User.username == username))
+    user = users_result.scalars().first()
     if not user:
         return None
     if not _pwd_ctx_sync.verify(password, user.hashed_password):

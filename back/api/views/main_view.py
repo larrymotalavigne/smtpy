@@ -7,19 +7,17 @@ from fastapi.responses import JSONResponse
 from passlib.context import CryptContext
 from passlib.hash import bcrypt
 from sqlalchemy.orm import selectinload, Session
+from sqlalchemy.ext.asyncio import AsyncSession
 from starlette.responses import RedirectResponse
 
-from back.api.controllers import dns_controller
-from back.core.config import template_response
-from back.core.database.models import User, Domain, Alias, ActivityLog
-from back.core.utils.csrf import validate_csrf
-from back.core.utils.db import get_db_dep
-from back.core.utils.error_handling import ValidationError
-
-# Backward-compatible alias for dependency usage throughout this module
-get_db = get_db_dep
-from back.core.utils.rate_limit import check_rate_limit
-from back.core.utils.soft_delete import (
+from api.controllers import dns_controller
+from core.config import template_response
+from core.database.models import User, Domain, Alias, ActivityLog
+from core.utils.csrf import validate_csrf
+from core.utils.db import get_db, sync_get_db
+from core.utils.error_handling import ValidationError
+from core.utils.rate_limit import check_rate_limit
+from core.utils.soft_delete import (
     soft_delete_domain,
     soft_delete_alias,
     soft_delete_user,
@@ -27,7 +25,7 @@ from back.core.utils.soft_delete import (
     get_active_aliases,
     get_active_users,
 )
-from back.core.utils.user import (
+from core.utils.user import (
     get_current_user,
     send_invitation_email,
     send_verification_email,
@@ -38,7 +36,7 @@ router = APIRouter(prefix="")
 pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
 
 # Thin controller helpers (async)
-from back.api.controllers.main_controller import (
+from api.controllers.main_controller import (
     invite_user_simple_sync,
     register_user_simple_sync,
     verify_email_simple_sync,
@@ -59,7 +57,7 @@ def invite_user_post(
         background_tasks: BackgroundTasks,
         email: str = Form(...),
         csrf_token: str = Form(...),
-        session: Session = Depends(get_db),
+        session: Session = Depends(sync_get_db),
 ):
     # Validate CSRF token
     validate_csrf(request, csrf_token)
@@ -92,7 +90,7 @@ def register_post(
         password: str = Form(...),
         invite: str = Form(""),
         csrf_token: str = Form(None),
-        session: Session = Depends(get_db),
+        session: Session = Depends(sync_get_db),
 ):
     # Apply rate limiting for registration attempts (3 attempts per 10 minutes)
     check_rate_limit(request, "auth_register", 3, 600)
@@ -130,7 +128,7 @@ def register_post(
 
 
 @router.get("/verify-email", response_class=HTMLResponse)
-def verify_email(request: Request, token: str, session: Session = Depends(get_db)):
+def verify_email(request: Request, token: str, session: Session = Depends(sync_get_db)):
     ok = verify_email_simple_sync(session, token)
     if not ok:
         return template_response(request, "login.html", {"error": "Invalid or expired token."})
@@ -145,12 +143,12 @@ def login_form(request: Request):
 
 
 @router.post("/login")
-def login(
+async def login(
         request: Request,
         username: str = Form(..., min_length=1),
         password: str = Form(..., min_length=1),
         csrf_token: str = Form(...),
-        session: Session = Depends(get_db),
+        session: AsyncSession = Depends(get_db),
 ):
     # Apply rate limiting for authentication attempts (5 attempts per 5 minutes)
     # Scope by username to avoid cross-test/user interference
@@ -159,12 +157,15 @@ def login(
     # Validate CSRF token
     validate_csrf(request, csrf_token)
 
-    user = get_active_users(session).filter_by(username=username).first()
+    from sqlalchemy import select
+    users_stmt = get_active_users(session).where(User.username == username)
+    users_result = await session.execute(users_stmt)
+    user = users_result.scalars().first()
     password_ok = user is not None and bcrypt.verify(password, user.hashed_password)
     if not user or not password_ok:
         return template_response(request, "login.html", {"error": "Invalid credentials."})
     # Successful authentication: clear auth attempt rate limit for this client
-    from back.core.utils.rate_limit import rate_limiter, get_client_ip
+    from core.utils.rate_limit import rate_limiter, get_client_ip
 
     client_ip = get_client_ip(request)
     # Clear possible rate limit keys
@@ -181,22 +182,30 @@ def logout(request: Request):
     return RedirectResponse(url="/", status_code=303)
 
 
-@router.get("/", response_class=HTMLResponse)
+@router.get("/")
 def landing(request: Request):
     user = get_current_user(request)
     return template_response(request, "presentation.html", {"user": user})
 
 
-@router.get("/dashboard", response_class=HTMLResponse)
-def dashboard(request: Request, session: Session = Depends(get_db)):
+@router.get("/dashboard")
+async def dashboard(request: Request, session: AsyncSession = Depends(get_db)):
     user = get_current_user(request)
     if not user:
         return RedirectResponse(url="/login", status_code=303)
-    num_domains = get_active_domains(session).count()
-    num_aliases = get_active_aliases(session).count()
-    recent_activity = (
-        session.query(ActivityLog).order_by(ActivityLog.timestamp.desc()).limit(10).all()
-    )
+    
+    # Execute the select statements and count results
+    domains_result = await session.execute(get_active_domains(session))
+    num_domains = len(domains_result.scalars().all())
+    
+    aliases_result = await session.execute(get_active_aliases(session))
+    num_aliases = len(aliases_result.scalars().all())
+    
+    from sqlalchemy import select
+    recent_activity_stmt = select(ActivityLog).order_by(ActivityLog.timestamp.desc()).limit(10)
+    recent_activity_result = await session.execute(recent_activity_stmt)
+    recent_activity = recent_activity_result.scalars().all()
+    
     return template_response(
         request,
         "dashboard.html",
@@ -209,13 +218,19 @@ def dashboard(request: Request, session: Session = Depends(get_db)):
     )
 
 
-@router.get("/admin", response_class=HTMLResponse)
-def admin_panel(request: Request, session: Session = Depends(get_db)):
+@router.get("/admin")
+async def admin_panel(request: Request, session: AsyncSession = Depends(get_db)):
     user = get_current_user(request)
     if not user:
         return RedirectResponse(url="/login", status_code=303)
-    domains = get_active_domains(session).options(selectinload(Domain.aliases)).all()
-    aliases = get_active_aliases(session).all()
+    
+    from sqlalchemy import select
+    domains_stmt = get_active_domains(session).options(selectinload(Domain.aliases))
+    domains_result = await session.execute(domains_stmt)
+    domains = domains_result.scalars().all()
+    
+    aliases_result = await session.execute(get_active_aliases(session))
+    aliases = aliases_result.scalars().all()
     # Prepare domain status for onboarding checklist
     domain_statuses = []
     for domain in domains:
@@ -251,12 +266,12 @@ def admin_panel(request: Request, session: Session = Depends(get_db)):
 # Additional endpoints for test compatibility
 
 
-@router.get("/forgot-password", response_class=HTMLResponse)
+@router.get("/forgot-password")
 def forgot_password_get(request: Request):
     return template_response(request, "forgot_password.html", {"error": None})
 
 
-@router.get("/invite-user", response_class=HTMLResponse)
+@router.get("/invite-user")
 def invite_user_get_alt(request: Request):
     user = get_current_user(request)
     if not user or user.role != "admin":
@@ -264,12 +279,13 @@ def invite_user_get_alt(request: Request):
     return template_response(request, "invite_user.html", {"error": None})
 
 
-@router.get("/users", response_class=HTMLResponse)
-def users_get(request: Request, session: Session = Depends(get_db)):
+@router.get("/users")
+async def users_get(request: Request, session: AsyncSession = Depends(get_db)):
     user = get_current_user(request)
     if not user or user.role != "admin":
         raise HTTPException(status_code=403, detail="Admin access required.")
-    users = get_active_users(session).all()
+    users_result = await session.execute(get_active_users(session))
+    users = users_result.scalars().all()
     return template_response(request, "users.html", {"users": users, "user": user})
 
 
@@ -288,7 +304,7 @@ def dkim_public_key_get(request: Request, domain: str):
         return f"DKIM public key for {domain} not found."
 
 
-@router.get("/domain-dns/{domain_id}", response_class=HTMLResponse)
+@router.get("/domain-dns/{domain_id}")
 def domain_dns_get(request: Request, domain_id: int, session: Session = Depends(get_db)):
     user = get_current_user(request)
     if not user:
@@ -339,7 +355,7 @@ def health_check():
 
 
 @router.get("/ready")
-def readiness_check(session: Session = Depends(get_db_dep)):
+def readiness_check(session: Session = Depends(get_db)):
     """Readiness probe endpoint - checks if the application is ready to serve traffic."""
     try:
         # Check database connectivity

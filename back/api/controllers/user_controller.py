@@ -2,8 +2,8 @@
 
 from typing import Optional, List
 
-from back.core.database.models import User, Invitation
-from back.api.views.main_view import pwd_context
+from core.database.models import User, Invitation
+from api.views.main_view import pwd_context
 
 
 async def authenticate_user(username: str, password: str) -> Optional[User]:

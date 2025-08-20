@@ -8,15 +8,15 @@ from typing import Dict, Any, Optional
 import stripe
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from back.core.config import SETTINGS
-from back.core.database.billing_database import (
+from core.config import SETTINGS
+from core.database.billing_database import (
     db_get_user_by_stripe_customer_id,
     db_set_user_stripe_customer_id,
     db_update_user_subscription_status,
 )
-from back.core.database.models import User, ActivityLog
-from back.core.utils.db import get_db
-from back.core.utils.error_handling import (
+from core.database.models import User, ActivityLog
+from core.utils.db import get_db
+from core.utils.error_handling import (
     ValidationError,
     ResourceNotFoundError,
 )

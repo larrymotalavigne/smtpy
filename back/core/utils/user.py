@@ -6,7 +6,9 @@ from fastapi.requests import Request
 from passlib.context import CryptContext
 from starlette import status
 
-from back.core.config import SETTINGS
+from core.config import SETTINGS
+from core.database.models import User
+from core.utils.db import get_sync_db
 
 
 # Utility functions (should be imported from a shared module if possible)
@@ -14,7 +16,7 @@ def get_current_user(request: Request):
     user_id = request.session.get("user_id")
     if not user_id:
         return None
-    with get_db() as session:
+    with get_sync_db() as session:
         user = session.get(User, user_id)
         if not user:
             return None

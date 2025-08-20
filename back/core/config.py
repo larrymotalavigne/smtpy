@@ -5,7 +5,13 @@ from pathlib import Path
 from typing import Optional, List
 from urllib.parse import urlparse
 
-from alembic.config import Config
+try:
+    from alembic.config import Config
+    ALEMBIC_AVAILABLE = True
+except ImportError:
+    Config = None
+    ALEMBIC_AVAILABLE = False
+
 from fastapi import Request
 from pydantic import Field, field_validator, model_validator, ConfigDict
 from pydantic_settings import BaseSettings
@@ -16,11 +22,14 @@ _CONFIG_DIR = Path(__file__).parent
 # Get the project root directory (two levels up from back/core/)
 _PROJECT_ROOT = _CONFIG_DIR.parent.parent
 
-ALEMBIC_CONFIG = Config(str(_PROJECT_ROOT / "back" / "alembic.ini"))
-ALEMBIC_CONFIG.set_main_option(
-    "script_location",
-    str(_PROJECT_ROOT / "alembic"),
-)
+# Only create ALEMBIC_CONFIG if alembic is available
+ALEMBIC_CONFIG = None
+if ALEMBIC_AVAILABLE:
+    ALEMBIC_CONFIG = Config(str(_PROJECT_ROOT / "back" / "alembic.ini"))
+    ALEMBIC_CONFIG.set_main_option(
+        "script_location",
+        str(_PROJECT_ROOT / "alembic"),
+    )
 
 
 class Environment(str, Enum):
@@ -48,10 +57,10 @@ class Settings(BaseSettings):
 
     # Database
     DB_PATH: str = Field(
-        default="smtpy.db", description="Path to SQLite database file", json_schema_extra={"env": "SMTPY_DB_PATH"}
+        default="smtpy.db", description="Path to SQLite database file (deprecated, use DATABASE_URL)", json_schema_extra={"env": "SMTPY_DB_PATH"}
     )
-    DATABASE_URL: Optional[str] = Field(
-        default=None, description="Database connection URL (overrides DB_PATH)", json_schema_extra={"env": "SMTPY_DATABASE_URL"}
+    ASYNC_SQLALCHEMY_DATABASE_URI: str = Field(
+        default="postgresql+psycopg://smtpy:smtpy@localhost:5432/smtpy", description="Database connection URL", json_schema_extra={"env": "SMTPY_DATABASE_URL"}
     )
 
     # SMTP Configuration
@@ -188,16 +197,16 @@ class Settings(BaseSettings):
         env = self.ENVIRONMENT
         
         # Log database configuration
-        if self.DATABASE_URL:
+        if self.ASYNC_SQLALCHEMY_DATABASE_URI:
             # Detect database type for logging
-            if self.DATABASE_URL.startswith("postgresql://") or self.DATABASE_URL.startswith("postgresql+"):
+            if self.ASYNC_SQLALCHEMY_DATABASE_URI.startswith("postgresql://") or self.ASYNC_SQLALCHEMY_DATABASE_URI.startswith("postgresql+"):
                 db_type = "PostgreSQL"
-            elif self.DATABASE_URL.startswith("sqlite://"):
+            elif self.ASYNC_SQLALCHEMY_DATABASE_URI.startswith("sqlite://"):
                 db_type = "SQLite"
             else:
                 db_type = "Unknown"
-            logging.info(f"Database configuration: Using {db_type} from DATABASE_URL")
-            logging.debug(f"Database URL: {self.DATABASE_URL}")
+            logging.info(f"Database configuration: Using {db_type} from ASYNC_SQLALCHEMY_DATABASE_URI")
+            logging.debug(f"Database URL: {self.ASYNC_SQLALCHEMY_DATABASE_URI}")
         else:
             logging.info(f"Database configuration: Using SQLite with DB_PATH")
             logging.debug(f"SQLite path: {self.DB_PATH}")
@@ -266,12 +275,20 @@ SETTINGS = Settings()
 
 def template_response(request: Request, template_name: str, context: dict = None):
     """Create a template response with CSRF token automatically included."""
-    from back.core.utils.csrf import get_csrf_token
+    from core.utils.csrf import get_csrf_token
 
     if context is None:
         context = {}
 
-    # Add CSRF token to context
-    context["csrf_token"] = get_csrf_token(request)
+    try:
+        # Add CSRF token to context
+        context["csrf_token"] = get_csrf_token(request)
 
-    return SETTINGS.templates.TemplateResponse(request, template_name, context)
+        return SETTINGS.templates.TemplateResponse(request, template_name, context)
+    except Exception as e:
+        # Debug: Log the exception and return error context
+        import logging
+        logging.error(f"Template response error: {e}")
+        logging.error(f"Template: {template_name}, Context: {context}")
+        # Return the context dict directly (this will cause the encode error, but helps debug)
+        return context

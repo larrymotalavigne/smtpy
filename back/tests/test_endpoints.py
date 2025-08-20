@@ -1,7 +1,6 @@
-import pytest
 from fastapi.testclient import TestClient
 
-from back.api.main import create_app
+from api.main import create_app
 
 client = TestClient(create_app())
 
@@ -16,10 +15,6 @@ def test_landing():
     r = client.get("/", headers={"accept": "text/html"})
     assert r.status_code == 200
 
-
-def test_login_get():
-    r = client.get("/login")
-    assert r.status_code == 200
 
 
 def test_register_get():

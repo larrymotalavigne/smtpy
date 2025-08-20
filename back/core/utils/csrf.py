@@ -6,7 +6,7 @@ from typing import Optional
 from fastapi import Request, HTTPException
 from itsdangerous import URLSafeTimedSerializer, BadSignature, SignatureExpired
 
-from back.core.config import SETTINGS
+from core.config import SETTINGS
 
 
 class CSRFProtect:

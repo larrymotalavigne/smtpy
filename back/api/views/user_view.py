@@ -8,17 +8,17 @@ from fastapi import APIRouter, Request, Form, BackgroundTasks, HTTPException
 from fastapi.responses import HTMLResponse, RedirectResponse
 from sqlalchemy import select
 
-from back.core.config import template_response
-from back.api.controllers.main_controller import (
+from core.config import template_response
+from api.controllers.main_controller import (
     invite_user_simple,
     register_user_simple,
     verify_email_simple,
     authenticate_simple,
 )
-from back.core.database.models import User
-from back.core.utils.csrf import validate_csrf
-from back.core.utils.db import adbDep
-from back.core.utils.user import (
+from core.database.models import User
+from core.utils.csrf import validate_csrf
+from core.utils.db import dbDep
+from core.utils.user import (
     get_current_user,
     send_invitation_email,
     hash_password,
@@ -38,12 +38,12 @@ def invite_user_get(request: Request):
 
 @router.post("/invite", response_class=HTMLResponse)
 async def invite_user_post(
-        request: Request, background_tasks: BackgroundTasks, email: str = Form(...), db: adbDep = None
+        request: Request, background_tasks: BackgroundTasks, email: str = Form(...), db: dbDep = None
 ):
     user = get_current_user(request)
     if not user or user.role != "admin":
         raise HTTPException(status_code=403, detail="Admin access required.")
-    from back.core.utils.error_handling import ValidationError
+    from core.utils.error_handling import ValidationError
 
     try:
         result = await invite_user_simple(db, email=email, invited_by_id=user["id"])
@@ -70,9 +70,9 @@ async def register_post(
         email: str = Form(""),
         password: str = Form(...),
         invite: str = Form(""),
-        db: adbDep = None,
+        db: dbDep = None,
 ):
-    from back.core.utils.error_handling import ValidationError
+    from core.utils.error_handling import ValidationError
 
     try:
         result = await register_user_simple(
@@ -105,7 +105,7 @@ async def register_post(
 
 
 @router.get("/verify-email", response_class=HTMLResponse)
-async def verify_email(request: Request, token: str, db: adbDep = None):
+async def verify_email(request: Request, token: str, db: dbDep = None):
     ok = await verify_email_simple(db, token)
     if not ok:
         return template_response(
@@ -127,7 +127,7 @@ async def login(
         username: str = Form(...),
         password: str = Form(...),
         csrf_token: str = Form(...),
-        db: adbDep = None,
+        db: dbDep = None,
 ):
     # Validate CSRF token
     validate_csrf(request, csrf_token)
@@ -146,7 +146,7 @@ def logout(request: Request):
 
 
 @router.get("/users", response_class=HTMLResponse)
-async def user_management(request: Request, db: adbDep):
+async def user_management(request: Request, db: dbDep):
     user = get_current_user(request)
     if not user or user.role != "admin":
         raise HTTPException(status_code=403, detail="Admin access required.")
@@ -159,7 +159,7 @@ async def user_management(request: Request, db: adbDep):
 
 @router.post("/users/edit")
 async def edit_user(
-        request: Request, user_id: int = Form(...), email: str = Form(None), role: str = Form(...), db: adbDep = None
+        request: Request, user_id: int = Form(...), email: str = Form(None), role: str = Form(...), db: dbDep = None
 ):
     user = get_current_user(request)
     if not user or user.role != "admin":
@@ -173,7 +173,7 @@ async def edit_user(
 
 
 @router.post("/users/delete")
-async def delete_user(request: Request, user_id: int = Form(...), db: adbDep = None):
+async def delete_user(request: Request, user_id: int = Form(...), db: dbDep = None):
     user = get_current_user(request)
     if not user or user.role != "admin":
         raise HTTPException(status_code=403, detail="Admin access required.")
@@ -193,7 +193,7 @@ def forgot_password_get(request: Request):
 
 @router.post("/forgot-password", response_class=HTMLResponse)
 async def forgot_password_post(
-        request: Request, background_tasks: BackgroundTasks, email: str = Form(...), db: adbDep = None
+        request: Request, background_tasks: BackgroundTasks, email: str = Form(...), db: dbDep = None
 ):
     result = await db.execute(select(User).where(User.email == email))
     user = result.scalars().first()
@@ -234,7 +234,7 @@ def reset_password_get(request: Request, token: str):
 
 
 @router.post("/reset-password", response_class=HTMLResponse)
-async def reset_password_post(request: Request, token: str = Form(...), password: str = Form(...), db: adbDep = None):
+async def reset_password_post(request: Request, token: str = Form(...), password: str = Form(...), db: dbDep = None):
     result = await db.execute(select(User).where(User.password_reset_token == token))
     user = result.scalars().first()
     if (

@@ -4,9 +4,9 @@ import logging
 from datetime import datetime, UTC
 from typing import List, Optional, Dict, Any
 
-from back.core.database import domain_database
-from back.core.database.models import Domain
-from back.core.utils.db import get_db
+from core.database import domain_database
+from core.database.models import Domain
+from core.utils.db import get_db
 
 
 def log_activity(event_type: str, details: Dict[str, Any]) -> None:
@@ -427,17 +427,17 @@ def validate_domain_ownership(
 
 from typing import List, Optional, Dict, Any
 
-from back.core.utils.error_handling import (
+from core.utils.error_handling import (
     ValidationError,
     ResourceNotFoundError,
 )
-from back.core.database.models import Domain, ActivityLog
-from back.core.utils.validation import validate_domain_name, validate_email
-from back.core.utils.soft_delete import get_active_domains, soft_delete_domain
-from back.api.controllers.dns_controller import check_dns_records
+from core.database.models import Domain, ActivityLog
+from core.utils.validation import validate_domain_name, validate_email
+from core.utils.soft_delete import get_active_domains, soft_delete_domain
+from api.controllers.dns_controller import check_dns_records
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy import select
-from back.core.database.domain_database import (
+from core.database.domain_database import (
     db_get_user_by_id,
     db_get_active_domain_by_name,
     db_list_user_domains,
