@@ -1,30 +1,48 @@
 services:
-  smtp:
-    container_name: smtpy-smtp
-    image: registry.atomdev.fr/smtpy-smtp:latest
-    build:
-      context: .
-      dockerfile: ./back/smtp/Dockerfile
+  db:
+    container_name: smtpy-db
+    image: postgres:16
     environment:
-      - SMTPY_DATABASE_URL=postgresql://postgres:postgres@192.168.10.111:5432/smtpy
-      - SMTP_RELAY=localhost
-      - SMTP_PORT=1025
+      - POSTGRES_DB=smtpy
+      - POSTGRES_USER=postgres
+      - POSTGRES_PASSWORD=postgres
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
     ports:
-      - "1025:1025"
-    restart: unless-stopped
+      - "5432:5432"
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
 
   api:
     container_name: smtpy-api
-    image: registry.atomdev.fr/smtpy-api:latest
     build:
-      context: .
-      dockerfile: ./back/api/Dockerfile
+      context: ./back/api
+      dockerfile: Dockerfile
     environment:
-      - SMTPY_DATABASE_URL=postgresql://postgres:postgres@192.168.10.111:5432/smtpy
-      - SMTP_HOST=smtp
-      - SMTP_PORT=1025
+      - DATABASE_URL=postgresql+asyncpg://postgres:postgres@db:5432/smtpy
+      - STRIPE_API_KEY=${STRIPE_API_KEY:-}
+      - STRIPE_WEBHOOK_SECRET=${STRIPE_WEBHOOK_SECRET:-}
+      - DEBUG=true
     ports:
-      - "1001:8000"
-    restart: unless-stopped
+      - "8000:8000"
+    volumes:
+      - ./back/api:/app
     depends_on:
-      - smtp
+      db:
+        condition: service_healthy
+    restart: unless-stopped
+    command: >
+      sh -c "
+        echo 'Waiting for database to be ready...' &&
+        sleep 5 &&
+        echo 'Running database migrations...' &&
+        alembic upgrade head &&
+        echo 'Starting API server...' &&
+        uvicorn main:create_app --host 0.0.0.0 --port 8000 --factory --reload
+      "
+
+volumes:
+  postgres_data:

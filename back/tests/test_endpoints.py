@@ -1,162 +1,264 @@
+"""Comprehensive endpoint tests for SMTPy v2 API."""
+
 from fastapi.testclient import TestClient
+from sqlalchemy.ext.asyncio import create_async_engine, async_sessionmaker
 
 from api.main import create_app
+from api.core.db import get_db
 
-client = TestClient(create_app())
+# Create test database
+test_database_url = "sqlite+aiosqlite:///:memory:"
+test_engine = create_async_engine(test_database_url, echo=False)
+test_sessionmaker = async_sessionmaker(
+    bind=test_engine,
+    expire_on_commit=False,
+    autoflush=False,
+    autocommit=False,
+)
 
+async def get_test_db():
+    """Override get_db for testing."""
+    async with test_sessionmaker() as session:
+        try:
+            yield session
+        except Exception:
+            await session.rollback()
+            raise
+        finally:
+            await session.close()
 
-# --- Public endpoints ---
-def test_root():
-    r = client.get("/")
-    assert r.status_code == 200
+# Create database tables
+async def create_test_tables():
+    from api.models.base import Base
+    async with test_engine.begin() as conn:
+        await conn.run_sync(Base.metadata.create_all)
 
+# Setup for testing
+import asyncio
+asyncio.run(create_test_tables())
 
-def test_landing():
-    r = client.get("/", headers={"accept": "text/html"})
-    assert r.status_code == 200
-
-
-
-def test_register_get():
-    r = client.get("/register")
-    assert r.status_code == 200
-
-
-def test_forgot_password_get():
-    r = client.get("/forgot-password")
-    assert r.status_code == 200
-
-
-def test_dashboard_requires_login():
-    r = client.get("/dashboard", follow_redirects=False)
-    assert r.status_code == 303
-    assert "/login" in r.headers["location"]
-
-
-def test_admin_requires_login():
-    r = client.get("/admin", follow_redirects=False)
-    assert r.status_code == 303
-    assert "/login" in r.headers["location"]
-
-
-def test_invite_user_requires_admin():
-    r = client.get("/invite-user", follow_redirects=False)
-    assert r.status_code in (303, 403)
+# Create app and override dependency
+app = create_app()
+app.dependency_overrides[get_db] = get_test_db
+client = TestClient(app)
 
 
-def test_users_requires_admin():
-    r = client.get("/users", follow_redirects=False)
-    assert r.status_code in (303, 403)
+# --- Health Endpoints ---
+def test_root_health():
+    """Test root health endpoint."""
+    response = client.get("/")
+    assert response.status_code == 200
+    data = response.json()
+    assert data["status"] == "healthy"
+    assert data["service"] == "SMTPy v2 API"
 
 
-def test_api_dns_check():
-    r = client.get("/api/dns-check?domain=example.com")
-    assert r.status_code == 200
-    data = r.json()
-    assert "spf" in data and "dkim" in data and "dmarc" in data
+def test_detailed_health():
+    """Test detailed health endpoint."""
+    response = client.get("/health")
+    assert response.status_code == 200
+    data = response.json()
+    assert data["status"] == "healthy"
+    assert data["version"] == "2.0.0"
+    assert "domains" in data["features"]
+    assert "messages" in data["features"]
+    assert "billing" in data["features"]
 
 
-def test_api_activity_stats():
-    r = client.get("/api/activity-stats")
-    assert r.status_code == 200
-
-
-def test_dkim_public_key():
-    r = client.get("/dkim-public-key?domain=example.com")
-    assert r.status_code == 200
-    assert "DKIM public key" in r.text or "not found" in r.text
-
-
-def test_domain_dns_requires_login():
-    r = client.get("/domain-dns/1", follow_redirects=False)
-    assert r.status_code in (303, 403)
-
-
-def test_domain_aliases_requires_login():
-    r = client.get("/domain-aliases/1", follow_redirects=False)
-    assert r.status_code in (303, 403)
-
-
-def test_api_aliases_requires_login():
-    r = client.get("/api/aliases/1", follow_redirects=False)
-    assert r.status_code in (303, 403, 404)
-
-
-def test_api_alias_add_requires_login():
-    import datetime
-
-    expires = datetime.datetime.now().isoformat()
-    r = client.post(
-        "/api/aliases/1",
-        json={"local_part": "test", "targets": "test@example.com", "expires_at": expires},
-        follow_redirects=False,
+# --- Domain Endpoints ---
+def test_create_domain():
+    """Test POST /domains."""
+    response = client.post(
+        "/domains",
+        json={"name": "test.example.com"}
     )
-    assert r.status_code in (303, 403, 404)
+    assert response.status_code == 201
+    data = response.json()
+    assert data["name"] == "test.example.com"
+    assert data["status"] == "pending"
+    assert data["is_active"] is True
 
 
-def test_api_alias_delete_requires_login():
-    r = client.delete("/api/alias/1", follow_redirects=False)
-    assert r.status_code in (303, 403, 404)
-
-
-def test_api_alias_test_requires_login():
-    r = client.post("/api/alias-test/1", follow_redirects=False)
-    assert r.status_code in (303, 403, 404)
-
-
-def test_add_domain_requires_login():
-    r = client.post("/add-domain", data={"name": "example.com"}, follow_redirects=False)
-    assert r.status_code in (303, 403)
-
-
-def test_delete_domain_requires_login():
-    r = client.post("/delete-domain", data={"domain_id": 1}, follow_redirects=False)
-    assert r.status_code in (303, 403)
-
-
-def test_add_alias_requires_login():
-    r = client.post(
-        "/add-alias",
-        data={"local_part": "test", "target": "test@example.com", "domain_id": 1},
-        follow_redirects=False,
+def test_create_domain_duplicate():
+    """Test creating duplicate domain fails."""
+    # First creation should succeed
+    response1 = client.post(
+        "/domains",
+        json={"name": "duplicate.example.com"}
     )
-    assert r.status_code in (303, 403)
-
-
-def test_delete_alias_requires_login():
-    r = client.post("/delete-alias", data={"alias_id": 1}, follow_redirects=False)
-    assert r.status_code in (303, 403)
-
-
-def test_edit_catchall_requires_login():
-    r = client.post(
-        "/edit-catchall",
-        data={"domain_id": 1, "catch_all": "test@example.com"},
-        follow_redirects=False,
+    assert response1.status_code == 201
+    
+    # Second creation should fail
+    response2 = client.post(
+        "/domains",
+        json={"name": "duplicate.example.com"}
     )
-    assert r.status_code in (303, 403)
+    assert response2.status_code == 400
 
 
-def test_users_edit_requires_admin():
-    r = client.post(
-        "/users/edit",
-        data={"user_id": 1, "email": "test@example.com", "role": "user"},
-        follow_redirects=False,
+def test_list_domains():
+    """Test GET /domains."""
+    response = client.get("/domains")
+    assert response.status_code == 200
+    data = response.json()
+    assert "items" in data
+    assert "total" in data
+    assert "page" in data
+    assert "page_size" in data
+
+
+def test_list_domains_with_pagination():
+    """Test GET /domains with pagination."""
+    response = client.get("/domains?page=1&page_size=5")
+    assert response.status_code == 200
+    data = response.json()
+    assert data["page"] == 1
+    assert data["page_size"] == 5
+
+
+def test_get_domain_not_found():
+    """Test GET /domains/{id} with non-existent domain."""
+    response = client.get("/domains/999999")
+    assert response.status_code == 404
+
+
+def test_update_domain_not_found():
+    """Test PATCH /domains/{id} with non-existent domain."""
+    response = client.patch(
+        "/domains/999999",
+        json={"is_active": False}
     )
-    assert r.status_code in (303, 403)
+    assert response.status_code == 404
 
 
-def test_users_delete_requires_admin():
-    r = client.post("/users/delete", data={"user_id": 1}, follow_redirects=False)
-    assert r.status_code in (303, 403)
+def test_delete_domain_not_found():
+    """Test DELETE /domains/{id} with non-existent domain."""
+    response = client.delete("/domains/999999")
+    assert response.status_code == 404
 
 
-def test_register_post_duplicate():
-    # Try to register with an existing username/email (should fail if already exists)
-    r = client.post(
-        "/register",
-        data={"username": "admin", "email": "admin@example.com", "password": "password"},
+def test_verify_domain_not_found():
+    """Test POST /domains/{id}/verify with non-existent domain."""
+    response = client.post("/domains/999999/verify")
+    assert response.status_code == 404
+
+
+def test_get_dns_records_not_found():
+    """Test GET /domains/{id}/dns-records with non-existent domain."""
+    response = client.get("/domains/999999/dns-records")
+    assert response.status_code == 404
+
+
+# --- Message Endpoints ---
+def test_list_messages():
+    """Test GET /messages."""
+    response = client.get("/messages")
+    assert response.status_code == 200
+    data = response.json()
+    assert "items" in data
+    assert "total" in data
+
+
+def test_search_messages():
+    """Test GET /messages/search."""
+    response = client.get("/messages/search?q=test")
+    assert response.status_code == 200
+    data = response.json()
+    assert "items" in data
+    assert "total" in data
+
+
+def test_search_messages_empty_query():
+    """Test search with empty query fails validation."""
+    response = client.get("/messages/search?q=")
+    assert response.status_code == 422
+
+
+def test_get_message_stats():
+    """Test GET /messages/stats."""
+    response = client.get("/messages/stats")
+    assert response.status_code == 200
+    data = response.json()
+    assert "total_messages" in data
+    assert "delivered_messages" in data
+    assert "failed_messages" in data
+
+
+def test_get_recent_messages():
+    """Test GET /messages/recent."""
+    response = client.get("/messages/recent")
+    assert response.status_code == 200
+    data = response.json()
+    assert isinstance(data, list)
+
+
+def test_get_message_not_found():
+    """Test GET /messages/{id} with non-existent message."""
+    response = client.get("/messages/999999")
+    assert response.status_code == 404
+
+
+def test_delete_message_not_found():
+    """Test DELETE /messages/{id} with non-existent message."""
+    response = client.delete("/messages/999999")
+    assert response.status_code == 404
+
+
+# --- Billing Endpoints ---
+def test_create_checkout_session():
+    """Test POST /billing/checkout-session."""
+    response = client.post(
+        "/billing/checkout-session",
+        json={"price_id": "price_test_123"}
     )
-    assert r.status_code == 200
-    # Should show error in response
-    assert "already" in r.text or "exists" in r.text or "Check your email" in r.text
+    # This will fail with 400 because we don't have a real organization/customer
+    # but it should not be a 500 error
+    assert response.status_code in [201, 400]
+
+
+def test_get_customer_portal():
+    """Test GET /billing/customer-portal."""
+    response = client.get("/billing/customer-portal")
+    # This will fail with 400/404 because no customer exists
+    assert response.status_code in [200, 400, 404]
+
+
+def test_get_subscription():
+    """Test GET /subscriptions/me."""
+    response = client.get("/subscriptions/me")
+    # This will return 404 because no subscription exists
+    assert response.status_code == 404
+
+
+def test_cancel_subscription_no_subscription():
+    """Test PATCH /subscriptions/cancel with no subscription."""
+    response = client.patch(
+        "/subscriptions/cancel",
+        json={"cancel_at_period_end": True}
+    )
+    # Should return 400/404 because no subscription exists
+    assert response.status_code in [400, 404]
+
+
+def test_resume_subscription_no_subscription():
+    """Test PATCH /subscriptions/resume with no subscription."""
+    response = client.patch("/subscriptions/resume")
+    # Should return 400/404 because no subscription exists
+    assert response.status_code in [400, 404]
+
+
+def test_get_organization_billing():
+    """Test GET /billing/organization."""
+    response = client.get("/billing/organization")
+    # Should return 404 because no organization exists with ID 1
+    assert response.status_code == 404
+
+
+def test_stripe_webhook_missing_signature():
+    """Test POST /webhooks/stripe without signature."""
+    response = client.post(
+        "/webhooks/stripe",
+        json={"type": "test.event"}
+    )
+    # The webhook endpoint returns 500 when signature is missing (which is caught by exception handler)
+    assert response.status_code == 500

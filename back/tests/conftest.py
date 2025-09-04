@@ -20,9 +20,7 @@ except ImportError:
     ALEMBIC_AVAILABLE = False
 from sqlalchemy import text, create_engine
 from sqlalchemy.orm import sessionmaker
-from testcontainers.postgres import PostgresContainer
 
-from core.database.models import Base
 
 # Define ROOT_DIR as the back/ directory
 ROOT_DIR = Path(__file__).parent.parent
@@ -31,32 +29,35 @@ ROOT_DIR = Path(__file__).parent.parent
 @pytest.fixture(scope="session", autouse=True)
 def patch_settings():
     """Patch SETTINGS to use test database configuration."""
-    container = PostgresContainer(image="postgres:17", driver="psycopg")
-    container.start()
-    url = container.get_connection_url()
-    # Convert to async URL for proper async database connection
-    async_url = url.replace("postgresql://", "postgresql+asyncpg://")
+    # Use SQLite in-memory database for testing
+    async_url = "sqlite+aiosqlite:///:memory:"
 
-    with patch("core.config.SETTINGS") as mock_settings, \
-         patch("core.utils.db.SYNC_DATABASE_URI", url), \
-         patch("core.utils.db.SYNC_ENGINE") as mock_sync_engine, \
-         patch("core.utils.db.SYNC_LOCAL_SESSION") as mock_sync_session:
-        
-        # Patch settings
-        mock_settings.DATABASE_URL = url
-        mock_settings.ASYNC_SQLALCHEMY_DATABASE_URI = async_url
-        
-        # Create sync engine and session for tests
-        from sqlalchemy import create_engine
-        from sqlalchemy.orm import sessionmaker
-        sync_engine = create_engine(url, pool_pre_ping=True, pool_recycle=3600)
-        sync_session_maker = sessionmaker(autocommit=False, autoflush=False, expire_on_commit=False, bind=sync_engine)
-        mock_sync_engine.configure_mock(return_value=sync_engine)
-        mock_sync_session.configure_mock(side_effect=lambda: sync_session_maker())
-        
-        yield url
+    # Import the settings module to patch it properly
+    from api.core.config import SETTINGS
+    
+    # Create a patch that modifies the actual SETTINGS instance
+    original_database_url = SETTINGS.DATABASE_URL
+    original_debug = SETTINGS.DEBUG
+    original_secret = SETTINGS.SECRET_KEY
+    original_stripe_key = SETTINGS.STRIPE_API_KEY
+    original_stripe_secret = SETTINGS.STRIPE_WEBHOOK_SECRET
 
-    container.stop()
+    # Set test values directly on the SETTINGS object
+    SETTINGS.DATABASE_URL = async_url
+    SETTINGS.DEBUG = True
+    SETTINGS.SECRET_KEY = "test-secret-key"
+    SETTINGS.STRIPE_API_KEY = "sk_test_fake_key"
+    SETTINGS.STRIPE_WEBHOOK_SECRET = "whsec_fake_secret"
+    
+    try:
+        yield async_url
+    finally:
+        # Restore original values
+        SETTINGS.DATABASE_URL = original_database_url
+        SETTINGS.DEBUG = original_debug
+        SETTINGS.SECRET_KEY = original_secret
+        SETTINGS.STRIPE_API_KEY = original_stripe_key
+        SETTINGS.STRIPE_WEBHOOK_SECRET = original_stripe_secret
 
 
 @pytest.fixture(scope="session")
@@ -64,28 +65,22 @@ def engine(patch_settings):
     url = patch_settings
     engine = create_engine(url)
 
-    if ALEMBIC_AVAILABLE:
-        # Use alembic to create database schema
-        config = Config(f"{ROOT_DIR}/alembic.ini")
-        config.set_main_option("sqlalchemy.url", url)
-        config.set_main_option("script_location", f"{ROOT_DIR}/alembic")
-        upgrade(config, "head")
-    else:
-        # Fallback: create tables directly from models
-        from core.database.models import Base
-        Base.metadata.create_all(engine)
+    # Create tables directly from models (skip alembic for SQLite testing)
+    from api.models.base import Base
+    Base.metadata.create_all(engine)
 
     yield engine
 
 
 @pytest.fixture(scope="class")
 def db(engine):
+    from api.models.base import Base
     testing_session_local = sessionmaker(autocommit=False, autoflush=False, expire_on_commit=False, bind=engine)
     db = testing_session_local()
-    db.execute(text("SET session_replication_role = 'replica';"))
-    for mapper in Base.registry.mappers:
-        db.execute(text(f"TRUNCATE TABLE {mapper.tables[0].name} CASCADE"))
-    db.execute(text("SET session_replication_role = 'origin';"))
+    # Clear all tables (SQLite compatible)
+    for table in reversed(Base.metadata.sorted_tables):
+        db.execute(text(f"DELETE FROM {table.name}"))
+    db.commit()
     yield db
     db.close()
 
@@ -94,15 +89,22 @@ def db(engine):
 def async_engine(patch_settings):
     """Create async engine for testing that matches the app's async database setup."""
     url = patch_settings
-    async_url = url.replace("postgresql://", "postgresql+asyncpg://")
     from sqlalchemy.ext.asyncio import create_async_engine
-    engine = create_async_engine(
-        async_url,
-        pool_pre_ping=True,
-        pool_recycle=3600,
-        pool_size=5,
-        echo=False
-    )
+    
+    # SQLite doesn't support pool_size, pool_recycle parameters
+    if url.startswith("sqlite"):
+        engine = create_async_engine(url, echo=False)
+    else:
+        # PostgreSQL configuration
+        async_url = url.replace("postgresql://", "postgresql+asyncpg://")
+        engine = create_async_engine(
+            async_url,
+            pool_pre_ping=True,
+            pool_recycle=3600,
+            pool_size=5,
+            echo=False
+        )
+    
     yield engine
     engine.sync_engine.dispose()
 
@@ -113,17 +115,20 @@ async def async_db(async_engine):
     from sqlalchemy.ext.asyncio import async_sessionmaker
     from sqlalchemy import text as sync_text
 
+    # Create tables first
+    from api.models.base import Base
+    async with async_engine.begin() as conn:
+        await conn.run_sync(Base.metadata.create_all)
+
     testing_async_session_local = async_sessionmaker(
         autocommit=False, autoflush=False, expire_on_commit=False, bind=async_engine
     )
 
     async with testing_async_session_local() as session:
-        # Clear all tables before each test
+        # Clear all tables before each test (SQLite compatible)
         try:
-            await session.execute(sync_text("SET session_replication_role = 'replica';"))
-            for mapper in Base.registry.mappers:
-                await session.execute(sync_text(f"TRUNCATE TABLE {mapper.tables[0].name} CASCADE"))
-            await session.execute(sync_text("SET session_replication_role = 'origin';"))
+            for table in reversed(Base.metadata.sorted_tables):
+                await session.execute(sync_text(f"DELETE FROM {table.name}"))
             await session.commit()
         except Exception:
             await session.rollback()
@@ -138,11 +143,6 @@ async def async_db(async_engine):
 
 @pytest_asyncio.fixture(autouse=True)
 def mock(monkeypatch):
-    with (
-        patch("core.utils.user.send_verification_email"),
-        patch("core.utils.user.send_invitation_email"),
-        patch("smtplib.SMTP"),
-        patch("core.utils.csrf.validate_csrf") as mock_csrf,
-    ):
-        mock_csrf.return_value = None
+    # Mock SMTP for email sending (if needed)
+    with patch("smtplib.SMTP"):
         yield

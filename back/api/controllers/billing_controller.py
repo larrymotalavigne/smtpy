@@ -1,482 +1,382 @@
-"""Billing controller for Stripe billing operations."""
+"""Billing controller for SMTPy v2."""
 
-import logging
-import os
-from datetime import datetime, UTC
+from datetime import datetime
 from typing import Dict, Any, Optional
 
-import stripe
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from core.config import SETTINGS
-from core.database.billing_database import (
-    db_get_user_by_stripe_customer_id,
-    db_set_user_stripe_customer_id,
-    db_update_user_subscription_status,
+from ..core.config import SETTINGS
+from ..models.organization import SubscriptionStatus
+from ..database import billing_database
+from ..services import stripe_service
+from ..schemas.billing import (
+    CheckoutSessionRequest,
+    CheckoutSessionResponse,
+    CustomerPortalResponse,
+    SubscriptionResponse,
+    SubscriptionUpdateRequest,
+    OrganizationBilling
 )
-from core.database.models import User, ActivityLog
-from core.utils.db import get_db
-from core.utils.error_handling import (
-    ValidationError,
-    ResourceNotFoundError,
-)
 
 
-def log_activity(event_type: str, details: Dict[str, Any]) -> None:
-    """Log activity to the database."""
-    try:
-        with get_db() as session:
-            activity_log = ActivityLog(
-                event_type=event_type,
-                timestamp=datetime.now(UTC),
-                details=str(details),
-                status="success"
-            )
-            session.add(activity_log)
-            session.commit()
-    except Exception as e:
-        logging.error(f"Failed to log activity: {e}")
-
-
-def get_by_id_or_404(session, model_class, record_id: int):
-    """Get a record by ID or raise an error if not found."""
-    record = session.get(model_class, record_id)
-    if not record:
-        raise ResourceNotFoundError(f"{model_class.__name__} with id {record_id} not found")
-    return record
-
-
-def get_or_create_stripe_customer(user_id: int) -> str:
-    """Get or create a Stripe customer for a user.
-
-    Args:
-        user_id: ID of the user
-
-    Returns:
-        Stripe customer ID
-
-    Raises:
-        ResourceNotFoundError: If user not found
-    """
-    try:
-        with get_db() as session:
-            user = get_by_id_or_404(session, User, user_id, session)
-
-            if not user.stripe_customer_id:
-                # Create new Stripe customer
-                customer = stripe.Customer.create(email=user.email or f"user{user.id}@example.com")
-                db_set_user_stripe_customer_id(session, user, customer.id)
-
-                log_activity(
-                    "stripe_customer_created",
-                    {"user_id": user_id, "customer_id": customer.id, "email": user.email},
-                )
-            else:
-                # Retrieve existing customer
-                customer = stripe.Customer.retrieve(user.stripe_customer_id)
-
-            return customer.id
-
-    except ResourceNotFoundError:
-        raise
-    except Exception as e:
-        logging.error(f"Failed to get/create Stripe customer for user {user_id}: {e}")
-        raise
-
-
-def create_billing_portal_session(user_id: int) -> str:
-    """Create a Stripe billing portal session.
-
-    Args:
-        user_id: ID of the user
-
-    Returns:
-        Billing portal session URL
-
-    Raises:
-        ResourceNotFoundError: If user not found
-    """
-    try:
-        customer_id = get_or_create_stripe_customer(user_id)
-
-        portal_session = stripe.billing_portal.Session.create(
-            customer=customer_id, return_url=SETTINGS.STRIPE_BILLING_PORTAL_RETURN_URL
+async def create_checkout_session(
+    db: AsyncSession,
+    organization_id: int,
+    checkout_request: CheckoutSessionRequest
+) -> CheckoutSessionResponse:
+    """Create a Stripe checkout session for an organization."""
+    # Get organization
+    organization = await billing_database.get_organization_by_id(db, organization_id)
+    if not organization:
+        raise ValueError("Organization not found")
+    
+    # Create or get Stripe customer
+    customer_id = organization.stripe_customer_id
+    if not customer_id:
+        customer_id = await stripe_service.create_or_get_customer(
+            email=organization.email,
+            name=organization.name
         )
-
-        log_activity(
-            "billing_portal_session_created",
-            {"user_id": user_id, "customer_id": customer_id, "session_url": portal_session.url},
+        
+        # Update organization with customer ID
+        await billing_database.update_organization_stripe_customer(
+            db, organization_id, customer_id
         )
-
-        return portal_session.url
-
-    except Exception as e:
-        logging.error(f"Failed to create billing portal session for user {user_id}: {e}")
-        raise
-
-
-def create_checkout_session(user_id: int, plan: str) -> str:
-    """Create a Stripe checkout session.
-
-    Args:
-        user_id: ID of the user
-        plan: Plan name (basic, pro, etc.)
-
-    Returns:
-        Checkout session URL
-
-    Raises:
-        ResourceNotFoundError: If user not found
-        ValidationError: If invalid plan
-    """
-    try:
-        # Validate plan
-        price_ids = {
-            "basic": os.environ.get("STRIPE_BASIC_PRICE_ID", "price_1N..."),
-            "pro": os.environ.get("STRIPE_PRO_PRICE_ID", "price_1N..."),
+    
+    # Determine URLs
+    success_url = str(checkout_request.success_url) if checkout_request.success_url else SETTINGS.STRIPE_SUCCESS_URL
+    cancel_url = str(checkout_request.cancel_url) if checkout_request.cancel_url else SETTINGS.STRIPE_CANCEL_URL
+    
+    # Create checkout session
+    session_data = await stripe_service.create_checkout_session(
+        customer_id=customer_id,
+        price_id=checkout_request.price_id,
+        success_url=success_url,
+        cancel_url=cancel_url,
+        metadata={
+            "organization_id": str(organization_id),
+            "price_id": checkout_request.price_id
         }
-
-        price_id = price_ids.get(plan)
-        if not price_id:
-            raise ValidationError(f"Invalid plan: {plan}")
-
-        customer_id = get_or_create_stripe_customer(user_id)
-
-        checkout_session = stripe.checkout.Session.create(
-            customer=customer_id,
-            payment_method_types=["card"],
-            line_items=[{"price": price_id, "quantity": 1}],
-            mode="subscription",
-            success_url=os.environ.get(
-                "STRIPE_CHECKOUT_SUCCESS_URL", "http://localhost:8000/billing?success=1"
-            ),
-            cancel_url=os.environ.get(
-                "STRIPE_CHECKOUT_CANCEL_URL", "http://localhost:8000/billing?canceled=1"
-            ),
-        )
-
-        log_activity(
-            "checkout_session_created",
-            {
-                "user_id": user_id,
-                "customer_id": customer_id,
-                "plan": plan,
-                "price_id": price_id,
-                "session_url": checkout_session.url,
-            },
-        )
-
-        return checkout_session.url
-
-    except (ResourceNotFoundError, ValidationError):
-        raise
-    except Exception as e:
-        logging.error(f"Failed to create checkout session for user {user_id}, plan {plan}: {e}")
-        raise
-
-
-def handle_webhook_event(payload: bytes, signature: str) -> Dict[str, Any]:
-    """Handle Stripe webhook events.
-
-    Args:
-        payload: Raw webhook payload
-        signature: Stripe signature header
-
-    Returns:
-        Dictionary containing processing results
-
-    Raises:
-        ValidationError: If webhook validation fails
-    """
-    try:
-        endpoint_secret = os.environ.get("STRIPE_WEBHOOK_SECRET", "whsec_test")
-
-        # Verify webhook signature
-        try:
-            event = stripe.Webhook.construct_event(payload, signature, endpoint_secret)
-        except Exception as e:
-            logging.error(f"Webhook signature verification failed: {e}")
-            raise ValidationError(f"Invalid webhook signature: {e}")
-
-        # Process subscription events
-        if event["type"].startswith("customer.subscription."):
-            return _handle_subscription_event(event)
-
-        # Log unhandled events
-        log_activity(
-            "webhook_event_received",
-            {"event_type": event["type"], "event_id": event.get("id"), "handled": False},
-        )
-
-        return {"received": True, "handled": False, "event_type": event["type"]}
-
-    except ValidationError:
-        raise
-    except Exception as e:
-        logging.error(f"Failed to handle webhook event: {e}")
-        raise
-
-
-def _handle_subscription_event(event: Dict[str, Any]) -> Dict[str, Any]:
-    """Handle subscription-related webhook events.
-
-    Args:
-        event: Stripe webhook event
-
-    Returns:
-        Dictionary containing processing results
-    """
-    try:
-        data = event["data"]["object"]
-        customer_id = data["customer"]
-        status = data["status"]
-
-        with get_db() as session:
-            user = db_get_user_by_stripe_customer_id(session, customer_id)
-
-            if user:
-                old_status = user.subscription_status
-                db_update_user_subscription_status(session, user, status)
-
-                log_activity(
-                    "subscription_status_updated",
-                    {
-                        "user_id": user.id,
-                        "customer_id": customer_id,
-                        "old_status": old_status,
-                        "new_status": status,
-                        "event_type": event["type"],
-                        "event_id": event.get("id"),
-                    },
-                )
-
-                return {
-                    "received": True,
-                    "handled": True,
-                    "event_type": event["type"],
-                    "user_id": user.id,
-                    "status_updated": True,
-                }
-            else:
-                logging.warning(f"No user found for Stripe customer {customer_id}")
-
-                log_activity(
-                    "subscription_event_no_user",
-                    {
-                        "customer_id": customer_id,
-                        "status": status,
-                        "event_type": event["type"],
-                        "event_id": event.get("id"),
-                    },
-                )
-
-                return {
-                    "received": True,
-                    "handled": False,
-                    "event_type": event["type"],
-                    "error": "User not found",
-                }
-
-    except Exception as e:
-        logging.error(f"Failed to handle subscription event: {e}")
-        raise
-
-
-def get_user_billing_info(user_id: int) -> Dict[str, Any]:
-    """Get billing information for a user.
-
-    Args:
-        user_id: ID of the user
-
-    Returns:
-        Dictionary containing billing information
-
-    Raises:
-        ResourceNotFoundError: If user not found
-    """
-    try:
-        with get_db() as session:
-            user = get_by_id_or_404(session, User, user_id, session)
-
-            billing_info = {
-                "user_id": user_id,
-                "has_stripe_customer": bool(user.stripe_customer_id),
-                "stripe_customer_id": user.stripe_customer_id,
-                "subscription_status": user.subscription_status,
-            }
-
-            # Get additional Stripe info if customer exists
-            if user.stripe_customer_id:
-                try:
-                    customer = stripe.Customer.retrieve(user.stripe_customer_id)
-                    subscriptions = stripe.Subscription.list(customer=user.stripe_customer_id)
-
-                    billing_info.update(
-                        {
-                            "customer_email": customer.email,
-                            "customer_created": customer.created,
-                            "active_subscriptions": len(subscriptions.data),
-                            "subscriptions": [
-                                {
-                                    "id": sub.id,
-                                    "status": sub.status,
-                                    "current_period_start": sub.current_period_start,
-                                    "current_period_end": sub.current_period_end,
-                                    "plan_name": sub.items.data[0].price.nickname
-                                    if sub.items.data
-                                    else None,
-                                }
-                                for sub in subscriptions.data
-                            ],
-                        }
-                    )
-                except Exception as e:
-                    logging.warning(
-                        f"Failed to retrieve Stripe info for customer {user.stripe_customer_id}: {e}"
-                    )
-                    billing_info["stripe_error"] = str(e)
-
-            log_activity(
-                "billing_info_retrieved",
-                {"user_id": user_id, "has_stripe_customer": billing_info["has_stripe_customer"]},
-            )
-
-            return billing_info
-
-    except ResourceNotFoundError:
-        raise
-    except Exception as e:
-        logging.error(f"Failed to get billing info for user {user_id}: {e}")
-        raise
-
-
-def cancel_subscription(user_id: int, subscription_id: str) -> Dict[str, Any]:
-    """Cancel a user's subscription.
-
-    Args:
-        user_id: ID of the user
-        subscription_id: Stripe subscription ID
-
-    Returns:
-        Dictionary containing cancellation results
-
-    Raises:
-        ResourceNotFoundError: If user not found
-        PermissionError: If user doesn't own the subscription
-    """
-    try:
-        with get_db() as session:
-            user = get_by_id_or_404(session, User, user_id, session)
-
-            if not user.stripe_customer_id:
-                raise ValidationError("User has no Stripe customer")
-
-            # Verify subscription belongs to user
-            subscription = stripe.Subscription.retrieve(subscription_id)
-            if subscription.customer != user.stripe_customer_id:
-                raise PermissionError("Subscription does not belong to user")
-
-            # Cancel subscription
-            canceled_subscription = stripe.Subscription.delete(subscription_id)
-
-            log_activity(
-                "subscription_canceled",
-                {
-                    "user_id": user_id,
-                    "subscription_id": subscription_id,
-                    "customer_id": user.stripe_customer_id,
-                    "canceled_at": canceled_subscription.canceled_at,
-                },
-            )
-
-            return {
-                "canceled": True,
-                "subscription_id": subscription_id,
-                "canceled_at": canceled_subscription.canceled_at,
-                "status": canceled_subscription.status,
-            }
-
-    except (ResourceNotFoundError, PermissionError, ValidationError):
-        raise
-    except Exception as e:
-        logging.error(
-            f"Failed to cancel subscription {subscription_id} for user {user_id}: {e}"
-        )
-        raise
-
-
-# ---- Thin async billing operations for views (function-style) ----
-# annotations future import not needed here
-
-
-async def get_or_create_customer(session: AsyncSession, user_id: int) -> str:
-    """Get or create a Stripe customer for a user and return the customer ID."""
-    user = await session.get(User, user_id)
-    if not user:
-        raise ResourceNotFoundError("User not found")
-    if not user.stripe_customer_id:
-        # Create customer in Stripe (Stripe SDK is sync)
-        customer = stripe.Customer.create(email=user.email or f"user{user.id}@example.com")
-        await db_set_user_stripe_customer_id(session, user, customer.id)
-        return customer.id
-    else:
-        customer = stripe.Customer.retrieve(user.stripe_customer_id)
-        return customer.id
-
-
-async def create_billing_portal(session: AsyncSession, user_id: int) -> str:
-    """Create a billing portal session and return its URL."""
-    customer_id = await get_or_create_customer(session, user_id)
-    portal_session = stripe.billing_portal.Session.create(
-        customer=customer_id,
-        return_url=SETTINGS.STRIPE_BILLING_PORTAL_RETURN_URL,
     )
-    return portal_session.url
+    
+    return CheckoutSessionResponse(
+        url=session_data["url"],
+        session_id=session_data["session_id"]
+    )
 
 
-async def create_checkout(session: AsyncSession, user_id: int, plan: str) -> str:
-    """Create a checkout session for the provided plan and return its URL."""
-    price_ids = {
-        "basic": os.environ.get("STRIPE_BASIC_PRICE_ID", "price_1N..."),
-        "pro": os.environ.get("STRIPE_PRO_PRICE_ID", "price_1N..."),
+async def create_customer_portal_session(
+    db: AsyncSession,
+    organization_id: int
+) -> CustomerPortalResponse:
+    """Create a Stripe customer portal session."""
+    # Get organization
+    organization = await billing_database.get_organization_by_id(db, organization_id)
+    if not organization:
+        raise ValueError("Organization not found")
+    
+    if not organization.stripe_customer_id:
+        raise ValueError("Organization does not have a Stripe customer")
+    
+    # Create portal session
+    portal_data = await stripe_service.create_portal_session(
+        customer_id=organization.stripe_customer_id,
+        return_url=SETTINGS.STRIPE_PORTAL_RETURN_URL
+    )
+    
+    return CustomerPortalResponse(url=portal_data["url"])
+
+
+async def get_subscription(
+    db: AsyncSession,
+    organization_id: int
+) -> Optional[SubscriptionResponse]:
+    """Get current subscription for an organization."""
+    # Get organization
+    organization = await billing_database.get_organization_by_id(db, organization_id)
+    if not organization:
+        raise ValueError("Organization not found")
+    
+    if not organization.stripe_subscription_id:
+        return None
+    
+    # Get subscription from Stripe
+    try:
+        subscription_data = await stripe_service.fetch_subscription(
+            organization.stripe_subscription_id
+        )
+    except ValueError:
+        # Subscription no longer exists in Stripe, clear local data
+        await billing_database.clear_subscription_data(db, organization_id)
+        return None
+    
+    # Calculate days until renewal
+    days_until_renewal = None
+    if organization.current_period_end:
+        days_until_renewal = (organization.current_period_end - datetime.now()).days
+        if days_until_renewal < 0:
+            days_until_renewal = 0
+    
+    is_active = organization.subscription_status in [
+        SubscriptionStatus.ACTIVE,
+        SubscriptionStatus.TRIALING
+    ] if organization.subscription_status else False
+    
+    return SubscriptionResponse(
+        id=organization.stripe_subscription_id,
+        status=organization.subscription_status,
+        current_period_end=organization.current_period_end,
+        plan_price_id=organization.plan_price_id,
+        cancel_at_period_end=subscription_data.get("cancel_at_period_end", False),
+        is_active=is_active,
+        days_until_renewal=days_until_renewal
+    )
+
+
+async def cancel_subscription(
+    db: AsyncSession,
+    organization_id: int,
+    update_request: SubscriptionUpdateRequest
+) -> Optional[SubscriptionResponse]:
+    """Cancel or schedule cancellation of a subscription."""
+    # Get organization
+    organization = await billing_database.get_organization_by_id(db, organization_id)
+    if not organization:
+        raise ValueError("Organization not found")
+    
+    if not organization.stripe_subscription_id:
+        raise ValueError("Organization does not have an active subscription")
+    
+    # Cancel subscription in Stripe
+    at_period_end = update_request.cancel_at_period_end or True
+    await stripe_service.cancel_subscription(
+        subscription_id=organization.stripe_subscription_id,
+        at_period_end=at_period_end
+    )
+    
+    # If canceling immediately, update status in database
+    if not at_period_end:
+        await billing_database.update_subscription_status(
+            db=db,
+            stripe_subscription_id=organization.stripe_subscription_id,
+            subscription_status=SubscriptionStatus.CANCELED
+        )
+    
+    # Return updated subscription
+    return await get_subscription(db, organization_id)
+
+
+async def resume_subscription(
+    db: AsyncSession,
+    organization_id: int
+) -> Optional[SubscriptionResponse]:
+    """Resume a subscription that was set to cancel at period end."""
+    # Get organization
+    organization = await billing_database.get_organization_by_id(db, organization_id)
+    if not organization:
+        raise ValueError("Organization not found")
+    
+    if not organization.stripe_subscription_id:
+        raise ValueError("Organization does not have an active subscription")
+    
+    # Resume subscription in Stripe
+    await stripe_service.resume_subscription(organization.stripe_subscription_id)
+    
+    # Return updated subscription
+    return await get_subscription(db, organization_id)
+
+
+async def handle_webhook_event(
+    db: AsyncSession,
+    event_data: Dict[str, Any]
+) -> bool:
+    """Handle Stripe webhook event and update database accordingly."""
+    event_id = event_data["id"]
+    event_type = event_data["type"]
+    
+    # Check if event already processed
+    existing_event = await billing_database.get_webhook_event(db, event_id)
+    if existing_event:
+        return existing_event.processed
+    
+    # Record webhook event
+    await billing_database.create_webhook_event(db, event_id, event_type)
+    
+    try:
+        # Process different event types
+        if event_type in [
+            "checkout.session.completed",
+            "invoice.payment_succeeded"
+        ]:
+            await _handle_subscription_created_or_updated(db, event_data)
+        
+        elif event_type in [
+            "customer.subscription.updated",
+            "customer.subscription.deleted"
+        ]:
+            await _handle_subscription_status_changed(db, event_data)
+        
+        elif event_type == "invoice.payment_failed":
+            await _handle_payment_failed(db, event_data)
+        
+        # Mark as processed
+        await billing_database.mark_webhook_event_processed(db, event_id)
+        return True
+        
+    except Exception as e:
+        # Log error but don't mark as processed so it can be retried
+        print(f"Error processing webhook {event_id}: {str(e)}")
+        return False
+
+
+async def _handle_subscription_created_or_updated(
+    db: AsyncSession,
+    event_data: Dict[str, Any]
+) -> None:
+    """Handle subscription creation or update events."""
+    if event_data["type"] == "checkout.session.completed":
+        session = event_data["data"]["object"]
+        customer_id = session["customer"]
+        subscription_id = session["subscription"]
+    else:  # invoice.payment_succeeded
+        invoice = event_data["data"]["object"]
+        customer_id = invoice["customer"]
+        subscription_id = invoice["subscription"]
+    
+    if not subscription_id:
+        return
+    
+    # Get organization by customer ID
+    organization = await billing_database.get_organization_by_stripe_customer_id(
+        db, customer_id
+    )
+    if not organization:
+        return
+    
+    # Get subscription details from Stripe
+    subscription_data = await stripe_service.fetch_subscription(subscription_id)
+    
+    # Convert timestamps
+    period_end = datetime.fromtimestamp(subscription_data["current_period_end"])
+    
+    # Map Stripe status to our enum
+    status_mapping = {
+        "active": SubscriptionStatus.ACTIVE,
+        "trialing": SubscriptionStatus.TRIALING,
+        "past_due": SubscriptionStatus.PAST_DUE,
+        "canceled": SubscriptionStatus.CANCELED,
+        "unpaid": SubscriptionStatus.UNPAID,
+        "incomplete": SubscriptionStatus.INCOMPLETE,
+        "incomplete_expired": SubscriptionStatus.INCOMPLETE_EXPIRED,
+        "paused": SubscriptionStatus.PAUSED,
     }
-    price_id = price_ids.get(plan)
-    if not price_id:
-        raise ValidationError(f"Invalid plan: {plan}")
-    customer_id = await get_or_create_customer(session, user_id)
-    checkout_session = stripe.checkout.Session.create(
-        customer=customer_id,
-        payment_method_types=["card"],
-        line_items=[{"price": price_id, "quantity": 1}],
-        mode="subscription",
-        success_url=os.environ.get(
-            "STRIPE_CHECKOUT_SUCCESS_URL", "http://localhost:8000/billing?success=1"
-        ),
-        cancel_url=os.environ.get(
-            "STRIPE_CHECKOUT_CANCEL_URL", "http://localhost:8000/billing?canceled=1"
-        ),
+    
+    subscription_status = status_mapping.get(
+        subscription_data["status"], 
+        SubscriptionStatus.ACTIVE
     )
-    return checkout_session.url
+    
+    # Get price ID from subscription items
+    price_id = None
+    if subscription_data["items"]:
+        price_id = subscription_data["items"][0]["price_id"]
+    
+    # Update organization subscription
+    await billing_database.update_organization_subscription(
+        db=db,
+        organization_id=organization.id,
+        stripe_subscription_id=subscription_id,
+        subscription_status=subscription_status,
+        current_period_end=period_end,
+        plan_price_id=price_id or ""
+    )
 
 
-async def handle_webhook(
-        session: AsyncSession, payload: bytes, signature: Optional[str]
-) -> Dict[str, Any]:
-    """Validate and process a Stripe webhook payload."""
-    endpoint_secret = os.environ.get("STRIPE_WEBHOOK_SECRET", "whsec_test")
-    try:
-        event = stripe.Webhook.construct_event(payload, signature, endpoint_secret)
-    except Exception as e:
-        raise ValidationError(f"Invalid webhook signature: {e}")
+async def _handle_subscription_status_changed(
+    db: AsyncSession,
+    event_data: Dict[str, Any]
+) -> None:
+    """Handle subscription status change events."""
+    subscription = event_data["data"]["object"]
+    subscription_id = subscription["id"]
+    
+    # Map Stripe status to our enum
+    status_mapping = {
+        "active": SubscriptionStatus.ACTIVE,
+        "trialing": SubscriptionStatus.TRIALING,
+        "past_due": SubscriptionStatus.PAST_DUE,
+        "canceled": SubscriptionStatus.CANCELED,
+        "unpaid": SubscriptionStatus.UNPAID,
+        "incomplete": SubscriptionStatus.INCOMPLETE,
+        "incomplete_expired": SubscriptionStatus.INCOMPLETE_EXPIRED,
+        "paused": SubscriptionStatus.PAUSED,
+    }
+    
+    subscription_status = status_mapping.get(
+        subscription["status"], 
+        SubscriptionStatus.ACTIVE
+    )
+    
+    period_end = None
+    if subscription.get("current_period_end"):
+        period_end = datetime.fromtimestamp(subscription["current_period_end"])
+    
+    # Update subscription status
+    await billing_database.update_subscription_status(
+        db=db,
+        stripe_subscription_id=subscription_id,
+        subscription_status=subscription_status,
+        current_period_end=period_end
+    )
 
-    handled = False
-    if event.get("type", "").startswith("customer.subscription."):
-        data = event["data"]["object"]
-        customer_id = data["customer"]
-        status_val = data["status"]
-        user = await db_get_user_by_stripe_customer_id(session, customer_id)
-        if user:
-            await db_update_user_subscription_status(session, user, status_val)
-            handled = True
 
-    return {"received": True, "handled": handled, "event_type": event.get("type")}
+async def _handle_payment_failed(
+    db: AsyncSession,
+    event_data: Dict[str, Any]
+) -> None:
+    """Handle payment failure events."""
+    invoice = event_data["data"]["object"]
+    subscription_id = invoice.get("subscription")
+    
+    if subscription_id:
+        # Update subscription status to past due
+        await billing_database.update_subscription_status(
+            db=db,
+            stripe_subscription_id=subscription_id,
+            subscription_status=SubscriptionStatus.PAST_DUE
+        )
+
+
+async def get_organization_billing(
+    db: AsyncSession,
+    organization_id: int
+) -> Optional[OrganizationBilling]:
+    """Get comprehensive billing information for an organization."""
+    # Get organization
+    organization = await billing_database.get_organization_by_id(db, organization_id)
+    if not organization:
+        return None
+    
+    # Get current subscription
+    subscription = await get_subscription(db, organization_id)
+    
+    # Get usage counts
+    domains_count = await billing_database.count_domains_for_organization(db, organization_id)
+    
+    # Get messages count for current month
+    from datetime import datetime
+    current_month_start = datetime.now().replace(day=1, hour=0, minute=0, second=0, microsecond=0)
+    messages_count = await billing_database.count_messages_for_organization(
+        db, organization_id, since_date=current_month_start
+    )
+    
+    return OrganizationBilling(
+        organization_id=organization.id,
+        stripe_customer_id=organization.stripe_customer_id,
+        subscription=subscription,
+        billing_email=organization.email,
+        domains_count=domains_count,
+        messages_count=messages_count,
+        plan_domain_limit=None,  # Would be determined by plan
+        plan_message_limit=None  # Would be determined by plan
+    )

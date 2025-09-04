@@ -179,3 +179,30 @@ python -m pytest --cov=. tests/
 - Verify SMTP relay configuration for email forwarding
 - Use DNS check endpoints for troubleshooting domain setup
 - Monitor activity logs for email processing issues
+
+## Architecture Guidelines
+
+### 3-Layer Architecture
+
+SMTPy follows a strict 3-layer module structure per feature:
+
+- **Views** (`*_view.py`): FastAPI routers with request/response handling and routing logic. Located in `views/` directory.
+- **Controllers** (`*_controller.py`): Pure functions orchestrating business logic, no FastAPI imports. Accept explicit dependencies (db, services, now_fn, etc.). Located in `controllers/` directory.
+- **Database** (`*_database.py`): Pure SQLAlchemy async queries. Accept AsyncSession as first argument. Located in `database/` directory.
+
+### File Naming Conventions
+
+Follow these naming conventions for consistency across the codebase:
+
+- **View files**: Files under `views/` directories should end with `_view.py` (e.g., `domains_view.py`, `messages_view.py`)
+- **Controller files**: Files under `controllers/` directories should end with `_controller.py` (e.g., `domains_controller.py`, `messages_controller.py`)
+- **Database files**: Files under `database/` directories should end with `_database.py` (e.g., `domains_database.py`, `messages_database.py`)
+
+This convention helps distinguish between different types of modules and maintains consistency across the project structure.
+
+### Import Patterns
+
+- Views inject database dependencies with `Depends(get_db)` and pass them down to controllers
+- Controllers accept database sessions as parameters and call database functions
+- Database functions are pure async functions that accept `AsyncSession` as the first argument
+- All business logic should be in controllers, not in views or database layers

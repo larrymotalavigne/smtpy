@@ -21,9 +21,14 @@ import logging
 logger = logging.getLogger("alembic.env")
 
 # Import the settings to get the default DATABASE_URL
-from core.config import SETTINGS
+from api.core.config import SETTINGS
 
-from core.database.models import Base
+# Import all models to ensure they're registered with Base.metadata
+from api.models.base import Base
+from api.models.organization import Organization
+from api.models.domain import Domain
+from api.models.message import Message
+from api.models.event import Event, BillingWebhookEvent
 
 database_url = SETTINGS.DATABASE_URL
 
