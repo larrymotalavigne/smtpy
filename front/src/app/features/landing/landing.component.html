@@ -1,0 +1,37 @@
+<div class="hero" style="text-align: center; padding: 60px 20px; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; margin: 20px; border-radius: 8px;">
+  <h1 style="font-size: 2.5em; margin-bottom: 20px;">Emails professionnels pour votre domaine</h1>
+  <p style="font-size: 1.2em; margin-bottom: 30px;">Créez des alias email illimités et redirigez-les vers votre boîte existante</p>
+  <button class="cta-button" 
+          style="background: #e74c3c; color: white; padding: 15px 30px; border: none; border-radius: 5px; font-size: 16px; cursor: pointer;"
+          (click)="navigateToDashboard()">Commencer gratuitement</button>
+</div>
+
+<div style="display: grid; grid-template-columns: repeat(3, 1fr); gap: 20px; margin: 40px 20px; max-width: 1200px; margin-left: auto; margin-right: auto;">
+  <div style="text-align: center; padding: 20px;">
+    <div style="background: #3498db; width: 60px; height: 60px; border-radius: 50%; margin: 0 auto 15px; display: flex; align-items: center; justify-content: center; color: white; font-size: 24px;">⚙️</div>
+    <h3 style="margin-bottom: 15px; color: #2c3e50;">Configuration simple</h3>
+    <p style="color: #666;">Configurez vos MX records en quelques minutes</p>
+  </div>
+  <div style="text-align: center; padding: 20px;">
+    <div style="background: #27ae60; width: 60px; height: 60px; border-radius: 50%; margin: 0 auto 15px; display: flex; align-items: center; justify-content: center; color: white; font-size: 24px;">∞</div>
+    <h3 style="margin-bottom: 15px; color: #2c3e50;">Alias illimités</h3>
+    <p style="color: #666;">Créez autant d'alias que nécessaire</p>
+  </div>
+  <div style="text-align: center; padding: 20px;">
+    <div style="background: #e74c3c; width: 60px; height: 60px; border-radius: 50%; margin: 0 auto 15px; display: flex; align-items: center; justify-content: center; color: white; font-size: 24px;">💻</div>
+    <h3 style="margin-bottom: 15px; color: #2c3e50;">Interface intuitive</h3>
+    <p style="color: #666;">Gérez vos emails facilement</p>
+  </div>
+</div>
+
+<style>
+@media (max-width: 768px) {
+  .hero h1 {
+    font-size: 2em !important;
+  }
+  
+  div[style*="grid-template-columns: repeat(3, 1fr)"] {
+    grid-template-columns: 1fr !important;
+  }
+}
+</style>

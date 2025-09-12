@@ -18,8 +18,7 @@ import { AppComponent } from './app/app.component';
 const routes = [
   {
     path: '',
-    redirectTo: '/dashboard',
-    pathMatch: 'full' as const
+    loadComponent: () => import('./app/features/landing/landing.component').then(m => m.LandingComponent)
   },
   {
     path: 'dashboard',
@@ -32,6 +31,10 @@ const routes = [
   {
     path: 'messages',
     loadComponent: () => import('./app/features/messages/messages.component').then(m => m.MessagesComponent)
+  },
+  {
+    path: 'statistics',
+    loadComponent: () => import('./app/features/statistics/statistics.component').then(m => m.StatisticsComponent)
   },
   {
     path: 'billing',

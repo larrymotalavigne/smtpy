@@ -1,0 +1,52 @@
+<div>
+  <h2>Statistiques d'utilisation</h2>
+  
+  <div class="period-buttons">
+    <button [class.active]="selectedPeriod === '7days'" (click)="selectPeriod('7days')">7 derniers jours</button>
+    <button [class.active]="selectedPeriod === '30days'" (click)="selectPeriod('30days')">30 derniers jours</button>
+    <button [class.active]="selectedPeriod === '3months'" (click)="selectPeriod('3months')">3 derniers mois</button>
+  </div>
+  
+  <div class="chart-placeholder">
+    <div class="chart-icon">📈</div>
+    <div class="chart-title">Graphique des emails transférés</div>
+    <div class="chart-subtitle">(Par jour/semaine/mois)</div>
+  </div>
+  
+  <div class="statistics-grid">
+    <div class="stats-section">
+      <h3>Top des alias les plus utilisés</h3>
+      <table class="stats-table">
+        <thead>
+          <tr>
+            <th>Alias</th>
+            <th>Emails reçus</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td>contact&#64;monentreprise.com</td>
+            <td>156</td>
+          </tr>
+          <tr>
+            <td>support&#64;monentreprise.com</td>
+            <td>89</td>
+          </tr>
+          <tr>
+            <td>info&#64;monentreprise.com</td>
+            <td>34</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+    
+    <div class="stats-section">
+      <h3>Répartition par domaine</h3>
+      <div class="pie-chart-placeholder">
+        <div class="chart-icon">📊</div>
+        <div class="chart-title">Graphique en secteurs</div>
+        <div class="chart-subtitle">des emails par domaine</div>
+      </div>
+    </div>
+  </div>
+</div>

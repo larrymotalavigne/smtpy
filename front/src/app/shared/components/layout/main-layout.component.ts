@@ -79,8 +79,8 @@ export class MainLayoutComponent implements OnInit, OnDestroy {
         filter(event => event instanceof NavigationEnd),
         takeUntil(this.destroy$)
       )
-      .subscribe((event: NavigationEnd) => {
-        this.currentRoute = event.urlAfterRedirects;
+      .subscribe((event) => {
+        this.currentRoute = (event as NavigationEnd).urlAfterRedirects;
       });
   }
 

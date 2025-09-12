@@ -9,12 +9,10 @@ RUN npm ci --legacy-peer-deps
 COPY . .
 RUN npm run build
 
-# Install gzip and brotli compression tools and compress the build output
-RUN apk add --no-cache gzip brotli \
+# Install gzip compression tools and compress the build output
+RUN apk add --no-cache gzip \
  && find /usr/src/app/dist -type f -name '*.js' -exec gzip -k -f {} \; \
- && find /usr/src/app/dist -type f -name '*.css' -exec gzip -k -f {} \; \
- && find /usr/src/app/dist -type f -name '*.js' -exec brotli -f {} \; \
- && find /usr/src/app/dist -type f -name '*.css' -exec brotli -f {} \;
+ && find /usr/src/app/dist -type f -name '*.css' -exec gzip -k -f {} \;
 
 ### STAGE 2: Run ###
 FROM $APP_IMAGE

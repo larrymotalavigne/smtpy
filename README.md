@@ -1,33 +1,57 @@
-# SMTPy v2
+# SMTPy
 
-A self-hosted email forwarding and domain management service built with FastAPI, SQLAlchemy (async), and Stripe integration.
+A self-hosted email aliasing and forwarding service built with FastAPI, SQLAlchemy, and aiosmtpd. SMTPy provides a comprehensive solution for managing email domains, aliases, and forwarding rules with DKIM/SPF/DMARC support and Stripe billing integration.
 
 ## Features
 
+- **Email Aliasing & Forwarding**: Create and manage email aliases with automatic forwarding
 - **Domain Management**: CRUD operations for email domains with DNS verification
+- **SMTP Server**: Built-in SMTP server for receiving and processing emails
 - **Message Processing**: Track and manage forwarded email messages
+- **DNS Configuration**: Automatic DNS record generation and verification (MX, SPF, DKIM, DMARC)
 - **Billing Integration**: Stripe-powered subscription management
+- **Web Interface**: Frontend interface for managing domains and aliases
 - **Async Architecture**: Built with async/await for high performance
-- **PostgreSQL Database**: Reliable data storage with Alembic migrations
-- **Function-Based Architecture**: Clean 3-layer architecture (view → controller → database)
+- **DKIM Signing**: Email signing support for enhanced deliverability
+- **Activity Logging**: Comprehensive audit trails for email processing
 
-## Architecture
+## Technology Stack
 
-SMTPy v2 follows a strict 3-layer module structure:
+### Backend
+- **Python**: >=3.13
+- **Framework**: FastAPI with async/await support
+- **Database**: PostgreSQL (production) / SQLite (development)
+- **ORM**: SQLAlchemy v2 with async support
+- **SMTP Server**: aiosmtpd for email processing
+- **Email Processing**: dkimpy for DKIM signing, dnspython for DNS operations
+- **Authentication**: Session-based with bcrypt password hashing
+- **Billing**: Stripe integration for subscription management
+- **Package Manager**: uv (modern Python package manager)
 
-- **Views** (`*_view.py`): FastAPI routers with request/response handling
-- **Controllers** (`*_controller.py`): Business logic orchestration (no FastAPI imports)
-- **Database** (`*_database.py`): Pure SQLAlchemy async queries
+### Frontend
+- **TODO**: Frontend technology stack needs documentation
+
+### Infrastructure
+- **Containerization**: Docker with Docker Compose
+- **Database Migrations**: Alembic
+- **Testing**: pytest with pytest-asyncio
+
+## Requirements
+
+- **Python**: >=3.13
+- **Package Manager**: uv
+- **Database**: PostgreSQL 16+ (production) or SQLite (development)
+- **Docker & Docker Compose**: For containerized deployment
 
 ## Quick Start
 
 ### Prerequisites
 
-- Docker and Docker Compose
-- Python 3.13+ (for local development)
-- PostgreSQL 16+ (handled by Docker)
+1. Install Python 3.13+
+2. Install uv: `pip install uv`
+3. Install Docker and Docker Compose
 
-### Setup
+### Development Setup
 
 1. **Clone the repository:**
    ```bash
@@ -41,243 +65,136 @@ SMTPy v2 follows a strict 3-layer module structure:
    # Edit .env with your configuration
    ```
 
-3. **Start the services:**
+3. **Install dependencies:**
+   ```bash
+   make install
+   ```
+
+4. **Start development environment with Docker:**
    ```bash
    make build
    make run
    ```
 
-4. **Check the logs:**
+   Or start services individually:
+   ```bash
+   # Start with development compose (includes SMTP server)
+   docker compose -f docker-compose.dev.yml up -d
+   ```
+
+5. **Check the logs:**
    ```bash
    make logs
    ```
 
-The API will be available at `http://localhost:8000`
+The services will be available at:
+- **API**: http://localhost:8000
+- **Frontend**: http://localhost:3000 (development) or http://localhost (production)
+- **SMTP Server**: localhost:1025 (development)
 
-### Environment Variables
+### Local Development (without Docker)
+
+1. **Run the API server:**
+   ```bash
+   cd back/api
+   uvicorn main:create_app --reload --host 0.0.0.0 --port 8000 --factory
+   ```
+
+2. **Run the SMTP server (separate terminal):**
+   ```bash
+   cd back/smtp
+   python main.py
+   ```
+
+## Environment Variables
 
 Configure these variables in your `.env` file:
 
+### Database Configuration
 ```bash
-# Database
-DATABASE_URL=postgresql+asyncpg://postgres:postgres@db:5432/smtpy
+# Production (PostgreSQL)
+DATABASE_URL=postgresql+asyncpg://postgres:postgres@localhost:5432/smtpy
 
-# Stripe Configuration
-STRIPE_API_KEY=sk_test_...
-STRIPE_WEBHOOK_SECRET=whsec_...
-STRIPE_SUCCESS_URL=http://localhost:8000/billing/success
-STRIPE_CANCEL_URL=http://localhost:8000/billing/cancel
-STRIPE_PORTAL_RETURN_URL=http://localhost:8000/billing
+# Development (SQLite)
+SMTPY_DB_PATH=/path/to/dev.db
+```
 
-# API Settings
+### API Settings
+```bash
+API_HOST=0.0.0.0
+API_PORT=8000
 DEBUG=true
 SECRET_KEY=change-this-secret-key-in-production
 ```
 
-## API Documentation
-
-### Health Check
-
+### Stripe Configuration
 ```bash
-# Basic health check
-curl http://localhost:8000/
-
-# Detailed health check with features
-curl http://localhost:8000/health
+STRIPE_API_KEY=sk_test_your_stripe_api_key_here
+STRIPE_WEBHOOK_SECRET=whsec_your_webhook_secret_here
+STRIPE_SUCCESS_URL=http://localhost:8000/billing/success
+STRIPE_CANCEL_URL=http://localhost:8000/billing/cancel
+STRIPE_PORTAL_RETURN_URL=http://localhost:8000/billing
 ```
 
-### Domain Management
-
-#### Create a Domain
+### SMTP Configuration
 ```bash
-curl -X POST "http://localhost:8000/domains" \
-  -H "Content-Type: application/json" \
-  -d '{"name": "example.com"}'
+SMTP_HOST=localhost
+SMTP_PORT=1025
 ```
 
-#### List Domains
+### DNS Configuration
 ```bash
-# Basic listing
-curl "http://localhost:8000/domains"
-
-# With pagination
-curl "http://localhost:8000/domains?page=1&page_size=10"
+DNS_CHECK_ENABLED=true
 ```
 
-#### Get Domain Details
+### Docker Environment
 ```bash
-curl "http://localhost:8000/domains/1"
+POSTGRES_DB=smtpy
+POSTGRES_USER=postgres
+POSTGRES_PASSWORD=postgres
 ```
 
-#### Verify Domain DNS
-```bash
-curl -X POST "http://localhost:8000/domains/1/verify"
-```
+## Available Scripts
 
-#### Get Required DNS Records
-```bash
-curl "http://localhost:8000/domains/1/dns-records"
-```
-
-#### Update Domain Settings
-```bash
-curl -X PATCH "http://localhost:8000/domains/1" \
-  -H "Content-Type: application/json" \
-  -d '{"is_active": true}'
-```
-
-#### Delete Domain
-```bash
-curl -X DELETE "http://localhost:8000/domains/1"
-```
-
-### Message Management
-
-#### List Messages
-```bash
-# Basic listing
-curl "http://localhost:8000/messages"
-
-# With filters
-curl "http://localhost:8000/messages?status=delivered&domain_id=1&page=1&page_size=20"
-
-# Filter by date range
-curl "http://localhost:8000/messages?date_from=2025-01-01&date_to=2025-12-31"
-
-# Filter by sender/recipient
-curl "http://localhost:8000/messages?sender_email=user@example.com"
-```
-
-#### Search Messages
-```bash
-curl "http://localhost:8000/messages/search?q=important"
-```
-
-#### Get Message Statistics
-```bash
-# Overall stats
-curl "http://localhost:8000/messages/stats"
-
-# Stats since specific date
-curl "http://localhost:8000/messages/stats?since=2025-01-01"
-```
-
-#### Get Recent Messages
-```bash
-curl "http://localhost:8000/messages/recent?limit=5"
-```
-
-#### Get Message Details
-```bash
-curl "http://localhost:8000/messages/123"
-```
-
-#### Get Messages by Domain
-```bash
-curl "http://localhost:8000/messages/domain/1?page=1&page_size=20"
-```
-
-#### Get Messages by Thread
-```bash
-curl "http://localhost:8000/messages/thread/thread-id-123"
-```
-
-#### Update Message Status
-```bash
-curl -X PATCH "http://localhost:8000/messages/123/status?new_status=delivered&forwarded_to=user@example.com"
-```
-
-#### Delete Message
-```bash
-curl -X DELETE "http://localhost:8000/messages/123"
-```
-
-### Billing Management
-
-#### Create Checkout Session
-```bash
-curl -X POST "http://localhost:8000/billing/checkout-session" \
-  -H "Content-Type: application/json" \
-  -d '{"price_id": "price_1234567890"}'
-```
-
-#### Get Customer Portal
-```bash
-curl "http://localhost:8000/billing/customer-portal"
-```
-
-#### Get Current Subscription
-```bash
-curl "http://localhost:8000/subscriptions/me"
-```
-
-#### Cancel Subscription
-```bash
-curl -X PATCH "http://localhost:8000/subscriptions/cancel" \
-  -H "Content-Type: application/json" \
-  -d '{"cancel_at_period_end": true}'
-```
-
-#### Resume Subscription
-```bash
-curl -X PATCH "http://localhost:8000/subscriptions/resume"
-```
-
-#### Get Organization Billing Info
-```bash
-curl "http://localhost:8000/billing/organization"
-```
-
-#### Stripe Webhook (for Stripe to call)
-```bash
-curl -X POST "http://localhost:8000/webhooks/stripe" \
-  -H "Content-Type: application/json" \
-  -H "Stripe-Signature: t=..." \
-  -d '{...stripe event data...}'
-```
-
-## Development
-
-### Local Development Setup
-
-1. **Install dependencies:**
-   ```bash
-   make install
-   ```
-
-2. **Run tests:**
-   ```bash
-   make test
-   ```
-
-3. **Run the API locally:**
-   ```bash
-   cd back
-   uvicorn api.main:create_app --reload --host 0.0.0.0 --port 8000 --factory
-   ```
-
-### Database Migrations
+The project includes a Makefile with the following commands:
 
 ```bash
-# Create a new migration
-cd back
-alembic revision --autogenerate -m "Description of changes"
+# Install dependencies
+make install
 
-# Apply migrations
-alembic upgrade head
+# Build Docker images
+make build
 
-# Rollback migration
-alembic downgrade -1
+# Start the application stack
+make run
+
+# Stop the application stack
+make stop
+
+# View container logs
+make logs
+
+# Run tests
+make test
+
+# Clean up Docker resources
+make clean
+
+# Show all available commands
+make help
 ```
 
-### Testing
+## Testing
 
-The project includes comprehensive tests covering:
+The project uses pytest with comprehensive test coverage:
 
-- API endpoints (FastAPI TestClient)
-- Controller business logic
-- Database operations
-- Schema validation
+### Test Structure
+- **Location**: `back/tests/`
+- **Framework**: pytest with pytest-asyncio
+- **Database**: In-memory SQLite for testing
+- **Coverage**: API endpoints, controllers, database operations, schema validation
+
+### Running Tests
 
 ```bash
 # Run all tests
@@ -288,145 +205,212 @@ pytest back/tests/test_messages.py -v
 
 # Run with coverage
 pytest --cov=back/api back/tests/
+
+# Run specific test markers
+pytest -m "not slow"  # Skip slow tests
+pytest -m integration  # Run only integration tests
 ```
 
-## API Response Formats
+### Test Configuration
+- Tests automatically use in-memory SQLite database
+- Email sending functions are mocked in tests
+- Database tables are created/dropped automatically for each test session
 
-### Paginated Response
-```json
-{
-  "items": [...],
-  "total": 100,
-  "page": 1,
-  "page_size": 20,
-  "total_pages": 5
-}
-```
+## Database Management
 
-### Error Response
-```json
-{
-  "error": "Error message",
-  "detail": "Detailed error information",
-  "code": "ERROR_CODE"
-}
-```
+### Migrations
 
-### Domain Response
-```json
-{
-  "id": 1,
-  "name": "example.com",
-  "organization_id": 1,
-  "status": "verified",
-  "is_active": true,
-  "mx_record_verified": true,
-  "spf_record_verified": true,
-  "dkim_record_verified": true,
-  "dmarc_record_verified": true,
-  "dkim_public_key": "...",
-  "verification_token": "...",
-  "created_at": "2025-09-01T18:10:00Z",
-  "updated_at": "2025-09-01T18:10:00Z"
-}
-```
-
-### Message Response
-```json
-{
-  "id": 123,
-  "message_id": "unique-message-id",
-  "thread_id": "thread-id-123",
-  "domain_id": 1,
-  "sender_email": "sender@example.com",
-  "recipient_email": "recipient@example.com",
-  "forwarded_to": "user@example.com",
-  "subject": "Email Subject",
-  "body_preview": "Email body preview...",
-  "status": "delivered",
-  "error_message": null,
-  "size_bytes": 1024,
-  "has_attachments": false,
-  "created_at": "2025-09-01T18:10:00Z",
-  "updated_at": "2025-09-01T18:10:00Z"
-}
-```
-
-### Message Statistics
-```json
-{
-  "total_messages": 1000,
-  "delivered_messages": 950,
-  "failed_messages": 30,
-  "pending_messages": 20,
-  "total_size_bytes": 1048576
-}
-```
-
-## Message Status Values
-
-- `pending`: Message received, awaiting processing
-- `processing`: Message is being processed
-- `delivered`: Message successfully forwarded
-- `failed`: Message processing failed
-- `bounced`: Message bounced back
-- `rejected`: Message rejected by filters
-
-## Domain Status Values
-
-- `pending`: Domain added, awaiting verification
-- `verified`: All DNS records verified
-- `failed`: Domain verification failed
-
-## Docker Commands
+The project uses Alembic for database migrations:
 
 ```bash
-# Build images
-make build
+cd back/api
 
-# Start services
-make run
+# Create a new migration
+alembic revision --autogenerate -m "Description of changes"
 
-# Stop services
-make stop
+# Apply migrations
+alembic upgrade head
 
-# View logs
-make logs
+# Rollback migration
+alembic downgrade -1
 
-# Clean up
-make clean
+# Show migration history
+alembic history
 ```
+
+### Database Initialization
+- Database tables are created automatically on application startup
+- Default admin user is created if no users exist (username: "admin", password: "password")
+
+## Project Structure
+
+```
+smtpy/
+├── back/
+│   ├── api/                    # FastAPI application
+│   │   ├── core/               # Core configuration and database
+│   │   ├── database/           # Database layer (*_database.py)
+│   │   ├── controllers/        # Business logic (*_controller.py)
+│   │   ├── views/              # API routers (*_view.py)
+│   │   ├── models/             # Database models
+│   │   ├── services/           # External service integrations
+│   │   ├── static/             # Static files
+│   │   └── main.py             # API entry point
+│   ├── smtp/                   # SMTP server components
+│   │   ├── smtp_server/        # SMTP server implementation
+│   │   ├── forwarding/         # Email forwarding logic
+│   │   ├── config_dns/         # DNS configuration utilities
+│   │   └── main.py             # SMTP server entry point
+│   └── tests/                  # Test suite
+├── front/                      # Frontend application
+├── docs/                       # Documentation
+├── docker-compose.yml          # Production Docker setup
+├── docker-compose.dev.yml      # Development Docker setup
+├── pyproject.toml              # Python project configuration
+├── Makefile                    # Development commands
+└── .env.example                # Environment variables template
+```
+
+## Architecture
+
+SMTPy follows a strict 3-layer architecture:
+
+### Layer Structure
+- **Views** (`*_view.py`): FastAPI routers with request/response handling and routing logic
+- **Controllers** (`*_controller.py`): Pure functions orchestrating business logic (no FastAPI imports)
+- **Database** (`*_database.py`): Pure SQLAlchemy async queries accepting AsyncSession as first argument
+
+### Key Principles
+- Function-based logic over class-based implementations
+- No import aliases (avoid `import module as alias`)
+- Controllers accept explicit dependencies (db, services, etc.)
+- Views inject dependencies and pass them to controllers
+- Database functions are pure async functions
+
+## API Documentation
+
+### Health Check Endpoints
+
+```bash
+# Basic health check
+curl http://localhost:8000/
+
+# Detailed health check
+curl http://localhost:8000/health
+```
+
+### Main Features
+- **Domain Management**: Create, verify, and manage email domains
+- **Message Processing**: Track forwarded emails and message statistics
+- **Billing**: Stripe integration for subscription management
+
+For detailed API documentation, visit http://localhost:8000/docs when the application is running.
 
 ## Production Deployment
 
-1. **Set production environment variables:**
-   - Set `DEBUG=false`
-   - Use strong `SECRET_KEY`
-   - Configure production database URL
-   - Set up real Stripe keys
+### Docker Deployment
 
-2. **Database setup:**
-   - Ensure PostgreSQL is running
-   - Run migrations: `alembic upgrade head`
+1. **Configure production environment:**
+   ```bash
+   cp .env.example .env
+   # Edit .env with production values:
+   # - Set DEBUG=false
+   # - Use strong SECRET_KEY
+   # - Configure production DATABASE_URL
+   # - Set real Stripe keys
+   ```
 
-3. **Reverse proxy setup:**
-   - Configure nginx or similar for SSL termination
-   - Set up proper domain and SSL certificates
+2. **Start production services:**
+   ```bash
+   docker compose up -d
+   ```
 
-4. **Monitoring:**
-   - Set up logging aggregation
-   - Configure health checks
-   - Monitor database performance
+### Database Setup
+- Ensure PostgreSQL is running and accessible
+- Migrations run automatically on container startup
+- For manual migration: `docker exec <api-container> alembic upgrade head`
 
-## Architecture Notes
+### Reverse Proxy Setup
+- Configure nginx or similar for SSL termination
+- Set up proper domain and SSL certificates
+- Forward traffic to port 8000 (API) and port 80 (frontend)
 
-### File Naming Conventions
+### Monitoring
+- Set up logging aggregation
+- Configure health check monitoring
+- Monitor database performance
+- Track email processing metrics
 
-Follow these naming conventions for consistency across the codebase:
+## Development Guidelines
 
-- **View files**: Files under `routers/` directories should end with `_view.py` (e.g., `domains_view.py`, `messages_view.py`)
-- **Controller files**: Files under `controllers/` directories should end with `_controller.py` (e.g., `domains_controller.py`, `messages_controller.py`) 
-- **Database files**: Files under `repositories/` directories should end with `_database.py` (e.g., `domains_database.py`, `messages_database.py`)
+### Code Style
+- Follow the 3-layer architecture pattern
+- Use function-based implementations
+- Avoid import aliases
+- Password hashing with bcrypt
+- Session-based authentication (not JWT)
+- Background tasks for email sending
 
-This convention helps distinguish between different types of modules and maintains consistency across the project structure.
+### Security Considerations
+- CSRF protection via session middleware
+- Password hashing with bcrypt
+- Email verification for new accounts
+- Role-based access control (admin/user roles)
+- Invitation-based registration system
+
+### Email Processing
+- DKIM signing support
+- DNS record validation for SPF/DKIM/DMARC
+- Email forwarding with configurable SMTP relay
+- Catch-all domain support
+
+## Troubleshooting
+
+### Common Issues
+
+1. **Database Connection Issues**:
+   - Check DATABASE_URL or SMTPY_DB_PATH configuration
+   - Ensure PostgreSQL is running (production) or SQLite file permissions (development)
+
+2. **Email Processing Issues**:
+   - Verify SMTP_HOST and SMTP_PORT configuration
+   - Check DNS configuration for domains
+   - Monitor activity logs for email processing errors
+
+3. **Docker Issues**:
+   - Run `make clean` to remove old containers and images
+   - Check container logs with `make logs`
+   - Ensure ports 8000, 3000, and 1025 are not in use
+
+### Admin Access
+- Default admin credentials: username="admin", password="password"
+- Change default credentials in production
+- Use admin panel for domain and alias management
+
+## Contributing
+
+### Development Workflow
+1. Use `make build` and `make run` for Docker development
+2. Run `make test` before committing changes
+3. Follow the 3-layer architecture pattern
+4. Check DNS configuration for email domains
+5. Monitor logs via `make logs`
+
+### Code Quality
+- Code formatting with Black (line length: 100)
+- Linting with Ruff
+- Type checking with MyPy
+- Pre-commit hooks available
+
+## License
+
+**TODO**: License information needs to be added. Please add a LICENSE file to specify the project's license terms.
+
+## Support
+
+**TODO**: Add support information, contributing guidelines, and contact details.
+
+## Changelog
+
+**TODO**: Add changelog or link to releases for version history.
 
