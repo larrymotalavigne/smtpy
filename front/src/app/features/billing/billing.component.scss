@@ -1,0 +1,49 @@
+.billing-container {
+  max-width: 1200px;
+  margin: 0 auto;
+}
+
+.plan-card {
+  transition: transform 0.2s ease-in-out, box-shadow 0.2s ease-in-out;
+  
+  &:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+  }
+}
+
+:host ::ng-deep {
+  .usage-high {
+    .p-progressbar-value {
+      background-color: #ef4444 !important;
+    }
+  }
+
+  .p-progressbar {
+    height: 8px;
+    border-radius: 4px;
+  }
+
+  .p-progressbar-value {
+    transition: all 0.3s ease;
+  }
+
+  .p-card {
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
+    border: 1px solid var(--surface-border);
+  }
+
+  .p-button.p-button-outlined {
+    border-width: 1px;
+  }
+
+  .p-tag.p-tag-success {
+    background-color: #10b981;
+    color: white;
+  }
+
+  .p-tag.p-tag-warning {
+    background-color: #f59e0b;
+    color: white;
+  }
+}

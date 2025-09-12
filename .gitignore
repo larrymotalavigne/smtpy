@@ -49,6 +49,8 @@ htmlcov/
 
 # Node (if frontend present)
 node_modules/
+.angular/
+dist/
 
 # Stripe
 stripe.log 

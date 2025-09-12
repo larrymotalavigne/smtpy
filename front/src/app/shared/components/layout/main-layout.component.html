@@ -1,0 +1,89 @@
+<div class="layout-wrapper">
+  <!-- Top Header -->
+  <div class="layout-topbar">
+    <div class="layout-topbar-logo">
+      <button 
+        type="button" 
+        class="p-link layout-menu-button layout-topbar-button"
+        (click)="toggleSidebar()">
+        <i class="pi pi-bars"></i>
+      </button>
+      <a [routerLink]="['/dashboard']" class="layout-topbar-logo-link">
+        <span class="layout-topbar-logo-text">SMTPy</span>
+      </a>
+    </div>
+
+    <div class="layout-topbar-menu">
+      <!-- User Menu -->
+      <div class="layout-topbar-button" *ngIf="currentUser">
+        <p-menu #userMenu [model]="userMenuItems" [popup]="true"></p-menu>
+        <button 
+          type="button" 
+          class="p-link layout-topbar-button user-profile-button"
+          (click)="userMenu.toggle($event)"
+          [title]="getUserDisplayName()">
+          <div class="user-avatar">
+            <span class="user-initials">{{ getUserInitials() }}</span>
+          </div>
+          <span class="layout-topbar-item-text">{{ getUserDisplayName() }}</span>
+          <i class="pi pi-angle-down ml-2"></i>
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Mobile Sidebar -->
+  <p-sidebar 
+    [(visible)]="sidebarVisible" 
+    position="left" 
+    [modal]="true"
+    [dismissible]="true"
+    styleClass="layout-sidebar-mobile">
+    <ng-template pTemplate="content">
+      <div class="layout-menu">
+        <ul class="layout-menu-list">
+          <li class="layout-menu-item" *ngFor="let item of menuItems">
+            <a 
+              [routerLink]="item.routerLink" 
+              class="layout-menu-link"
+              [class.active-menuitem-link]="isRouteActive(item.routerLink)"
+              (click)="sidebarVisible = false"
+              pRipple>
+              <i [class]="item.icon"></i>
+              <span class="layout-menuitem-text">{{ item.label }}</span>
+            </a>
+          </li>
+        </ul>
+      </div>
+    </ng-template>
+  </p-sidebar>
+
+  <!-- Desktop Sidebar -->
+  <div class="layout-sidebar hidden lg:block">
+    <div class="layout-menu">
+      <ul class="layout-menu-list">
+        <li class="layout-menu-item" *ngFor="let item of menuItems">
+          <a 
+            [routerLink]="item.routerLink" 
+            class="layout-menu-link"
+            [class.active-menuitem-link]="isRouteActive(item.routerLink)"
+            [title]="item.label"
+            pRipple>
+            <i [class]="item.icon"></i>
+            <span class="layout-menuitem-text">{{ item.label }}</span>
+          </a>
+        </li>
+      </ul>
+    </div>
+  </div>
+
+  <!-- Main Content Area -->
+  <div class="layout-main-container">
+    <div class="layout-main">
+      <router-outlet></router-outlet>
+    </div>
+  </div>
+
+  <!-- Toast Messages -->
+  <p-toast position="top-right" key="main"></p-toast>
+</div>

@@ -1,0 +1,24 @@
+.domains-container {
+  @apply max-w-7xl mx-auto;
+}
+
+// Domain-specific styles
+::ng-deep {
+  .p-table {
+    .p-datatable-thead > tr > th {
+      @apply bg-gray-50 font-semibold text-gray-700;
+    }
+    
+    .p-datatable-tbody > tr {
+      @apply hover:bg-gray-50 transition-colors duration-200;
+    }
+    
+    .p-datatable-emptymessage > td {
+      @apply text-center py-8;
+    }
+  }
+  
+  .p-button-sm {
+    @apply px-2 py-1;
+  }
+}

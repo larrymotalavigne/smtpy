@@ -1,0 +1,14 @@
+<div class="min-h-screen bg-gray-50">
+  <p-menubar [model]="[]" class="border-bottom-1 surface-border">
+    <ng-template pTemplate="start">
+      <div class="flex align-items-center gap-2">
+        <i class="pi pi-envelope text-2xl text-primary"></i>
+        <span class="text-xl font-bold text-900">{{ title }}</span>
+      </div>
+    </ng-template>
+  </p-menubar>
+
+  <main class="p-4">
+    <router-outlet></router-outlet>
+  </main>
+</div>

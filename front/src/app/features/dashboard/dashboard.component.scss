@@ -1,0 +1,18 @@
+.dashboard-container {
+  @apply max-w-7xl mx-auto;
+}
+
+// Dashboard-specific styles
+::ng-deep {
+  .p-card {
+    @apply shadow-md border border-gray-200;
+  }
+  
+  .p-card-header {
+    @apply bg-gray-50;
+  }
+  
+  .p-card-footer {
+    @apply bg-gray-50;
+  }
+}

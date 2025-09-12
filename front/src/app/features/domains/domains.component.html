@@ -1,0 +1,51 @@
+<div class="domains-container p-4">
+  <div class="grid">
+    <div class="col-12">
+      <p-card>
+        <ng-template pTemplate="header">
+          <div class="flex align-items-center justify-content-between p-3">
+            <div class="flex align-items-center gap-2">
+              <i class="pi pi-globe text-2xl text-primary"></i>
+              <h2 class="text-2xl font-bold text-900 m-0">Domains</h2>
+            </div>
+            <p-button label="Add Domain" icon="pi pi-plus" styleClass="p-button-primary"></p-button>
+          </div>
+        </ng-template>
+        <p class="text-600 line-height-3 mb-3">
+          Manage your email domains and DNS verification settings.
+        </p>
+        <p-table [value]="domains" [paginator]="true" [rows]="10" [responsive]="true">
+          <ng-template pTemplate="header">
+            <tr>
+              <th>Domain</th>
+              <th>Status</th>
+              <th>Verified</th>
+              <th>Active</th>
+              <th>Actions</th>
+            </tr>
+          </ng-template>
+          <ng-template pTemplate="body" let-domain>
+            <tr>
+              <td>{{domain.name}}</td>
+              <td>{{domain.status}}</td>
+              <td>{{domain.is_fully_verified}}</td>
+              <td>{{domain.is_active}}</td>
+              <td>
+                <p-button icon="pi pi-pencil" styleClass="p-button-text p-button-sm mr-2"></p-button>
+                <p-button icon="pi pi-trash" styleClass="p-button-text p-button-danger p-button-sm"></p-button>
+              </td>
+            </tr>
+          </ng-template>
+          <ng-template pTemplate="emptymessage">
+            <tr>
+              <td colspan="5" class="text-center p-4">
+                <i class="pi pi-globe text-4xl text-400 mb-2 block"></i>
+                <p class="text-600 m-0">No domains found. Add your first domain to get started.</p>
+              </td>
+            </tr>
+          </ng-template>
+        </p-table>
+      </p-card>
+    </div>
+  </div>
+</div>
