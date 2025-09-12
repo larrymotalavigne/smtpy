@@ -15,7 +15,6 @@ ENV PATH="/app/.venv/bin:$PATH"
 
 # Copy the rest of the application code
 COPY ./back/smtp/ ./
-COPY ./back/core/ ./back/core/
 
 # Expose SMTP port only
 EXPOSE 1025
