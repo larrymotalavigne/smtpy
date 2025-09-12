@@ -14,7 +14,7 @@ RUN uv sync --frozen
 ENV PATH="/app/.venv/bin:$PATH"
 
 # Copy the rest of the application code
-COPY ./back/smtp/ ./
+COPY . .
 
 # Expose SMTP port only
 EXPOSE 1025
