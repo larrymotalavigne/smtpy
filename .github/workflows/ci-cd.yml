@@ -58,6 +58,15 @@ jobs:
             registry.atomdev.fr/smtpy-api:${{ github.sha }}
             registry.atomdev.fr/smtpy-api:latest
 
+      - name: Build and push Frontend Docker image
+        uses: docker/build-push-action@v5
+        with:
+          context: ./front
+          push: true
+          tags: |
+            registry.atomdev.fr/smtpy-frontend:${{ github.sha }}
+            registry.atomdev.fr/smtpy-frontend:latest
+
   deploy:
     needs: build-and-push
     runs-on: ubuntu-latest
@@ -127,6 +136,15 @@ jobs:
               echo "✅ SMTP server is running and listening on port 1025"
             else
               echo "❌ SMTP server health check failed"
+              exit 1
+            fi
+            
+            # Check if Frontend is running
+            echo "Checking Frontend..."
+            if curl -f -s http://smtpy.fr:80/ > /dev/null; then
+              echo "✅ Frontend is running and responding on port 80"
+            else
+              echo "❌ Frontend health check failed"
               exit 1
             fi
             
