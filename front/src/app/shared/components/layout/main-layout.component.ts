@@ -53,6 +53,11 @@ export class MainLayoutComponent implements OnInit, OnDestroy {
       routerLink: '/messages'
     },
     {
+      label: 'Statistics',
+      icon: 'pi pi-chart-bar',
+      routerLink: '/statistics'
+    },
+    {
       label: 'Billing',
       icon: 'pi pi-credit-card',
       routerLink: '/billing'

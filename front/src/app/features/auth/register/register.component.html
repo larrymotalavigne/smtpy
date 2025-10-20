@@ -1,0 +1,189 @@
+<div class="auth-container">
+  <div class="auth-content">
+    <!-- Logo Section -->
+    <div class="auth-header">
+      <div class="auth-logo">
+        <h1 class="logo-text">SMTPy</h1>
+      </div>
+      <h2 class="auth-title">Créer un compte</h2>
+      <p class="auth-subtitle">Commencez à utiliser SMTPy gratuitement</p>
+    </div>
+
+    <!-- Register Form Card -->
+    <p-card class="auth-card">
+      <ng-template pTemplate="content">
+        <form [formGroup]="registerForm" (ngSubmit)="onSubmit()" class="auth-form">
+          <!-- Error Message -->
+          <p-message
+            *ngIf="errorMessage"
+            severity="error"
+            [text]="errorMessage"
+            styleClass="w-full mb-4">
+          </p-message>
+
+          <!-- Username Field -->
+          <div class="form-field">
+            <label for="username" class="form-label">
+              Nom d'utilisateur
+              <span class="required">*</span>
+            </label>
+            <div class="input-wrapper">
+              <i class="pi pi-user input-icon"></i>
+              <input
+                pInputText
+                id="username"
+                formControlName="username"
+                placeholder="Choisissez un nom d'utilisateur"
+                [class.invalid]="isFieldInvalid('username')"
+                autocomplete="username"
+                class="w-full" />
+            </div>
+            <small class="form-error" *ngIf="isFieldInvalid('username')">
+              {{ getFieldError('username') }}
+            </small>
+          </div>
+
+          <!-- Email Field -->
+          <div class="form-field">
+            <label for="email" class="form-label">
+              Email
+              <span class="required">*</span>
+            </label>
+            <div class="input-wrapper">
+              <i class="pi pi-envelope input-icon"></i>
+              <input
+                pInputText
+                id="email"
+                type="email"
+                formControlName="email"
+                placeholder="votre@email.com"
+                [class.invalid]="isFieldInvalid('email')"
+                autocomplete="email"
+                class="w-full" />
+            </div>
+            <small class="form-error" *ngIf="isFieldInvalid('email')">
+              {{ getFieldError('email') }}
+            </small>
+          </div>
+
+          <!-- Password Field -->
+          <div class="form-field">
+            <label for="password" class="form-label">
+              Mot de passe
+              <span class="required">*</span>
+            </label>
+            <div class="input-wrapper">
+              <i class="pi pi-lock input-icon"></i>
+              <p-password
+                id="password"
+                formControlName="password"
+                placeholder="Créez un mot de passe fort"
+                [toggleMask]="true"
+                [feedback]="true"
+                [class.invalid]="isFieldInvalid('password')"
+                autocomplete="new-password"
+                styleClass="w-full"
+                inputStyleClass="w-full"
+                promptLabel="Entrez un mot de passe"
+                weakLabel="Faible"
+                mediumLabel="Moyen"
+                strongLabel="Fort">
+              </p-password>
+            </div>
+            <small class="form-error" *ngIf="isFieldInvalid('password')">
+              {{ getFieldError('password') }}
+            </small>
+            <small class="form-hint" *ngIf="!isFieldInvalid('password')">
+              Minimum 8 caractères avec majuscule, minuscule et chiffre
+            </small>
+          </div>
+
+          <!-- Confirm Password Field -->
+          <div class="form-field">
+            <label for="confirmPassword" class="form-label">
+              Confirmer le mot de passe
+              <span class="required">*</span>
+            </label>
+            <div class="input-wrapper">
+              <i class="pi pi-lock input-icon"></i>
+              <p-password
+                id="confirmPassword"
+                formControlName="confirmPassword"
+                placeholder="Confirmez votre mot de passe"
+                [toggleMask]="true"
+                [feedback]="false"
+                [class.invalid]="isFieldInvalid('confirmPassword') || getPasswordMatchError()"
+                autocomplete="new-password"
+                styleClass="w-full"
+                inputStyleClass="w-full">
+              </p-password>
+            </div>
+            <small class="form-error" *ngIf="isFieldInvalid('confirmPassword')">
+              {{ getFieldError('confirmPassword') }}
+            </small>
+            <small class="form-error" *ngIf="getPasswordMatchError()">
+              {{ getPasswordMatchError() }}
+            </small>
+          </div>
+
+          <!-- Accept Terms -->
+          <div class="form-field">
+            <div class="accept-terms">
+              <p-checkbox
+                formControlName="acceptTerms"
+                [binary]="true"
+                inputId="acceptTerms">
+              </p-checkbox>
+              <label for="acceptTerms" class="terms-label">
+                J'accepte les
+                <a href="/terms" target="_blank" class="terms-link">conditions d'utilisation</a>
+                et la
+                <a href="/privacy" target="_blank" class="terms-link">politique de confidentialité</a>
+                <span class="required">*</span>
+              </label>
+            </div>
+            <small class="form-error" *ngIf="isFieldInvalid('acceptTerms')">
+              {{ getFieldError('acceptTerms') }}
+            </small>
+          </div>
+
+          <!-- Submit Button -->
+          <p-button
+            type="submit"
+            label="Créer mon compte"
+            icon="pi pi-user-plus"
+            [loading]="loading"
+            [disabled]="loading"
+            styleClass="w-full register-button">
+          </p-button>
+
+          <!-- Divider -->
+          <div class="divider">
+            <span class="divider-text">ou</span>
+          </div>
+
+          <!-- Login Link -->
+          <div class="auth-footer">
+            <p class="footer-text">
+              Vous avez déjà un compte?
+              <a routerLink="/auth/login" class="auth-link">
+                Se connecter
+              </a>
+            </p>
+          </div>
+        </form>
+      </ng-template>
+    </p-card>
+
+    <!-- Back to Home -->
+    <div class="back-to-home">
+      <a routerLink="/" class="home-link">
+        <i class="pi pi-arrow-left"></i>
+        Retour à l'accueil
+      </a>
+    </div>
+  </div>
+</div>
+
+<!-- Toast for notifications -->
+<p-toast></p-toast>

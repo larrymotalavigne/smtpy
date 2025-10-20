@@ -1,0 +1,125 @@
+<div class="auth-container">
+  <div class="auth-content">
+    <!-- Logo Section -->
+    <div class="auth-header">
+      <div class="auth-logo">
+        <h1 class="logo-text">SMTPy</h1>
+      </div>
+      <h2 class="auth-title">Connexion</h2>
+      <p class="auth-subtitle">Connectez-vous à votre compte</p>
+    </div>
+
+    <!-- Login Form Card -->
+    <p-card class="auth-card">
+      <ng-template pTemplate="content">
+        <form [formGroup]="loginForm" (ngSubmit)="onSubmit()" class="auth-form">
+          <!-- Error Message -->
+          <p-message
+            *ngIf="errorMessage"
+            severity="error"
+            [text]="errorMessage"
+            styleClass="w-full mb-4">
+          </p-message>
+
+          <!-- Username Field -->
+          <div class="form-field">
+            <label for="username" class="form-label">
+              Nom d'utilisateur ou email
+              <span class="required">*</span>
+            </label>
+            <div class="input-wrapper">
+              <i class="pi pi-user input-icon"></i>
+              <input
+                pInputText
+                id="username"
+                formControlName="username"
+                placeholder="Entrez votre nom d'utilisateur"
+                [class.invalid]="isFieldInvalid('username')"
+                autocomplete="username"
+                class="w-full" />
+            </div>
+            <small class="form-error" *ngIf="isFieldInvalid('username')">
+              {{ getFieldError('username') }}
+            </small>
+          </div>
+
+          <!-- Password Field -->
+          <div class="form-field">
+            <label for="password" class="form-label">
+              Mot de passe
+              <span class="required">*</span>
+            </label>
+            <div class="input-wrapper">
+              <i class="pi pi-lock input-icon"></i>
+              <p-password
+                id="password"
+                formControlName="password"
+                placeholder="Entrez votre mot de passe"
+                [toggleMask]="true"
+                [feedback]="false"
+                [class.invalid]="isFieldInvalid('password')"
+                autocomplete="current-password"
+                styleClass="w-full"
+                inputStyleClass="w-full">
+              </p-password>
+            </div>
+            <small class="form-error" *ngIf="isFieldInvalid('password')">
+              {{ getFieldError('password') }}
+            </small>
+          </div>
+
+          <!-- Remember Me & Forgot Password -->
+          <div class="form-options">
+            <div class="remember-me">
+              <p-checkbox
+                formControlName="rememberMe"
+                [binary]="true"
+                inputId="rememberMe"
+                label="Se souvenir de moi">
+              </p-checkbox>
+            </div>
+            <a routerLink="/auth/forgot-password" class="forgot-password-link">
+              Mot de passe oublié?
+            </a>
+          </div>
+
+          <!-- Submit Button -->
+          <p-button
+            type="submit"
+            label="Se connecter"
+            icon="pi pi-sign-in"
+            [loading]="loading"
+            [disabled]="loading"
+            styleClass="w-full login-button">
+          </p-button>
+
+          <!-- Divider -->
+          <div class="divider">
+            <span class="divider-text">ou</span>
+          </div>
+
+          <!-- Register Link -->
+          <div class="auth-footer">
+            <p class="footer-text">
+              Vous n'avez pas de compte?
+              <a routerLink="/auth/register" class="auth-link">
+                Créer un compte
+              </a>
+            </p>
+          </div>
+        </form>
+      </ng-template>
+    </p-card>
+
+    <!-- Back to Home -->
+    <div class="back-to-home">
+      <a routerLink="/" class="home-link">
+        <i class="pi pi-arrow-left"></i>
+        Retour à l'accueil
+      </a>
+    </div>
+  </div>
+</div>
+
+<!-- Toast for notifications -->
+<p-toast></p-toast>

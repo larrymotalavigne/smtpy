@@ -71,6 +71,16 @@ const routes = [
     canActivate: [authGuard]  // Require authentication
   },
   {
+    path: 'profile',
+    loadComponent: () => import('./app/features/profile/profile.component').then(m => m.ProfileComponent),
+    canActivate: [authGuard]  // Require authentication
+  },
+  {
+    path: 'settings',
+    loadComponent: () => import('./app/features/settings/settings.component').then(m => m.SettingsComponent),
+    canActivate: [authGuard]  // Require authentication
+  },
+  {
     path: '**',
     redirectTo: ''  // Redirect to landing page instead of dashboard
   }

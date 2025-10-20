@@ -6,7 +6,15 @@
       "Bash(ng update:*)",
       "Bash(npm install:*)",
       "Bash(npm run build:*)",
-      "Bash(cat:*)"
+      "Bash(cat:*)",
+      "Bash(python -m pytest tests/test_basic.py -v)",
+      "Bash(uv pip install:*)",
+      "Bash(uv sync:*)",
+      "Bash(python:*)",
+      "Bash(uv run:*)",
+      "Bash(uv pip:*)",
+      "Bash(git add:*)",
+      "Bash(git commit:*)"
     ],
     "deny": [],
     "ask": []
