@@ -1,23 +1,17 @@
 import { HttpInterceptorFn } from '@angular/common/http';
-import { inject } from '@angular/core';
-import { AuthService } from '../services/auth.service';
 
+/**
+ * Auth interceptor to add credentials to all HTTP requests
+ * This ensures session cookies are sent with every request to the backend
+ *
+ * The backend uses HTTP-only session cookies for authentication,
+ * so we need to set withCredentials: true on all requests
+ */
 export const authInterceptor: HttpInterceptorFn = (req, next) => {
-  const authService = inject(AuthService);
-  
-  // Get the auth token from the auth service
-  const authToken = authService.getAuthToken();
-  
-  // If we have a token, clone the request and add the authorization header
-  if (authToken) {
-    const authRequest = req.clone({
-      setHeaders: {
-        Authorization: `Bearer ${authToken}`
-      }
-    });
-    return next(authRequest);
-  }
-  
-  // If no token, proceed with the original request
-  return next(req);
+  // Clone the request and add withCredentials for cookie handling
+  const authReq = req.clone({
+    withCredentials: true
+  });
+
+  return next(authReq);
 };

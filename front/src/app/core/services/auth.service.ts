@@ -50,17 +50,21 @@ export class AuthService {
         tap(response => {
           if (response.success && response.data?.user) {
             this.currentUserSubject.next(response.data.user);
-            // Store token if provided
-            if (response.data.access_token) {
-              localStorage.setItem('auth_token', response.data.access_token);
-            }
+            // Session is managed via HTTP-only cookies by the auth interceptor
           }
         })
       );
   }
 
   register(userData: RegisterRequest): Observable<ApiResponse<AuthResponse>> {
-    return this.http.post<ApiResponse<AuthResponse>>(`${this.apiUrl}/register`, userData);
+    return this.http.post<ApiResponse<AuthResponse>>(`${this.apiUrl}/register`, userData)
+      .pipe(
+        tap(response => {
+          if (response.success && response.data?.user) {
+            this.currentUserSubject.next(response.data.user);
+          }
+        })
+      );
   }
 
   logout(): Observable<ApiResponse<any>> {
@@ -68,12 +72,10 @@ export class AuthService {
       .pipe(
         tap(() => {
           this.currentUserSubject.next(null);
-          localStorage.removeItem('auth_token');
         }),
         catchError(() => {
           // Even if logout fails on server, clear local state
           this.currentUserSubject.next(null);
-          localStorage.removeItem('auth_token');
           return of({ success: true, data: null });
         })
       );
@@ -87,12 +89,10 @@ export class AuthService {
             this.currentUserSubject.next(response.data);
           } else {
             this.currentUserSubject.next(null);
-            localStorage.removeItem('auth_token');
           }
         }),
         catchError(() => {
           this.currentUserSubject.next(null);
-          localStorage.removeItem('auth_token');
           return of({ success: false, data: undefined });
         })
       );
@@ -103,9 +103,9 @@ export class AuthService {
   }
 
   resetPassword(token: string, newPassword: string): Observable<ApiResponse<any>> {
-    return this.http.post<ApiResponse<any>>(`${this.apiUrl}/reset-password`, { 
-      token, 
-      new_password: newPassword 
+    return this.http.post<ApiResponse<any>>(`${this.apiUrl}/reset-password`, {
+      token,
+      new_password: newPassword
     });
   }
 
@@ -120,9 +120,5 @@ export class AuthService {
   isAdmin(): boolean {
     const user = this.getCurrentUser();
     return user?.role === 'admin';
-  }
-
-  getAuthToken(): string | null {
-    return localStorage.getItem('auth_token');
   }
 }

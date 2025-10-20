@@ -3,6 +3,7 @@ import os
 from contextlib import asynccontextmanager
 
 from fastapi import FastAPI
+from fastapi.middleware.cors import CORSMiddleware
 
 from api.core.config import SETTINGS
 from api.core.db import create_tables
@@ -40,6 +41,17 @@ def create_app() -> FastAPI:
         lifespan=lifespan
     )
 
+    # CORS middleware for frontend development
+    # IMPORTANT: In production, restrict origins to your actual frontend domain
+    app.add_middleware(
+        CORSMiddleware,
+        allow_origins=["http://localhost:4200", "http://127.0.0.1:4200"],  # Angular dev server
+        allow_credentials=True,  # Required for cookies
+        allow_methods=["*"],  # Allow all HTTP methods
+        allow_headers=["*"],  # Allow all headers
+    )
+
+    # # Other middleware (commented out for now)
     # # Middleware order matters: last added runs first.
     # app.add_middleware(SecurityHeadersMiddleware, enable_hsts=SETTINGS.is_production)
     # app.add_middleware(
