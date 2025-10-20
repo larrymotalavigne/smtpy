@@ -57,6 +57,9 @@ class Organization(Base, TimestampMixin):
     domains: Mapped[list["Domain"]] = relationship(
         "Domain", back_populates="organization", lazy="selectin", cascade="all, delete-orphan"
     )
-    
+    users: Mapped[list["User"]] = relationship(
+        "User", back_populates="organization", lazy="selectin"
+    )
+
     def __repr__(self) -> str:
         return f"<Organization(id={self.id}, name='{self.name}', email='{self.email}')>"

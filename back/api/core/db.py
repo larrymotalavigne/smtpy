@@ -30,7 +30,7 @@ async_sessionmaker_factory = async_sessionmaker(
 async def get_db() -> AsyncGenerator[AsyncSession, None]:
     """
     Dependency function to get database session.
-    
+
     Yields:
         AsyncSession: Database session
     """
@@ -42,6 +42,10 @@ async def get_db() -> AsyncGenerator[AsyncSession, None]:
             raise
         finally:
             await session.close()
+
+
+# Alias for compatibility
+get_async_session = get_db
 
 
 async def create_tables():

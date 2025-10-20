@@ -6,7 +6,7 @@ from fastapi import FastAPI
 
 from api.core.config import SETTINGS
 from api.core.db import create_tables
-from api.views import billing_view, domains_view, messages_view, subscriptions_view, webhooks_view
+from api.views import auth_view, billing_view, domains_view, messages_view, subscriptions_view, webhooks_view
 from api.views import utils_view
 
 
@@ -52,6 +52,7 @@ def create_app() -> FastAPI:
     # app.add_middleware(SessionMiddleware, secret_key=secret_key, same_site="lax", https_only=SETTINGS.is_production)
 
     # Include routers
+    app.include_router(auth_view.router)
     app.include_router(billing_view.router)
     app.include_router(domains_view.router)
     app.include_router(messages_view.router)
