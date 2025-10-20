@@ -1,6 +1,6 @@
 [project]
 name = "smtpy"
-version = "0.1.0"
+version = "0.2.0"
 description = "Custom email aliasing and forwarding."
 authors = [
     { name = "SMTPy Team", email = "team@smtpy.local" }
@@ -9,40 +9,31 @@ requires-python = ">=3.13"
 
 dependencies = [
     "aiosmtpd~=1.4.6",
-    "fastapi~=0.116.0",
-    "jinja2~=3.1.4",
+    "fastapi",
     "dkimpy~=1.1.8",
-    "uvicorn~=0.32.1",
-    "httpx~=0.28.1",
-    "python-multipart~=0.0.17",
+    "uvicorn[standard]",
+    "aiohttp",
+    "python-multipart",
     "passlib[bcrypt]~=1.7.4",
     "itsdangerous~=2.2.0",
-    "dnspython~=2.7.0",
+    "dnspython",
     "stripe~=12.3.0",
-    "SQLAlchemy~=2.0.41",
-    "starlette~=0.46.2",
-    "pydantic-settings~=2.10.1",
-    "psycopg[binary, pool]~=3.2.1",
-    "aiosqlite~=0.20.0",
-    "python-json-logger~=2.0.7",
-    "alembic~=1.14.0",
-    "pytest>=8.4.1",
-    "testcontainers>=4.8.2",
-    "pytest-asyncio>=0.24.0",
-    "greenlet>=3.2.3",
+    "sqlalchemy[asyncio]",
+    "pydantic-settings",
+    "psycopg[binary, pool]",
+    "python-json-logger",
+    "alembic",
 ]
 
 [project.optional-dependencies]
 dev = [
-    "pytest~=8.4.1",
-    "pytest-asyncio~=0.24.0",
-    "pytest-cov~=6.0.0",
-    "httpx~=0.28.1",
-    "black~=24.10.0",
-    "ruff~=0.8.4",
-    "mypy~=1.13.0",
-    "pre-commit~=4.0.1",
-    "testcontainers~=4.8.2",
+    "pytest",
+    "pytest-asyncio",
+    "pytest-cov",
+    "httpx",
+    "ruff",
+    "mypy",
+    "testcontainers",
 ]
 
 [tool.uv]

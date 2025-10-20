@@ -15,18 +15,13 @@ import { BadgeModule } from 'primeng/badge';
 import { InputTextModule } from 'primeng/inputtext';
 import { ToastModule } from 'primeng/toast';
 
-// Components
-import { MainLayoutComponent } from './components/layout/main-layout.component';
-
 @NgModule({
-  declarations: [
-    MainLayoutComponent
-  ],
+  declarations: [],
   imports: [
     CommonModule,
     RouterModule,
     ReactiveFormsModule,
-    
+
     // PrimeNG Modules
     ButtonModule,
     MenuModule,
@@ -40,13 +35,11 @@ import { MainLayoutComponent } from './components/layout/main-layout.component';
     ToastModule
   ],
   exports: [
-    MainLayoutComponent,
-    
     // Re-export common modules for use in feature modules
     CommonModule,
     RouterModule,
     ReactiveFormsModule,
-    
+
     // PrimeNG Modules
     ButtonModule,
     MenuModule,

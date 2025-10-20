@@ -4,9 +4,11 @@ import { provideHttpClient, withInterceptors } from '@angular/common/http';
 import { provideAnimations } from '@angular/platform-browser/animations';
 import { importProvidersFrom } from '@angular/core';
 
-// PrimeNG Services
+// PrimeNG Services & Theme
 import { MessageService } from 'primeng/api';
 import { ConfirmationService } from 'primeng/api';
+import { providePrimeNG } from 'primeng/config';
+import { definePreset } from '@primeuix/themes';
 
 // Interceptors
 import { authInterceptor } from './app/core/interceptors/auth.interceptor';
@@ -53,6 +55,9 @@ bootstrapApplication(AppComponent, {
       withInterceptors([authInterceptor, errorInterceptor])
     ),
     provideAnimations(),
+    providePrimeNG({
+      ripple: true
+    }),
     MessageService,
     ConfirmationService
   ]

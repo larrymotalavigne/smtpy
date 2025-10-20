@@ -1,24 +1,407 @@
 .domains-container {
-  @apply max-w-7xl mx-auto;
+  padding: 2rem;
+  max-width: 1400px;
+  margin: 0 auto;
 }
 
-// Domain-specific styles
-::ng-deep {
-  .p-table {
-    .p-datatable-thead > tr > th {
-      @apply bg-gray-50 font-semibold text-gray-700;
+.domains-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 2rem;
+
+  @media (max-width: 640px) {
+    flex-direction: column;
+    gap: 1rem;
+    align-items: flex-start;
+  }
+}
+
+.page-title {
+  font-size: 2rem;
+  font-weight: 700;
+  color: #1e293b;
+  margin: 0 0 0.5rem 0;
+
+  @media (max-width: 640px) {
+    font-size: 1.5rem;
+  }
+}
+
+.page-subtitle {
+  font-size: 0.95rem;
+  color: #64748b;
+  margin: 0;
+}
+
+.domains-card {
+  ::ng-deep .p-card-body {
+    padding: 0;
+  }
+
+  ::ng-deep .p-card-content {
+    padding: 0;
+  }
+}
+
+// Domain table styles
+.domain-name-cell {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+
+  .domain-info {
+    display: flex;
+    flex-direction: column;
+    gap: 0.25rem;
+
+    .domain-name {
+      font-weight: 600;
+      color: #1e293b;
+      font-size: 0.95rem;
     }
-    
-    .p-datatable-tbody > tr {
-      @apply hover:bg-gray-50 transition-colors duration-200;
-    }
-    
-    .p-datatable-emptymessage > td {
-      @apply text-center py-8;
+
+    .domain-date {
+      font-size: 0.8rem;
+      color: #64748b;
     }
   }
-  
-  .p-button-sm {
-    @apply px-2 py-1;
+}
+
+.status-cell {
+  display: flex;
+  gap: 0.5rem;
+  align-items: center;
+  flex-wrap: wrap;
+}
+
+.dns-verification {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+
+  .verification-icons {
+    display: flex;
+    gap: 0.5rem;
+
+    i {
+      font-size: 1.25rem;
+      transition: transform 0.2s ease;
+
+      &:hover {
+        transform: scale(1.1);
+      }
+
+      &.text-green-600 {
+        color: #10b981;
+      }
+
+      &.text-gray-400 {
+        color: #9ca3af;
+      }
+
+      &.text-red-600 {
+        color: #ef4444;
+      }
+    }
+  }
+
+  ::ng-deep .dns-progress {
+    height: 6px;
+
+    .p-progressbar-value {
+      transition: width 0.5s ease;
+    }
+  }
+}
+
+.stats-cell {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+
+  .stat-item {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    font-size: 0.85rem;
+    color: #475569;
+
+    i {
+      color: #667eea;
+      font-size: 0.9rem;
+    }
+  }
+}
+
+.last-activity {
+  font-size: 0.85rem;
+  color: #64748b;
+}
+
+.action-buttons {
+  display: flex;
+  gap: 0.25rem;
+  justify-content: flex-end;
+
+  ::ng-deep .p-button {
+    transition: transform 0.2s ease;
+
+    &:hover {
+      transform: translateY(-2px);
+    }
+  }
+}
+
+// Empty state
+.empty-message {
+  text-align: center;
+
+  .empty-state {
+    padding: 3rem 2rem;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 1rem;
+
+    i {
+      font-size: 4rem;
+      color: #cbd5e1;
+    }
+
+    h3 {
+      font-size: 1.25rem;
+      font-weight: 600;
+      color: #1e293b;
+      margin: 0;
+    }
+
+    p {
+      font-size: 0.95rem;
+      color: #64748b;
+      margin: 0;
+      max-width: 400px;
+    }
+  }
+}
+
+// Add domain dialog
+.add-domain-form {
+  display: flex;
+  flex-direction: column;
+  gap: 1.5rem;
+
+  .form-field {
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+
+    label {
+      font-weight: 600;
+      color: #1e293b;
+      font-size: 0.9rem;
+    }
+
+    input {
+      font-size: 0.95rem;
+
+      &.ng-invalid.ng-touched {
+        border-color: #ef4444;
+      }
+    }
+
+    small.p-error {
+      font-size: 0.8rem;
+      color: #ef4444;
+    }
+  }
+
+  .info-message {
+    display: flex;
+    gap: 0.75rem;
+    padding: 1rem;
+    background-color: #eff6ff;
+    border-radius: 8px;
+    border-left: 4px solid #3b82f6;
+
+    i {
+      color: #3b82f6;
+      font-size: 1.25rem;
+      flex-shrink: 0;
+      margin-top: 0.125rem;
+    }
+
+    strong {
+      display: block;
+      color: #1e293b;
+      margin-bottom: 0.25rem;
+      font-size: 0.9rem;
+    }
+
+    p {
+      color: #475569;
+      font-size: 0.85rem;
+      margin: 0;
+      line-height: 1.5;
+    }
+  }
+}
+
+// DNS dialog
+.dns-dialog-content {
+  .dns-intro {
+    font-size: 0.95rem;
+    color: #475569;
+    margin-bottom: 1.5rem;
+    line-height: 1.6;
+  }
+
+  ::ng-deep .p-tabview {
+    .p-tabview-nav {
+      border-bottom: 2px solid #e2e8f0;
+    }
+
+    .p-tabview-panels {
+      padding: 1.5rem 0;
+    }
+  }
+
+  .dns-record-section {
+    display: flex;
+    flex-direction: column;
+    gap: 1rem;
+
+    .dns-record-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 0.5rem;
+
+      h4 {
+        font-size: 1rem;
+        font-weight: 600;
+        color: #1e293b;
+        margin: 0;
+      }
+
+      .verification-status {
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+        font-size: 0.9rem;
+        font-weight: 500;
+
+        i {
+          font-size: 1.25rem;
+
+          &.text-green-600 {
+            color: #10b981;
+          }
+
+          &.text-red-600 {
+            color: #ef4444;
+          }
+        }
+      }
+    }
+
+    .dns-record-value {
+      display: flex;
+      align-items: center;
+      gap: 0.75rem;
+      padding: 1rem;
+      background-color: #f8fafc;
+      border: 1px solid #e2e8f0;
+      border-radius: 8px;
+
+      code {
+        flex: 1;
+        font-size: 0.85rem;
+        color: #1e293b;
+        font-family: 'Monaco', 'Menlo', 'Courier New', monospace;
+        word-break: break-all;
+        line-height: 1.6;
+      }
+
+      ::ng-deep .p-button {
+        flex-shrink: 0;
+      }
+    }
+
+    .dns-hint {
+      font-size: 0.85rem;
+      color: #64748b;
+      font-style: italic;
+      margin: 0;
+    }
+  }
+}
+
+// Responsive adjustments
+@media (max-width: 1024px) {
+  .domains-container {
+    padding: 1.5rem;
+  }
+
+  ::ng-deep .p-datatable {
+    font-size: 0.9rem;
+
+    .action-buttons {
+      flex-wrap: wrap;
+    }
+  }
+}
+
+@media (max-width: 768px) {
+  .domains-container {
+    padding: 1rem;
+  }
+
+  .page-title {
+    font-size: 1.5rem;
+  }
+
+  .domains-header {
+    flex-direction: column;
+    gap: 1rem;
+    align-items: stretch;
+  }
+
+  ::ng-deep .p-datatable {
+    font-size: 0.85rem;
+
+    .p-datatable-wrapper {
+      overflow-x: auto;
+    }
+
+    .stats-cell,
+    .last-activity {
+      display: none;
+    }
+
+    .verification-icons {
+      flex-wrap: wrap;
+    }
+  }
+
+  .dns-record-value {
+    flex-direction: column;
+    align-items: stretch !important;
+
+    code {
+      font-size: 0.75rem;
+    }
+  }
+}
+
+@media (max-width: 640px) {
+  ::ng-deep .p-dialog {
+    width: 95vw !important;
+    max-width: 95vw !important;
+  }
+
+  .action-buttons {
+    flex-direction: column;
+    gap: 0.5rem !important;
   }
 }
