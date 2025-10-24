@@ -26,21 +26,22 @@ export interface DomainResponse {
   organization_id: number;
   status: DomainStatus;
   is_active: boolean;
-  
+  success: boolean;
+
   // DNS verification status
   mx_record_verified: boolean;
   spf_record_verified: boolean;
   dkim_record_verified: boolean;
   dmarc_record_verified: boolean;
-  
+
   // DNS record values
   dkim_public_key?: string;
   verification_token?: string;
-  
+
   // Timestamps
   created_at: string;
   updated_at: string;
-  
+
   // Computed property
   is_fully_verified: boolean;
 }

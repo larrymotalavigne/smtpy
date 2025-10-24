@@ -4,8 +4,10 @@ import secrets
 from typing import Optional
 
 from sqlalchemy.ext.asyncio import AsyncSession
+from sqlalchemy import select, func
 
 from ..models.domain import Domain, DomainStatus
+from ..models.message import Message, MessageStatus
 from ..database import domains_database
 from ..schemas.common import PaginatedResponse
 from ..schemas.domain import (
@@ -14,7 +16,8 @@ from ..schemas.domain import (
     DomainList,
     DomainVerificationResponse,
     DNSVerificationStatus,
-    DNSRecords
+    DNSRecords,
+    DomainStats
 )
 
 
@@ -210,3 +213,51 @@ async def get_active_domains_for_organization(
     """Get all active verified domains for an organization."""
     domains = await domains_database.get_active_domains_by_organization(db, organization_id)
     return [DomainResponse.model_validate(domain) for domain in domains]
+
+
+async def get_domain_stats(
+    db: AsyncSession,
+    domain_id: int,
+    organization_id: int
+) -> Optional[DomainStats]:
+    """Compute statistics for a given domain.
+    Returns None if the domain does not exist or does not belong to the organization.
+    """
+    # Validate domain ownership
+    domain = await domains_database.get_domain_by_id(db, domain_id)
+    if not domain or domain.organization_id != organization_id:
+        return None
+
+    # Messages received (all statuses count) for this domain
+    total_messages_stmt = select(func.count()).select_from(Message).where(Message.domain_id == domain_id)
+    result = await db.execute(total_messages_stmt)
+    messages_received = int(result.scalar() or 0)
+
+    # Messages forwarded = delivered
+    delivered_stmt = (
+        select(func.count())
+        .select_from(Message)
+        .where(
+            (Message.domain_id == domain_id) & (Message.status == MessageStatus.DELIVERED)
+        )
+    )
+    result = await db.execute(delivered_stmt)
+    messages_forwarded = int(result.scalar() or 0)
+
+    # Last message at (max created_at)
+    last_msg_stmt = select(func.max(Message.created_at)).where(Message.domain_id == domain_id)
+    result = await db.execute(last_msg_stmt)
+    last_message_dt = result.scalar()
+    last_message_at = last_message_dt.isoformat() if last_message_dt else None
+
+    # Alias counts – no Alias model detected, default to 0 for now
+    total_aliases = 0
+    active_aliases = 0
+
+    return DomainStats(
+        total_aliases=total_aliases,
+        active_aliases=active_aliases,
+        messages_received=messages_received,
+        messages_forwarded=messages_forwarded,
+        last_message_at=last_message_at,
+    )

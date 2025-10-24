@@ -108,3 +108,13 @@ class DNSRecords(BaseSchema):
     dkim_record: str = Field(..., description="Required DKIM record")
     dmarc_record: str = Field(..., description="Required DMARC record")
     verification_record: Optional[str] = Field(None, description="Domain verification TXT record")
+
+
+class DomainStats(BaseSchema):
+    """Schema for per-domain statistics used by the frontend."""
+    
+    total_aliases: int = Field(0, description="Total number of aliases for the domain")
+    active_aliases: int = Field(0, description="Number of active aliases for the domain")
+    messages_received: int = Field(0, description="Total number of messages received for the domain")
+    messages_forwarded: int = Field(0, description="Number of messages successfully forwarded (delivered)")
+    last_message_at: Optional[str] = Field(None, description="ISO timestamp of the last message activity")

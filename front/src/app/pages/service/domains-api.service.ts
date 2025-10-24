@@ -2,18 +2,17 @@ import { Injectable } from '@angular/core';
 import { HttpClient, HttpParams } from '@angular/common/http';
 import { Observable } from 'rxjs';
 import { environment } from '../../../environments/environment';
-import { 
-  DomainResponse, 
-  DomainList, 
-  DomainCreate, 
-  DomainUpdate, 
-  DomainVerificationResponse, 
-  DNSRecords 
+import {
+  DomainResponse,
+  DomainList,
+  DomainCreate,
+  DomainUpdate,
+  DomainVerificationResponse,
+  DNSRecords
 } from '../../core/interfaces/domain.interface';
-import { 
-  PaginatedResponse, 
-  PaginationParams, 
-  ApiResponse 
+import {
+  PaginatedResponse,
+  PaginationParams
 } from '../../core/interfaces/common.interface';
 
 @Injectable({
@@ -27,16 +26,16 @@ export class DomainsApiService {
   /**
    * Create a new domain
    */
-  createDomain(domain: DomainCreate): Observable<ApiResponse<DomainResponse>> {
-    return this.http.post<ApiResponse<DomainResponse>>(this.apiUrl, domain);
+  createDomain(domain: DomainCreate): Observable<DomainResponse> {
+    return this.http.post<DomainResponse>(this.apiUrl, domain);
   }
 
   /**
    * Get paginated list of domains
    */
-  getDomains(params?: PaginationParams): Observable<ApiResponse<PaginatedResponse<DomainList>>> {
+  getDomains(params?: PaginationParams): Observable<PaginatedResponse<DomainList>> {
     let httpParams = new HttpParams();
-    
+
     if (params?.page) {
       httpParams = httpParams.set('page', params.page.toString());
     }
@@ -50,70 +49,70 @@ export class DomainsApiService {
       httpParams = httpParams.set('order', params.order);
     }
 
-    return this.http.get<ApiResponse<PaginatedResponse<DomainList>>>(this.apiUrl, { params: httpParams });
+    return this.http.get<PaginatedResponse<DomainList>>(this.apiUrl, { params: httpParams });
   }
 
   /**
    * Get a specific domain by ID
    */
-  getDomain(id: number): Observable<ApiResponse<DomainResponse>> {
-    return this.http.get<ApiResponse<DomainResponse>>(`${this.apiUrl}/${id}`);
+  getDomain(id: number): Observable<DomainResponse> {
+    return this.http.get<DomainResponse>(`${this.apiUrl}/${id}`);
   }
 
   /**
    * Update a domain
    */
-  updateDomain(id: number, update: DomainUpdate): Observable<ApiResponse<DomainResponse>> {
-    return this.http.patch<ApiResponse<DomainResponse>>(`${this.apiUrl}/${id}`, update);
+  updateDomain(id: number, update: DomainUpdate): Observable<DomainResponse> {
+    return this.http.patch<DomainResponse>(`${this.apiUrl}/${id}`, update);
   }
 
   /**
    * Delete a domain
    */
-  deleteDomain(id: number): Observable<ApiResponse<void>> {
-    return this.http.delete<ApiResponse<void>>(`${this.apiUrl}/${id}`);
+  deleteDomain(id: number): Observable<void> {
+    return this.http.delete<void>(`${this.apiUrl}/${id}`);
   }
 
   /**
    * Verify domain DNS records
    */
-  verifyDomain(id: number): Observable<ApiResponse<DomainVerificationResponse>> {
-    return this.http.post<ApiResponse<DomainVerificationResponse>>(`${this.apiUrl}/${id}/verify`, {});
+  verifyDomain(id: number): Observable<DomainVerificationResponse> {
+    return this.http.post<DomainVerificationResponse>(`${this.apiUrl}/${id}/verify`, {});
   }
 
   /**
    * Get DNS records for a domain
    */
-  getDNSRecords(id: number): Observable<ApiResponse<DNSRecords>> {
-    return this.http.get<ApiResponse<DNSRecords>>(`${this.apiUrl}/${id}/dns-records`);
+  getDNSRecords(id: number): Observable<DNSRecords> {
+    return this.http.get<DNSRecords>(`${this.apiUrl}/${id}/dns-records`);
   }
 
   /**
    * Get domains with active status only
    */
-  getActiveDomains(): Observable<ApiResponse<DomainList[]>> {
+  getActiveDomains(): Observable<DomainList[]> {
     const params = new HttpParams().set('active_only', 'true');
-    return this.http.get<ApiResponse<DomainList[]>>(this.apiUrl, { params });
+    return this.http.get<DomainList[]>(this.apiUrl, { params });
   }
 
   /**
    * Check domain availability (before creating)
    */
-  checkDomainAvailability(domainName: string): Observable<ApiResponse<{ available: boolean; reason?: string }>> {
+  checkDomainAvailability(domainName: string): Observable<{ available: boolean; reason?: string }> {
     const params = new HttpParams().set('name', domainName);
-    return this.http.get<ApiResponse<{ available: boolean; reason?: string }>>(`${this.apiUrl}/check-availability`, { params });
+    return this.http.get<{ available: boolean; reason?: string }>(`${this.apiUrl}/check-availability`, { params });
   }
 
   /**
    * Get domain statistics
    */
-  getDomainStats(id: number): Observable<ApiResponse<{
+  getDomainStats(id: number): Observable<{
     total_aliases: number;
     active_aliases: number;
     messages_received: number;
     messages_forwarded: number;
     last_message_at?: string;
-  }>> {
-    return this.http.get<ApiResponse<any>>(`${this.apiUrl}/${id}/stats`);
+  }> {
+    return this.http.get<any>(`${this.apiUrl}/${id}/stats`);
   }
 }

@@ -11,7 +11,8 @@ from ..schemas.domain import (
     DomainUpdate,
     DomainResponse,
     DomainVerificationResponse,
-    DNSRecords
+    DNSRecords,
+    DomainStats
 )
 
 # Create router
@@ -228,6 +229,41 @@ async def verify_domain(
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
             detail="Failed to verify domain"
+        )
+
+
+@router.get(
+    "/{domain_id}/stats",
+    response_model=DomainStats,
+    summary="Get domain statistics",
+    responses={
+        404: {"model": ErrorResponse, "description": "Domain not found"},
+        500: {"model": ErrorResponse, "description": "Internal server error"}
+    }
+)
+async def get_domain_stats(
+    domain_id: int,
+    db: AsyncSession = Depends(get_db)
+):
+    """Get per-domain statistics (aliases, messages, last activity)."""
+    try:
+        stats = await domains_controller.get_domain_stats(
+            db=db,
+            domain_id=domain_id,
+            organization_id=MOCK_ORGANIZATION_ID
+        )
+        if stats is None:
+            raise HTTPException(
+                status_code=status.HTTP_404_NOT_FOUND,
+                detail="Domain not found"
+            )
+        return stats
+    except HTTPException:
+        raise
+    except Exception:
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail="Failed to fetch domain stats"
         )
 
 

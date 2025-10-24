@@ -1,29 +1,26 @@
+/**
+ * Standard API response wrapper used by auth, billing, and statistics endpoints
+ */
+export interface ApiResponse<T> {
+  success: boolean;
+  data?: T;
+  message?: string;
+}
+
 export interface PaginatedResponse<T> {
   items: T[];
   total: number;
   page: number;
-  size: number;
-  pages: number;
+  page_size: number;
+  total_pages: number;
 }
 
 export interface PaginationParams {
   page?: number;
-  size?: number;
+  page_size?: number;
+  size?: number;  // Alias for page_size (for backward compatibility)
   sort?: string;
   order?: 'asc' | 'desc';
-}
-
-export interface ErrorResponse {
-  detail: string;
-  error_code?: string;
-  field_errors?: Record<string, string[]>;
-}
-
-export interface ApiResponse<T> {
-  success: boolean;
-  data?: T;
-  error?: ErrorResponse;
-  message?: string;
 }
 
 export interface BaseTimestamp {
