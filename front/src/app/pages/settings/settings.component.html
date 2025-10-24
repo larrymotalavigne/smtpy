@@ -1,0 +1,299 @@
+  <div class="settings-container">
+    <!-- Page Header -->
+    <div class="page-header">
+      <div>
+        <h1 class="page-title">Paramètres</h1>
+        <p class="page-subtitle">Gérez vos préférences et paramètres de sécurité</p>
+      </div>
+    </div>
+
+    <div class="settings-content">
+      <!-- Notifications Settings -->
+      <p-card class="settings-card">
+        <ng-template pTemplate="header">
+          <div class="card-header">
+            <i class="pi pi-bell"></i>
+            <h3>Notifications Email</h3>
+          </div>
+        </ng-template>
+
+        <p-message
+          severity="info"
+          text="Choisissez les notifications que vous souhaitez recevoir par email."
+          styleClass="mb-4">
+        </p-message>
+
+        <form [formGroup]="notificationsForm" *ngIf="notificationsForm">
+          <div class="notification-settings">
+            <div class="setting-item">
+              <div class="setting-info">
+                <label class="setting-label">Nouveaux messages</label>
+                <p class="setting-description">Recevoir une notification lorsqu'un nouveau message arrive</p>
+              </div>
+              <p-inputSwitch formControlName="emailOnNewMessage"></p-inputSwitch>
+            </div>
+
+            <p-divider></p-divider>
+
+            <div class="setting-item">
+              <div class="setting-info">
+                <label class="setting-label">Domaine vérifié</label>
+                <p class="setting-description">Être notifié lorsqu'un domaine est vérifié avec succès</p>
+              </div>
+              <p-inputSwitch formControlName="emailOnDomainVerified"></p-inputSwitch>
+            </div>
+
+            <p-divider></p-divider>
+
+            <div class="setting-item">
+              <div class="setting-info">
+                <label class="setting-label">Avertissement de quota</label>
+                <p class="setting-description">Alerte lorsque vous approchez de votre limite de quota</p>
+              </div>
+              <p-inputSwitch formControlName="emailOnQuotaWarning"></p-inputSwitch>
+            </div>
+
+            <p-divider></p-divider>
+
+            <div class="setting-item">
+              <div class="setting-info">
+                <label class="setting-label">Résumé hebdomadaire</label>
+                <p class="setting-description">Recevoir un résumé de votre activité chaque semaine</p>
+              </div>
+              <p-inputSwitch formControlName="emailWeeklySummary"></p-inputSwitch>
+            </div>
+          </div>
+        </form>
+      </p-card>
+
+      <!-- API Keys Management -->
+      <p-card class="settings-card">
+        <ng-template pTemplate="header">
+          <div class="card-header">
+            <i class="pi pi-key"></i>
+            <h3>Clés API</h3>
+          </div>
+        </ng-template>
+
+        <p-message
+          severity="warn"
+          text="Ne partagez jamais vos clés API. Elles donnent un accès complet à votre compte."
+          styleClass="mb-4">
+        </p-message>
+
+        <div class="api-keys-section">
+          <div class="section-header">
+            <p-button
+              label="Générer une nouvelle clé"
+              icon="pi pi-plus"
+              (onClick)="showApiKeyDialog = true">
+            </p-button>
+          </div>
+
+          <p-table [value]="apiKeys" styleClass="mt-4">
+            <ng-template pTemplate="header">
+              <tr>
+                <th>Nom</th>
+                <th>Clé</th>
+                <th>Créée le</th>
+                <th>Dernière utilisation</th>
+                <th>Actions</th>
+              </tr>
+            </ng-template>
+            <ng-template pTemplate="body" let-apiKey>
+              <tr>
+                <td><strong>{{ apiKey.name }}</strong></td>
+                <td>
+                  <code class="api-key-value">{{ apiKey.key }}</code>
+                </td>
+                <td>{{ formatDate(apiKey.created_at) }}</td>
+                <td>{{ formatDate(apiKey.last_used) }}</td>
+                <td>
+                  <div class="table-actions">
+                    <p-button
+                      icon="pi pi-copy"
+                      [rounded]="true"
+                      [text]="true"
+                      severity="secondary"
+                      (onClick)="copyApiKey(apiKey.key)"
+                      pTooltip="Copier">
+                    </p-button>
+                    <p-button
+                      icon="pi pi-trash"
+                      [rounded]="true"
+                      [text]="true"
+                      severity="danger"
+                      (onClick)="revokeApiKey(apiKey)"
+                      pTooltip="Révoquer">
+                    </p-button>
+                  </div>
+                </td>
+              </tr>
+            </ng-template>
+            <ng-template pTemplate="emptymessage">
+              <tr>
+                <td colspan="5" class="text-center">
+                  <p class="empty-state">Aucune clé API configurée</p>
+                </td>
+              </tr>
+            </ng-template>
+          </p-table>
+        </div>
+      </p-card>
+
+      <!-- Active Sessions -->
+      <p-card class="settings-card">
+        <ng-template pTemplate="header">
+          <div class="card-header">
+            <i class="pi pi-desktop"></i>
+            <h3>Sessions actives</h3>
+          </div>
+        </ng-template>
+
+        <div class="sessions-section">
+          <div class="section-header">
+            <p class="section-description">Gérez vos sessions actives sur différents appareils</p>
+            <p-button
+              label="Révoquer toutes les sessions"
+              icon="pi pi-sign-out"
+              severity="danger"
+              [outlined]="true"
+              (onClick)="revokeAllSessions()">
+            </p-button>
+          </div>
+
+          <div class="sessions-list">
+            <div class="session-item" *ngFor="let session of sessions" [class.current-session]="session.is_current">
+              <div class="session-icon">
+                <i class="pi pi-desktop"></i>
+              </div>
+              <div class="session-details">
+                <div class="session-header">
+                  <strong>{{ session.device }}</strong>
+                  <span class="current-badge" *ngIf="session.is_current">Session actuelle</span>
+                </div>
+                <p class="session-location">
+                  <i class="pi pi-map-marker"></i>
+                  {{ session.location }} • {{ session.ip_address }}
+                </p>
+                <p class="session-time">
+                  <i class="pi pi-clock"></i>
+                  Dernière activité: {{ formatDate(session.last_active) }}
+                </p>
+              </div>
+              <div class="session-actions" *ngIf="!session.is_current">
+                <p-button
+                  label="Révoquer"
+                  icon="pi pi-times"
+                  severity="danger"
+                  [outlined]="true"
+                  size="small"
+                  (onClick)="revokeSession(session)">
+                </p-button>
+              </div>
+            </div>
+          </div>
+        </div>
+      </p-card>
+
+      <!-- Danger Zone -->
+      <p-card class="settings-card danger-card">
+        <ng-template pTemplate="header">
+          <div class="card-header">
+            <i class="pi pi-exclamation-triangle"></i>
+            <h3>Zone Dangereuse</h3>
+          </div>
+        </ng-template>
+
+        <p-message
+          severity="error"
+          text="Ces actions sont irréversibles. Procédez avec prudence."
+          styleClass="mb-4">
+        </p-message>
+
+        <div class="danger-actions">
+          <div class="danger-item">
+            <div class="danger-info">
+              <h4>Supprimer mon compte</h4>
+              <p>Une fois supprimé, votre compte ne pourra pas être récupéré. Toutes vos données seront supprimées définitivement.</p>
+            </div>
+            <p-button
+              label="Supprimer mon compte"
+              icon="pi pi-trash"
+              severity="danger"
+              (onClick)="deleteAccount()">
+            </p-button>
+          </div>
+        </div>
+      </p-card>
+    </div>
+
+    <!-- API Key Generation Dialog -->
+    <p-dialog
+      header="Générer une nouvelle clé API"
+      [(visible)]="showApiKeyDialog"
+      [modal]="true"
+      [style]="{width: '500px'}"
+      [draggable]="false"
+      [resizable]="false">
+
+      <div class="api-key-dialog" *ngIf="!generatedApiKey">
+        <p>Donnez un nom à votre clé API pour l'identifier facilement.</p>
+
+        <div class="form-field">
+          <label for="apiKeyName">Nom de la clé *</label>
+          <input
+            pInputText
+            id="apiKeyName"
+            [(ngModel)]="newApiKeyName"
+            placeholder="Ex: Production API, Development"
+            class="w-full" />
+        </div>
+      </div>
+
+      <div class="api-key-dialog" *ngIf="generatedApiKey">
+        <p-message
+          severity="warn"
+          text="Copiez cette clé maintenant. Pour des raisons de sécurité, elle ne sera plus affichée."
+          styleClass="mb-3">
+        </p-message>
+
+        <div class="generated-key">
+          <code>{{ generatedApiKey }}</code>
+          <p-button
+            icon="pi pi-copy"
+            [rounded]="true"
+            severity="secondary"
+            (onClick)="copyApiKey(generatedApiKey)">
+          </p-button>
+        </div>
+      </div>
+
+      <ng-template pTemplate="footer">
+        <p-button
+          label="Annuler"
+          severity="secondary"
+          [outlined]="true"
+          (onClick)="closeApiKeyDialog()"
+          *ngIf="!generatedApiKey">
+        </p-button>
+        <p-button
+          label="Générer"
+          icon="pi pi-key"
+          (onClick)="generateApiKey()"
+          *ngIf="!generatedApiKey">
+        </p-button>
+        <p-button
+          label="Fermer"
+          (onClick)="closeApiKeyDialog()"
+          *ngIf="generatedApiKey">
+        </p-button>
+      </ng-template>
+    </p-dialog>
+
+    <!-- Toast for notifications -->
+    <p-toast position="top-right"></p-toast>
+
+    <!-- Confirmation Dialog -->
+    <p-confirmDialog></p-confirmDialog>
+  </div>

@@ -1,0 +1,278 @@
+<div class="statistics-container">
+  <!-- Header -->
+  <div class="statistics-header">
+    <div>
+      <h1 class="page-title">Statistiques d'utilisation</h1>
+      <p class="page-subtitle">Analysez vos données de messagerie en temps réel</p>
+    </div>
+    <div class="header-actions">
+      <p-button
+        #exportBtn
+        type="button"
+        label="Exporter"
+        icon="pi pi-download"
+        [outlined]="true"
+        (onClick)="exportMenu.toggle($event)">
+      </p-button>
+      <p-menu #exportMenu [model]="exportMenuItems" [popup]="true"></p-menu>
+    </div>
+  </div>
+
+  <!-- Filters -->
+  <p-card class="filters-card">
+    <ng-template pTemplate="content">
+      <div class="filters-grid">
+        <div class="filter-item">
+          <label for="period">Période:</label>
+          <p-select
+            id="period"
+            [(ngModel)]="selectedPeriod"
+            [options]="periodOptions"
+            optionLabel="label"
+            (onChange)="onPeriodChange()"
+            styleClass="w-full">
+          </p-select>
+        </div>
+        <div class="filter-item" *ngIf="selectedPeriod.value === 'custom'">
+          <label for="dateRange">Plage de dates:</label>
+          <p-datepicker
+            id="dateRange"
+            [(ngModel)]="dateRange"
+            selectionMode="range"
+            [showIcon]="true"
+            dateFormat="dd/mm/yy"
+            placeholder="Sélectionner une plage"
+            (onSelect)="onDateRangeChange()"
+            styleClass="w-full">
+          </p-datepicker>
+        </div>
+      </div>
+    </ng-template>
+  </p-card>
+
+  <!-- Overall Statistics Cards -->
+  <div class="stats-cards" *ngIf="!loading && overallStats; else statsLoading">
+    <div class="stat-card">
+      <div class="stat-icon success">
+        <i class="pi pi-check-circle"></i>
+      </div>
+      <div class="stat-content">
+        <span class="stat-label">Total emails</span>
+        <span class="stat-value">{{ overallStats.total_emails | number }}</span>
+      </div>
+    </div>
+
+    <div class="stat-card">
+      <div class="stat-icon primary">
+        <i class="pi pi-send"></i>
+      </div>
+      <div class="stat-content">
+        <span class="stat-label">Emails envoyés</span>
+        <span class="stat-value">{{ overallStats.emails_sent | number }}</span>
+      </div>
+    </div>
+
+    <div class="stat-card">
+      <div class="stat-icon danger">
+        <i class="pi pi-times-circle"></i>
+      </div>
+      <div class="stat-content">
+        <span class="stat-label">Emails échoués</span>
+        <span class="stat-value">{{ overallStats.emails_failed | number }}</span>
+      </div>
+    </div>
+
+    <div class="stat-card">
+      <div class="stat-icon info">
+        <i class="pi pi-percentage"></i>
+      </div>
+      <div class="stat-content">
+        <span class="stat-label">Taux de succès</span>
+        <span class="stat-value">{{ overallStats.success_rate | number:'1.1-1' }}%</span>
+      </div>
+    </div>
+
+    <div class="stat-card">
+      <div class="stat-icon warning">
+        <i class="pi pi-globe"></i>
+      </div>
+      <div class="stat-content">
+        <span class="stat-label">Domaines actifs</span>
+        <span class="stat-value">{{ overallStats.active_domains | number }}</span>
+      </div>
+    </div>
+
+    <div class="stat-card">
+      <div class="stat-icon secondary">
+        <i class="pi pi-at"></i>
+      </div>
+      <div class="stat-content">
+        <span class="stat-label">Alias actifs</span>
+        <span class="stat-value">{{ overallStats.active_aliases | number }}</span>
+      </div>
+    </div>
+  </div>
+
+  <ng-template #statsLoading>
+    <div class="stats-cards">
+      <div class="stat-card" *ngFor="let i of [1,2,3,4,5,6]">
+        <p-skeleton width="3rem" height="3rem" borderRadius="50%"></p-skeleton>
+        <div class="stat-content">
+          <p-skeleton width="8rem" height="1rem" styleClass="mb-2"></p-skeleton>
+          <p-skeleton width="4rem" height="1.5rem"></p-skeleton>
+        </div>
+      </div>
+    </div>
+  </ng-template>
+
+  <!-- Charts Section -->
+  <div class="charts-grid">
+    <!-- Time Series Chart -->
+    <p-card class="chart-card">
+      <ng-template pTemplate="header">
+        <div class="card-header">
+          <h3>Volume d'emails dans le temps</h3>
+        </div>
+      </ng-template>
+      <ng-template pTemplate="content">
+        <div class="chart-wrapper" *ngIf="!loading; else chartLoading">
+          <canvas #timeSeriesCanvas></canvas>
+        </div>
+        <ng-template #chartLoading>
+          <p-skeleton height="300px"></p-skeleton>
+        </ng-template>
+      </ng-template>
+    </p-card>
+
+    <!-- Domain Breakdown Chart -->
+    <p-card class="chart-card">
+      <ng-template pTemplate="header">
+        <div class="card-header">
+          <h3>Répartition par domaine</h3>
+        </div>
+      </ng-template>
+      <ng-template pTemplate="content">
+        <div class="chart-wrapper domain-chart" *ngIf="!loading && domainStats.length > 0; else chartLoading">
+          <canvas #domainBreakdownCanvas></canvas>
+        </div>
+        <ng-template #chartLoading>
+          <p-skeleton height="300px"></p-skeleton>
+        </ng-template>
+      </ng-template>
+    </p-card>
+  </div>
+
+  <!-- Domain Statistics Table -->
+  <p-card class="table-card" *ngIf="!loading && domainStats.length > 0">
+    <ng-template pTemplate="header">
+      <div class="card-header">
+        <h3>Statistiques par domaine</h3>
+      </div>
+    </ng-template>
+    <ng-template pTemplate="content">
+      <p-table
+        [value]="domainStats"
+        [paginator]="false"
+        [tableStyle]="{ 'min-width': '60rem' }"
+        styleClass="p-datatable-sm">
+        <ng-template pTemplate="header">
+          <tr>
+            <th>Domaine</th>
+            <th class="text-right">Total emails</th>
+            <th class="text-right">Envoyés</th>
+            <th class="text-right">Échoués</th>
+            <th class="text-right">Taux de succès</th>
+            <th class="text-right">% du total</th>
+          </tr>
+        </ng-template>
+        <ng-template pTemplate="body" let-domain>
+          <tr>
+            <td>
+              <div class="domain-cell">
+                <i class="pi pi-globe"></i>
+                <span class="domain-name">{{ domain.domain_name }}</span>
+              </div>
+            </td>
+            <td class="text-right">
+              <span class="stat-number">{{ domain.email_count | number }}</span>
+            </td>
+            <td class="text-right">
+              <span class="stat-number success">{{ domain.success_count | number }}</span>
+            </td>
+            <td class="text-right">
+              <span class="stat-number danger">{{ domain.failure_count | number }}</span>
+            </td>
+            <td class="text-right">
+              <div class="success-rate" [class.high]="domain.success_rate >= 95" [class.medium]="domain.success_rate >= 85 && domain.success_rate < 95" [class.low]="domain.success_rate < 85">
+                <i class="pi" [class.pi-check-circle]="domain.success_rate >= 95" [class.pi-exclamation-triangle]="domain.success_rate >= 85 && domain.success_rate < 95" [class.pi-times-circle]="domain.success_rate < 85"></i>
+                <span>{{ domain.success_rate | number:'1.1-1' }}%</span>
+              </div>
+            </td>
+            <td class="text-right">
+              <span class="percentage">{{ domain.percentage_of_total | number:'1.1-1' }}%</span>
+            </td>
+          </tr>
+        </ng-template>
+      </p-table>
+    </ng-template>
+  </p-card>
+
+  <!-- Top Aliases Table -->
+  <p-card class="table-card" *ngIf="!loading && topAliases.length > 0">
+    <ng-template pTemplate="header">
+      <div class="card-header">
+        <h3>Top des alias les plus utilisés</h3>
+      </div>
+    </ng-template>
+    <ng-template pTemplate="content">
+      <p-table
+        [value]="topAliases"
+        [paginator]="false"
+        [tableStyle]="{ 'min-width': '50rem' }"
+        styleClass="p-datatable-sm">
+        <ng-template pTemplate="header">
+          <tr>
+            <th>Alias</th>
+            <th>Domaine</th>
+            <th class="text-right">Emails reçus</th>
+            <th class="text-right">Dernière utilisation</th>
+          </tr>
+        </ng-template>
+        <ng-template pTemplate="body" let-alias let-i="rowIndex">
+          <tr>
+            <td>
+              <div class="alias-cell">
+                <span class="rank-badge">{{ i + 1 }}</span>
+                <i class="pi pi-at"></i>
+                <span class="alias-email">{{ alias.alias_email }}</span>
+              </div>
+            </td>
+            <td>
+              <span class="domain-badge">{{ alias.domain_name }}</span>
+            </td>
+            <td class="text-right">
+              <span class="stat-number">{{ alias.email_count | number }}</span>
+            </td>
+            <td class="text-right">
+              <span class="date-text">{{ formatDate(alias.last_used) }}</span>
+            </td>
+          </tr>
+        </ng-template>
+      </p-table>
+    </ng-template>
+  </p-card>
+
+  <!-- Empty State -->
+  <p-card *ngIf="!loading && (!overallStats || overallStats.total_emails === 0)" class="empty-state">
+    <ng-template pTemplate="content">
+      <div class="empty-content">
+        <i class="pi pi-chart-bar"></i>
+        <h3>Aucune donnée disponible</h3>
+        <p>Il n'y a pas encore de statistiques pour la période sélectionnée</p>
+      </div>
+    </ng-template>
+  </p-card>
+</div>
+
+<!-- Toast for notifications -->
+<p-toast></p-toast>

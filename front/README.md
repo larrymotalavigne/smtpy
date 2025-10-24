@@ -1,117 +1,59 @@
-# SMTPy Frontend
+# Sakai19
 
-Angular frontend for SMTPy email aliasing and forwarding service.
+This project was generated using [Angular CLI](https://github.com/angular/angular-cli) version 20.0.5.
 
-## Technologies
+## Development server
 
-- **Angular 18**: Modern web framework
-- **PrimeNG 20**: UI component library
-- **TailwindCSS 3**: Utility-first CSS framework
-- **TypeScript**: Type-safe JavaScript
-
-## Project Structure
-
-```
-src/
-├── app/
-│   ├── core/
-│   │   ├── interfaces/          # TypeScript interfaces
-│   │   │   ├── domain.interface.ts
-│   │   │   ├── message.interface.ts
-│   │   │   ├── billing.interface.ts
-│   │   │   └── common.interface.ts
-│   │   └── services/            # HTTP services (to be implemented)
-│   ├── features/                # Feature modules (to be implemented)
-│   │   ├── dashboard/
-│   │   ├── domains/
-│   │   ├── messages/
-│   │   └── billing/
-│   ├── app-routing.module.ts    # Main routing configuration
-│   ├── app.module.ts           # Main app module
-│   └── app.component.*         # Root component
-├── environments/               # Environment configurations
-├── assets/                    # Static assets
-└── styles.scss               # Global styles
-```
-
-## Features Implemented
-
-### ✅ Core Framework
-- Angular 18 project structure
-- PrimeNG 20 integration with animations
-- TailwindCSS configuration
-- TypeScript strict mode enabled
-
-### ✅ TypeScript Interfaces
-Based on backend API schemas:
-- **Domain interfaces**: DomainCreate, DomainResponse, DNSVerificationStatus, etc.
-- **Message interfaces**: MessageResponse, MessageList, MessageStats, MessageFilter
-- **Billing interfaces**: SubscriptionResponse, CheckoutSessionRequest, OrganizationBilling
-- **Common interfaces**: PaginatedResponse, ErrorResponse, ApiResponse
-
-### ✅ Routing Setup
-- Lazy-loaded feature modules
-- Routes for dashboard, domains, messages, billing
-- Wildcard route handling
-
-### ✅ Configuration
-- Development and production environments
-- API URL configuration
-- Build and serve configurations
-
-## Getting Started
-
-### Prerequisites
-- Node.js 18+
-- npm or yarn
-
-### Installation
+To start a local development server, run:
 
 ```bash
-# Navigate to frontend directory
-cd front
-
-# Install dependencies
-npm install
-
-# Start development server
-npm start
+ng serve
 ```
 
-The application will be available at `http://localhost:4200`
+Once the server is running, open your browser and navigate to `http://localhost:4200/`. The application will automatically reload whenever you modify any of the source files.
 
-### Available Scripts
+## Code scaffolding
+
+Angular CLI includes powerful code scaffolding tools. To generate a new component, run:
 
 ```bash
-npm start          # Start development server
-npm run build      # Build for production
-npm run build:dev  # Build for development
-npm test           # Run tests
-npm run lint       # Run linting
+ng generate component component-name
 ```
 
-## Next Steps
+For a complete list of available schematics (such as `components`, `directives`, or `pipes`), run:
 
-The framework is ready for feature implementation:
+```bash
+ng generate --help
+```
 
-1. **Services**: Implement HTTP services extending BaseService
-2. **Components**: Create feature components for domains, messages, billing
-3. **Guards**: Add authentication and authorization guards  
-4. **Interceptors**: Add HTTP interceptors for auth tokens and error handling
-5. **State Management**: Consider NgRx for complex state management
-6. **Testing**: Add unit and integration tests
+## Building
 
-## Backend Integration
+To build the project run:
 
-The frontend is designed to work with the SMTPy backend API:
-- **API Base URL**: Configured in environment files
-- **Authentication**: Session-based (matches backend)
-- **Data Models**: TypeScript interfaces mirror backend Pydantic schemas
+```bash
+ng build
+```
 
-## Development Notes
+This will compile your project and store the build artifacts in the `dist/` directory. By default, the production build optimizes your application for performance and speed.
 
-- Uses function-based patterns (following project guidelines)
-- No import aliases used (following project guidelines)
-- Strict TypeScript configuration enabled
-- PrimeNG theming with Lara Light Blue theme
-- TailwindCSS with preflight disabled to avoid conflicts with PrimeNG
+## Running unit tests
+
+To execute unit tests with the [Karma](https://karma-runner.github.io) test runner, use the following command:
+
+```bash
+ng test
+```
+
+## Running end-to-end tests
+
+For end-to-end (e2e) testing, run:
+
+```bash
+ng e2e
+```
+
+Angular CLI does not come with an end-to-end testing framework by default. You can choose one that suits your needs.
+
+## Additional Resources
+
+For more information on using the Angular CLI, including detailed command references, visit the [Angular CLI Overview and Command Reference](https://angular.dev/tools/cli) page.

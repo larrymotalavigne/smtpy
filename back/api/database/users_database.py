@@ -1,5 +1,6 @@
 """User database operations for SMTPy v2."""
 
+import bcrypt
 import secrets
 from datetime import datetime, timedelta, timezone
 from typing import Optional
@@ -79,7 +80,17 @@ class UsersDatabase:
         session: AsyncSession, username_or_email: str, password: str
     ) -> Optional[User]:
         """Verify user credentials and return user if valid."""
-        user = await UsersDatabase.get_user_by_credentials(session, username_or_email)
+        from sqlalchemy.orm import selectinload
+
+        # Eagerly load organization to avoid lazy loading issues
+        result = await session.execute(
+            select(User)
+            .where(
+                (User.username == username_or_email) | (User.email == username_or_email)
+            )
+            .options(selectinload(User.organization))
+        )
+        user = result.scalar_one_or_none()
 
         if not user:
             return None
@@ -87,12 +98,19 @@ class UsersDatabase:
         if not user.is_active:
             return None
 
-        if not user.verify_password(password):
+        # Access password_hash directly to avoid any lazy loading issues
+        password_matches = bcrypt.checkpw(
+            password.encode('utf-8'),
+            user.password_hash.encode('utf-8')
+        )
+
+        if not password_matches:
             return None
 
         # Update last login timestamp
         user.last_login = datetime.now(timezone.utc)
         await session.flush()
+        await session.refresh(user)
 
         return user
 

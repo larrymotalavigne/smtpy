@@ -1,0 +1,413 @@
+<div class="domains-container">
+  <!-- Header -->
+  <div class="domains-header">
+    <div>
+      <h1 class="page-title">Mes Domaines</h1>
+      <p class="page-subtitle">Gérez vos domaines et configurez les enregistrements DNS</p>
+    </div>
+    <p-button
+      label="Ajouter un domaine"
+      icon="pi pi-plus"
+      (onClick)="openAddDialog()">
+    </p-button>
+  </div>
+
+  <!-- Domains Table -->
+  <p-card class="domains-card">
+    <ng-template pTemplate="content">
+      <p-table
+        [value]="domains"
+        [loading]="loading"
+        [paginator]="true"
+        [rows]="10"
+        [showCurrentPageReport]="true"
+        currentPageReportTemplate="Affichage de {first} à {last} sur {totalRecords} domaines"
+        [rowsPerPageOptions]="[10, 25, 50]"
+        styleClass="p-datatable-sm"
+        [globalFilterFields]="['name', 'status']">
+
+        <ng-template pTemplate="header">
+          <tr>
+            <th>Domaine</th>
+            <th>Statut</th>
+            <th>Vérification DNS</th>
+            <th>Statistiques</th>
+            <th>Dernière activité</th>
+            <th style="width: 180px">Actions</th>
+          </tr>
+        </ng-template>
+
+        <ng-template pTemplate="body" let-domain>
+          <tr>
+            <!-- Domain Name -->
+            <td>
+              <div class="domain-name-cell">
+                <p-avatar
+                  icon="pi pi-globe"
+                  size="normal"
+                  shape="circle"
+                  [style]="{'background-color': domain.is_active ? '#667eea' : '#94a3b8', 'color': '#ffffff'}">
+                </p-avatar>
+                <div class="domain-info">
+                  <span class="domain-name">{{ domain.name }}</span>
+                  <span class="domain-date">Ajouté le {{ formatDate(domain.created_at) }}</span>
+                </div>
+              </div>
+            </td>
+
+            <!-- Status -->
+            <td>
+              <div class="status-cell">
+                <p-tag
+                  [value]="getStatusLabel(domain.status)"
+                  [severity]="getStatusSeverity(domain.status)">
+                </p-tag>
+                <p-tag
+                  *ngIf="!domain.is_active"
+                  value="Inactif"
+                  severity="secondary"
+                  class="ml-2">
+                </p-tag>
+              </div>
+            </td>
+
+            <!-- DNS Verification -->
+            <td>
+              <div class="dns-verification">
+                <div class="verification-icons">
+                  <i
+                    class="pi"
+                    [class.pi-check-circle]="domain.mx_record_verified"
+                    [class.pi-times-circle]="!domain.mx_record_verified"
+                    [class.text-green-600]="domain.mx_record_verified"
+                    [class.text-gray-400]="!domain.mx_record_verified"
+                    pTooltip="MX Record"
+                    tooltipPosition="top">
+                  </i>
+                  <i
+                    class="pi"
+                    [class.pi-check-circle]="domain.spf_record_verified"
+                    [class.pi-times-circle]="!domain.spf_record_verified"
+                    [class.text-green-600]="domain.spf_record_verified"
+                    [class.text-gray-400]="!domain.spf_record_verified"
+                    pTooltip="SPF Record"
+                    tooltipPosition="top">
+                  </i>
+                  <i
+                    class="pi"
+                    [class.pi-check-circle]="domain.dkim_record_verified"
+                    [class.pi-times-circle]="!domain.dkim_record_verified"
+                    [class.text-green-600]="domain.dkim_record_verified"
+                    [class.text-gray-400]="!domain.dkim_record_verified"
+                    pTooltip="DKIM Record"
+                    tooltipPosition="top">
+                  </i>
+                  <i
+                    class="pi"
+                    [class.pi-check-circle]="domain.dmarc_record_verified"
+                    [class.pi-times-circle]="!domain.dmarc_record_verified"
+                    [class.text-green-600]="domain.dmarc_record_verified"
+                    [class.text-gray-400]="!domain.dmarc_record_verified"
+                    pTooltip="DMARC Record"
+                    tooltipPosition="top">
+                  </i>
+                </div>
+                <p-progressBar
+                  [value]="getDNSVerificationProgress(domain)"
+                  [showValue]="false"
+                  styleClass="dns-progress">
+                </p-progressBar>
+              </div>
+            </td>
+
+            <!-- Statistics -->
+            <td>
+              <div class="stats-cell">
+                <div class="stat-item">
+                  <i class="pi pi-at"></i>
+                  <span>{{ domain.aliasCount }} alias</span>
+                </div>
+                <div class="stat-item">
+                  <i class="pi pi-envelope"></i>
+                  <span>{{ domain.messagesCount }} emails</span>
+                </div>
+              </div>
+            </td>
+
+            <!-- Last Activity -->
+            <td>
+              <span class="last-activity">{{ domain.lastActivity }}</span>
+            </td>
+
+            <!-- Actions -->
+            <td>
+              <div class="action-buttons">
+                <p-button
+                  icon="pi pi-cog"
+                  [text]="true"
+                  [rounded]="true"
+                  severity="secondary"
+                  size="small"
+                  pTooltip="Voir les DNS"
+                  tooltipPosition="top"
+                  (onClick)="viewDNSRecords(domain)">
+                </p-button>
+                <p-button
+                  icon="pi pi-refresh"
+                  [text]="true"
+                  [rounded]="true"
+                  severity="info"
+                  size="small"
+                  pTooltip="Vérifier DNS"
+                  tooltipPosition="top"
+                  (onClick)="verifyDNS(domain)">
+                </p-button>
+                <p-button
+                  icon="pi pi-users"
+                  [text]="true"
+                  [rounded]="true"
+                  severity="secondary"
+                  size="small"
+                  pTooltip="Gérer les alias"
+                  tooltipPosition="top"
+                  (onClick)="manageAliases(domain)">
+                </p-button>
+                <p-button
+                  icon="pi pi-trash"
+                  [text]="true"
+                  [rounded]="true"
+                  severity="danger"
+                  size="small"
+                  pTooltip="Supprimer"
+                  tooltipPosition="top"
+                  (onClick)="deleteDomain(domain)">
+                </p-button>
+              </div>
+            </td>
+          </tr>
+        </ng-template>
+
+        <ng-template pTemplate="emptymessage">
+          <tr>
+            <td colspan="6" class="empty-message">
+              <div class="empty-state">
+                <i class="pi pi-globe"></i>
+                <h3>Aucun domaine configuré</h3>
+                <p>Commencez par ajouter votre premier domaine pour recevoir des emails.</p>
+                <p-button
+                  label="Ajouter un domaine"
+                  icon="pi pi-plus"
+                  (onClick)="openAddDialog()">
+                </p-button>
+              </div>
+            </td>
+          </tr>
+        </ng-template>
+      </p-table>
+    </ng-template>
+  </p-card>
+</div>
+
+<!-- Add Domain Dialog -->
+<p-dialog
+  header="Ajouter un domaine"
+  [(visible)]="displayAddDialog"
+  [modal]="true"
+  [style]="{width: '500px'}"
+  [draggable]="false"
+  [resizable]="false">
+  <ng-template pTemplate="content">
+    <form [formGroup]="addDomainForm" class="add-domain-form">
+      <div class="form-field">
+        <label for="domainName">Nom de domaine</label>
+        <input
+          pInputText
+          id="domainName"
+          formControlName="name"
+          placeholder="example.com"
+          class="w-full"
+          [class.ng-invalid]="addDomainForm.get('name')?.invalid && addDomainForm.get('name')?.touched" />
+        <small
+          *ngIf="addDomainForm.get('name')?.invalid && addDomainForm.get('name')?.touched"
+          class="p-error">
+          Veuillez entrer un nom de domaine valide (ex: example.com)
+        </small>
+      </div>
+      <div class="info-message">
+        <i class="pi pi-info-circle"></i>
+        <div>
+          <strong>Prochaines étapes :</strong>
+          <p>Après avoir ajouté votre domaine, vous devrez configurer les enregistrements DNS (MX, SPF, DKIM, DMARC) chez votre registrar.</p>
+        </div>
+      </div>
+    </form>
+  </ng-template>
+  <ng-template pTemplate="footer">
+    <p-button
+      label="Annuler"
+      severity="secondary"
+      [text]="true"
+      (onClick)="displayAddDialog = false">
+    </p-button>
+    <p-button
+      label="Ajouter"
+      icon="pi pi-plus"
+      [disabled]="!addDomainForm.valid"
+      [loading]="savingDomain"
+      (onClick)="submitAddDomain()">
+    </p-button>
+  </ng-template>
+</p-dialog>
+
+<!-- DNS Records Dialog -->
+<p-dialog
+  [header]="'Configuration DNS - ' + (selectedDomain?.name || '')"
+  [(visible)]="displayDNSDialog"
+  [modal]="true"
+  [style]="{width: '700px'}"
+  [draggable]="false"
+  [resizable]="false">
+  <ng-template pTemplate="content">
+    <div class="dns-dialog-content" *ngIf="selectedDomain">
+      <p class="dns-intro">
+        Ajoutez ces enregistrements DNS chez votre registrar de domaine pour activer la réception d'emails.
+      </p>
+
+      <p-tabs>
+        <p-tabpanel header="MX Records">
+          <div class="dns-record-section">
+            <div class="dns-record-header">
+              <h4>Enregistrements MX (Mail Exchange)</h4>
+              <div class="verification-status">
+                <i
+                  class="pi"
+                  [class.pi-check-circle]="selectedDomain.mx_record_verified"
+                  [class.pi-times-circle]="!selectedDomain.mx_record_verified"
+                  [class.text-green-600]="selectedDomain.mx_record_verified"
+                  [class.text-red-600]="!selectedDomain.mx_record_verified">
+                </i>
+                <span>{{ selectedDomain.mx_record_verified ? 'Vérifié' : 'Non vérifié' }}</span>
+              </div>
+            </div>
+            <div class="dns-record-value">
+              <code>{{ dnsRecords?.mx_record || 'Chargement...' }}</code>
+              <p-button
+                *ngIf="dnsRecords?.mx_record"
+                icon="pi pi-copy"
+                [text]="true"
+                size="small"
+                (onClick)="copyToClipboard(dnsRecords!.mx_record, 'Enregistrements MX')">
+              </p-button>
+            </div>
+          </div>
+        </p-tabpanel>
+
+        <p-tabpanel header="SPF Record">
+          <div class="dns-record-section">
+            <div class="dns-record-header">
+              <h4>Enregistrement SPF (Sender Policy Framework)</h4>
+              <div class="verification-status">
+                <i
+                  class="pi"
+                  [class.pi-check-circle]="selectedDomain.spf_record_verified"
+                  [class.pi-times-circle]="!selectedDomain.spf_record_verified"
+                  [class.text-green-600]="selectedDomain.spf_record_verified"
+                  [class.text-red-600]="!selectedDomain.spf_record_verified">
+                </i>
+                <span>{{ selectedDomain.spf_record_verified ? 'Vérifié' : 'Non vérifié' }}</span>
+              </div>
+            </div>
+            <div class="dns-record-value">
+              <code>{{ dnsRecords?.spf_record || 'Chargement...' }}</code>
+              <p-button
+                *ngIf="dnsRecords?.spf_record"
+                icon="pi pi-copy"
+                [text]="true"
+                size="small"
+                (onClick)="copyToClipboard(dnsRecords!.spf_record, 'Enregistrement SPF')">
+              </p-button>
+            </div>
+            <p class="dns-hint">Ajoutez ceci comme enregistrement TXT à votre domaine.</p>
+          </div>
+        </p-tabpanel>
+
+        <p-tabpanel header="DKIM Record">
+          <div class="dns-record-section">
+            <div class="dns-record-header">
+              <h4>Enregistrement DKIM (DomainKeys Identified Mail)</h4>
+              <div class="verification-status">
+                <i
+                  class="pi"
+                  [class.pi-check-circle]="selectedDomain.dkim_record_verified"
+                  [class.pi-times-circle]="!selectedDomain.dkim_record_verified"
+                  [class.text-green-600]="selectedDomain.dkim_record_verified"
+                  [class.text-red-600]="!selectedDomain.dkim_record_verified">
+                </i>
+                <span>{{ selectedDomain.dkim_record_verified ? 'Vérifié' : 'Non vérifié' }}</span>
+              </div>
+            </div>
+            <div class="dns-record-value">
+              <code>{{ dnsRecords?.dkim_record || 'Chargement...' }}</code>
+              <p-button
+                *ngIf="dnsRecords?.dkim_record"
+                icon="pi pi-copy"
+                [text]="true"
+                size="small"
+                (onClick)="copyToClipboard(dnsRecords!.dkim_record, 'Enregistrement DKIM')">
+              </p-button>
+            </div>
+            <p class="dns-hint">Nom: smtpy._domainkey | Type: TXT | Valeur: voir ci-dessus</p>
+          </div>
+        </p-tabpanel>
+
+        <p-tabpanel header="DMARC Record">
+          <div class="dns-record-section">
+            <div class="dns-record-header">
+              <h4>Enregistrement DMARC</h4>
+              <div class="verification-status">
+                <i
+                  class="pi"
+                  [class.pi-check-circle]="selectedDomain.dmarc_record_verified"
+                  [class.pi-times-circle]="!selectedDomain.dmarc_record_verified"
+                  [class.text-green-600]="selectedDomain.dmarc_record_verified"
+                  [class.text-red-600]="!selectedDomain.dmarc_record_verified">
+                </i>
+                <span>{{ selectedDomain.dmarc_record_verified ? 'Vérifié' : 'Non vérifié' }}</span>
+              </div>
+            </div>
+            <div class="dns-record-value">
+              <code>{{ dnsRecords?.dmarc_record || 'Chargement...' }}</code>
+              <p-button
+                *ngIf="dnsRecords?.dmarc_record"
+                icon="pi pi-copy"
+                [text]="true"
+                size="small"
+                (onClick)="copyToClipboard(dnsRecords!.dmarc_record, 'Enregistrement DMARC')">
+              </p-button>
+            </div>
+            <p class="dns-hint">Nom: _dmarc | Type: TXT | Valeur: voir ci-dessus</p>
+          </div>
+        </p-tabpanel>
+      </p-tabs>
+    </div>
+  </ng-template>
+  <ng-template pTemplate="footer">
+    <p-button
+      label="Fermer"
+      severity="secondary"
+      (onClick)="displayDNSDialog = false">
+    </p-button>
+    <p-button
+      label="Vérifier maintenant"
+      icon="pi pi-refresh"
+      [loading]="verifying"
+      (onClick)="verifyDNS(selectedDomain!)">
+    </p-button>
+  </ng-template>
+</p-dialog>
+
+<!-- Toast Notifications -->
+<p-toast position="top-right"></p-toast>
+
+<!-- Confirmation Dialog -->
+<p-confirmDialog></p-confirmDialog>

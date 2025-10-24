@@ -17,12 +17,14 @@ def test_landing_page_available():
     client = _client()
     resp = client.get("/")
 
-    # Then I receive a successful response
+    # Then I receive a successful response with health info
     assert resp.status_code == 200
 
-    # And I can see the API documentation (FastAPI SwaggerUI or ReDoc snippet)
-    text = resp.text.lower()
-    assert "swagger" in text or "openapi" in text or "redoc" in text
+    # And I can see the API health information (JSON response)
+    data = resp.json()
+    assert data.get("status") == "healthy"
+    assert data.get("service") == "SMTPy v2 API"
+    assert data.get("version") == "2.0.0"
 
 
 def test_health_endpoint_reports_healthy():

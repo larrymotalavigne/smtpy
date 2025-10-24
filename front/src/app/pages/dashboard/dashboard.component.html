@@ -1,0 +1,214 @@
+<div class="dashboard-container">
+  <!-- Header -->
+  <div class="dashboard-header">
+    <div>
+      <h1 class="dashboard-title">Aperçu de votre compte</h1>
+      <p class="dashboard-subtitle">Vue d'ensemble de votre activité</p>
+    </div>
+    <p-button
+      label="Ajouter un domaine"
+      icon="pi pi-plus"
+      (onClick)="navigateTo('/domains')">
+    </p-button>
+  </div>
+
+  <!-- Stats Cards -->
+  <div class="stats-grid">
+    <!-- Loading State -->
+    <ng-container *ngIf="loadingStats">
+      <div class="stat-card-skeleton" *ngFor="let i of [1,2,3,4]">
+        <p-card>
+          <p-skeleton width="100%" height="120px"></p-skeleton>
+        </p-card>
+      </div>
+    </ng-container>
+
+    <!-- Stats Data -->
+    <ng-container *ngIf="!loadingStats">
+      <p-card *ngFor="let stat of stats" class="stat-card" [ngClass]="'stat-card-' + stat.icon.split(' ')[1].split('-')[1]">
+        <div class="stat-content">
+          <div class="stat-info">
+            <span class="stat-title">{{ stat.title }}</span>
+            <div class="stat-value-row">
+              <span class="stat-value">{{ stat.value }}</span>
+              <span class="stat-change" [ngClass]="stat.change > 0 ? 'positive' : stat.change < 0 ? 'negative' : 'neutral'">
+                <i [class]="stat.change > 0 ? 'pi pi-arrow-up' : stat.change < 0 ? 'pi pi-arrow-down' : 'pi pi-minus'"></i>
+                {{ stat.changeLabel }}
+              </span>
+            </div>
+          </div>
+          <div class="stat-icon-wrapper" [ngClass]="stat.iconColor">
+            <i [class]="stat.icon"></i>
+          </div>
+        </div>
+      </p-card>
+    </ng-container>
+  </div>
+
+  <!-- Chart and Quick Actions -->
+  <div class="content-grid">
+    <!-- Email Activity Chart -->
+    <p-card class="chart-card">
+      <ng-template pTemplate="header">
+        <div class="card-header">
+          <h3>Activité des 7 derniers jours</h3>
+          <p-button
+            icon="pi pi-ellipsis-v"
+            [text]="true"
+            [rounded]="true"
+            size="small">
+          </p-button>
+        </div>
+      </ng-template>
+      <ng-template pTemplate="content">
+        <div class="chart-wrapper">
+          <!-- Loading State -->
+          <div *ngIf="loadingChart" class="chart-loading">
+            <p-skeleton width="100%" height="300px"></p-skeleton>
+          </div>
+
+          <!-- Chart -->
+          <p-chart *ngIf="!loadingChart && hasChartData" type="line" [data]="chartData" [options]="chartOptions"></p-chart>
+
+          <!-- Empty State -->
+          <div *ngIf="!loadingChart && !hasChartData" class="empty-state">
+            <i class="pi pi-chart-line empty-icon"></i>
+            <p class="empty-title">Aucune donnée disponible</p>
+            <p class="empty-subtitle">Les statistiques apparaîtront ici une fois que vous commencerez à envoyer des emails</p>
+          </div>
+        </div>
+      </ng-template>
+    </p-card>
+
+    <!-- Quick Actions -->
+    <p-card class="quick-actions-card">
+      <ng-template pTemplate="header">
+        <div class="card-header">
+          <h3>Actions rapides</h3>
+        </div>
+      </ng-template>
+      <ng-template pTemplate="content">
+        <div class="quick-actions">
+          <button class="quick-action-btn" (click)="navigateTo('/domains')">
+            <div class="action-icon bg-blue-100">
+              <i class="pi pi-globe text-blue-600"></i>
+            </div>
+            <div class="action-text">
+              <span class="action-title">Gérer les domaines</span>
+              <span class="action-subtitle">Ajouter ou configurer</span>
+            </div>
+            <i class="pi pi-chevron-right action-arrow"></i>
+          </button>
+
+          <button class="quick-action-btn" (click)="navigateTo('/messages')">
+            <div class="action-icon bg-green-100">
+              <i class="pi pi-envelope text-green-600"></i>
+            </div>
+            <div class="action-text">
+              <span class="action-title">Messages récents</span>
+              <span class="action-subtitle">Voir les emails</span>
+            </div>
+            <i class="pi pi-chevron-right action-arrow"></i>
+          </button>
+
+          <button class="quick-action-btn" (click)="navigateTo('/billing')">
+            <div class="action-icon bg-purple-100">
+              <i class="pi pi-credit-card text-purple-600"></i>
+            </div>
+            <div class="action-text">
+              <span class="action-title">Facturation</span>
+              <span class="action-subtitle">Plan et paiements</span>
+            </div>
+            <i class="pi pi-chevron-right action-arrow"></i>
+          </button>
+        </div>
+      </ng-template>
+    </p-card>
+  </div>
+
+  <!-- Recent Domains Table -->
+  <p-card class="domains-card">
+    <ng-template pTemplate="header">
+      <div class="card-header">
+        <h3>Domaines récents</h3>
+        <p-button
+          label="Voir tout"
+          icon="pi pi-arrow-right"
+          iconPos="right"
+          [text]="true"
+          (onClick)="navigateTo('/domains')">
+        </p-button>
+      </div>
+    </ng-template>
+    <ng-template pTemplate="content">
+      <p-table [value]="recentDomains" [loading]="loadingDomains" [tableStyle]="{'min-width': '50rem'}" styleClass="p-datatable-sm">
+        <ng-template pTemplate="header">
+          <tr>
+            <th>Domaine</th>
+            <th>Statut</th>
+            <th>Alias</th>
+            <th>Dernière activité</th>
+            <th>Emails aujourd'hui</th>
+            <th>Actions</th>
+          </tr>
+        </ng-template>
+        <ng-template pTemplate="body" let-domain>
+          <tr>
+            <td>
+              <div class="domain-cell">
+                <p-avatar
+                  icon="pi pi-globe"
+                  size="normal"
+                  shape="circle"
+                  [style]="{'background-color': '#667eea', 'color': '#ffffff'}">
+                </p-avatar>
+                <span class="domain-name">{{ domain.name }}</span>
+              </div>
+            </td>
+            <td>
+              <p-tag [value]="getStatusLabel(domain.status)" [severity]="getStatusSeverity(domain.status)"></p-tag>
+            </td>
+            <td>
+              <span class="alias-count">{{ domain.aliasCount }}</span>
+            </td>
+            <td>
+              <span class="text-muted">{{ domain.lastActivity }}</span>
+            </td>
+            <td>
+              <span class="email-count">{{ domain.emailsToday }}</span>
+            </td>
+            <td>
+              <p-button
+                icon="pi pi-cog"
+                [text]="true"
+                [rounded]="true"
+                size="small"
+                (onClick)="navigateTo('/domains')">
+              </p-button>
+            </td>
+          </tr>
+        </ng-template>
+        <ng-template pTemplate="emptymessage">
+          <tr>
+            <td colspan="6">
+              <div class="empty-state-table">
+                <i class="pi pi-globe empty-icon"></i>
+                <p class="empty-title">Aucun domaine configuré</p>
+                <p class="empty-subtitle">Commencez par ajouter votre premier domaine pour recevoir des emails</p>
+                <p-button
+                  label="Ajouter un domaine"
+                  icon="pi pi-plus"
+                  size="small"
+                  (onClick)="navigateTo('/domains')">
+                </p-button>
+              </div>
+            </td>
+          </tr>
+        </ng-template>
+      </p-table>
+    </ng-template>
+  </p-card>
+</div>
+
+<!-- Toast Notifications -->
+<p-toast position="top-right"></p-toast>

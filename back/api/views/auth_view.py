@@ -4,7 +4,7 @@ from datetime import datetime, timezone
 from typing import Optional
 
 from fastapi import APIRouter, Depends, HTTPException, Response, Request
-from pydantic import BaseModel, EmailStr, Field, validator
+from pydantic import BaseModel, EmailStr, Field, field_validator
 from sqlalchemy.ext.asyncio import AsyncSession
 from itsdangerous import URLSafeTimedSerializer, BadSignature, SignatureExpired
 
@@ -29,7 +29,8 @@ class RegisterRequest(BaseModel):
     email: EmailStr
     password: str = Field(..., min_length=8)
 
-    @validator('password')
+    @field_validator('password')
+    @classmethod
     def password_strength(cls, v):
         """Validate password strength."""
         if not any(c.isupper() for c in v):
@@ -57,7 +58,8 @@ class ResetPasswordRequest(BaseModel):
     token: str
     new_password: str = Field(..., min_length=8)
 
-    @validator('new_password')
+    @field_validator('new_password')
+    @classmethod
     def password_strength(cls, v):
         """Validate password strength."""
         if not any(c.isupper() for c in v):
@@ -138,12 +140,24 @@ async def register(
         raise HTTPException(status_code=400, detail="Email already registered")
 
     try:
-        # Create new user
+        # Create organization for the new user
+        from ..models.organization import Organization
+
+        organization = Organization(
+            name=f"{data.username}'s Organization",
+            email=data.email
+        )
+        session.add(organization)
+        await session.flush()
+        await session.refresh(organization)
+
+        # Create new user with organization
         user = await UsersDatabase.create_user(
             session=session,
             username=data.username,
             email=data.email,
             password=data.password,
+            organization_id=organization.id,
             role=UserRole.USER,
             is_verified=False  # Email verification can be added later
         )
@@ -193,10 +207,14 @@ async def login(
         raise HTTPException(status_code=401, detail="Invalid credentials")
 
     try:
+        # Extract user data before commit to avoid lazy loading issues
+        user_id = user.id
+        user_dict = user.to_dict()
+
         await session.commit()
 
         # Create session cookie
-        session_token = serializer.dumps(user.id)
+        session_token = serializer.dumps(user_id)
         response.set_cookie(
             key=SESSION_COOKIE_NAME,
             value=session_token,
@@ -210,7 +228,7 @@ async def login(
             "success": True,
             "message": "Login successful",
             "data": {
-                "user": UserResponse(**user.to_dict()),
+                "user": UserResponse(**user_dict),
                 "access_token": session_token
             }
         }

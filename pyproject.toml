@@ -20,6 +20,8 @@ dependencies = [
     "stripe~=12.3.0",
     "sqlalchemy[asyncio]",
     "pydantic-settings",
+    "pydantic[email]",
+    "email-validator",
     "psycopg[binary, pool]",
     "python-json-logger",
     "alembic",

@@ -1,0 +1,212 @@
+  <div class="profile-container">
+    <!-- Page Header -->
+    <div class="page-header">
+      <div>
+        <h1 class="page-title">Mon Profil</h1>
+        <p class="page-subtitle">Gérez vos informations personnelles</p>
+      </div>
+    </div>
+
+    <div class="profile-content">
+      <!-- User Info Card -->
+      <p-card class="user-info-card">
+        <div class="user-info-header">
+          <p-avatar
+            [label]="getUserInitials()"
+            size="xlarge"
+            shape="circle"
+            styleClass="avatar-gradient">
+          </p-avatar>
+
+          <div class="user-details" *ngIf="currentUser">
+            <h2 class="user-name">{{ currentUser.username }}</h2>
+            <p class="user-email">{{ currentUser.email }}</p>
+
+            <div class="user-badges">
+              <p-tag
+                [value]="getRoleLabel()"
+                [severity]="getRoleSeverity()"
+                [icon]="currentUser.role === 'admin' ? 'pi pi-shield' : 'pi pi-user'">
+              </p-tag>
+              <p-tag
+                [value]="getStatusLabel()"
+                [severity]="getStatusSeverity()"
+                icon="pi pi-circle-fill">
+              </p-tag>
+            </div>
+          </div>
+
+          <!-- Skeleton loader -->
+          <div class="user-details" *ngIf="!currentUser">
+            <p-skeleton width="200px" height="2rem" styleClass="mb-2"></p-skeleton>
+            <p-skeleton width="250px" height="1.5rem" styleClass="mb-3"></p-skeleton>
+            <p-skeleton width="150px" height="1.5rem"></p-skeleton>
+          </div>
+        </div>
+
+        <p-divider></p-divider>
+
+        <div class="user-metadata" *ngIf="currentUser">
+          <div class="metadata-item">
+            <i class="pi pi-calendar"></i>
+            <div>
+              <span class="metadata-label">Membre depuis</span>
+              <span class="metadata-value">{{ formatDate(currentUser.created_at) }}</span>
+            </div>
+          </div>
+
+          <div class="metadata-item">
+            <i class="pi pi-clock"></i>
+            <div>
+              <span class="metadata-label">Dernière mise à jour</span>
+              <span class="metadata-value">{{ formatDate(currentUser.updated_at) }}</span>
+            </div>
+          </div>
+
+          <div class="metadata-item">
+            <i class="pi pi-id-card"></i>
+            <div>
+              <span class="metadata-label">ID Utilisateur</span>
+              <span class="metadata-value">#{{ currentUser.id }}</span>
+            </div>
+          </div>
+        </div>
+      </p-card>
+
+      <!-- Profile Information Form -->
+      <p-card class="form-card">
+        <ng-template pTemplate="header">
+          <div class="card-header">
+            <i class="pi pi-user"></i>
+            <h3>Informations du Profil</h3>
+          </div>
+        </ng-template>
+
+        <form [formGroup]="profileForm" (ngSubmit)="onSaveProfile()" *ngIf="profileForm">
+          <div class="form-grid">
+            <!-- Username (Read-only) -->
+            <div class="form-field">
+              <label for="username">Nom d'utilisateur</label>
+              <input
+                pInputText
+                id="username"
+                formControlName="username"
+                placeholder="Nom d'utilisateur"
+                class="w-full" />
+              <small class="field-help">
+                <i class="pi pi-info-circle"></i>
+                Le nom d'utilisateur ne peut pas être modifié
+              </small>
+            </div>
+
+            <!-- Email -->
+            <div class="form-field">
+              <label for="email">Adresse email *</label>
+              <input
+                pInputText
+                id="email"
+                formControlName="email"
+                placeholder="votre@email.com"
+                class="w-full"
+                [class.input-error]="isFieldInvalid(profileForm, 'email')" />
+              <small class="error-message" *ngIf="isFieldInvalid(profileForm, 'email')">
+                {{ getFieldError(profileForm, 'email') }}
+              </small>
+            </div>
+          </div>
+
+          <div class="form-actions">
+            <p-button
+              label="Enregistrer les modifications"
+              icon="pi pi-save"
+              [loading]="savingProfile"
+              [disabled]="profileForm.invalid || profileForm.pristine"
+              type="submit">
+            </p-button>
+          </div>
+        </form>
+      </p-card>
+
+      <!-- Change Password Form -->
+      <p-card class="form-card">
+        <ng-template pTemplate="header">
+          <div class="card-header">
+            <i class="pi pi-lock"></i>
+            <h3>Changer le Mot de Passe</h3>
+          </div>
+        </ng-template>
+
+        <p-message
+          severity="info"
+          text="Pour des raisons de sécurité, votre mot de passe doit contenir au moins 8 caractères avec des majuscules, minuscules et chiffres."
+          styleClass="mb-4">
+        </p-message>
+
+        <form [formGroup]="passwordForm" (ngSubmit)="onChangePassword()" *ngIf="passwordForm">
+          <div class="form-grid">
+            <!-- Current Password -->
+            <div class="form-field">
+              <label for="currentPassword">Mot de passe actuel *</label>
+              <input
+                pInputText
+                id="currentPassword"
+                type="password"
+                formControlName="currentPassword"
+                placeholder="Mot de passe actuel"
+                class="w-full"
+                [class.input-error]="isFieldInvalid(passwordForm, 'currentPassword')" />
+              <small class="error-message" *ngIf="isFieldInvalid(passwordForm, 'currentPassword')">
+                {{ getFieldError(passwordForm, 'currentPassword') }}
+              </small>
+            </div>
+
+            <!-- New Password -->
+            <div class="form-field">
+              <label for="newPassword">Nouveau mot de passe *</label>
+              <input
+                pInputText
+                id="newPassword"
+                type="password"
+                formControlName="newPassword"
+                placeholder="Nouveau mot de passe"
+                class="w-full"
+                [class.input-error]="isFieldInvalid(passwordForm, 'newPassword')" />
+              <small class="error-message" *ngIf="isFieldInvalid(passwordForm, 'newPassword')">
+                {{ getFieldError(passwordForm, 'newPassword') }}
+              </small>
+            </div>
+
+            <!-- Confirm Password -->
+            <div class="form-field">
+              <label for="confirmPassword">Confirmer le nouveau mot de passe *</label>
+              <input
+                pInputText
+                id="confirmPassword"
+                type="password"
+                formControlName="confirmPassword"
+                placeholder="Confirmer le mot de passe"
+                class="w-full"
+                [class.input-error]="isFieldInvalid(passwordForm, 'confirmPassword')" />
+              <small class="error-message" *ngIf="isFieldInvalid(passwordForm, 'confirmPassword')">
+                {{ getFieldError(passwordForm, 'confirmPassword') }}
+              </small>
+            </div>
+          </div>
+
+          <div class="form-actions">
+            <p-button
+              label="Changer le mot de passe"
+              icon="pi pi-key"
+              severity="warn"
+              [loading]="changingPassword"
+              [disabled]="passwordForm.invalid"
+              type="submit">
+            </p-button>
+          </div>
+        </form>
+      </p-card>
+    </div>
+
+    <!-- Toast for notifications -->
+    <p-toast position="top-right"></p-toast>
+  </div>

@@ -1,0 +1,334 @@
+<div class="messages-container">
+  <!-- Header -->
+  <div class="messages-header">
+    <div>
+      <h1 class="page-title">Messages</h1>
+      <p class="page-subtitle">Consultez tous les emails transférés par vos alias</p>
+    </div>
+  </div>
+
+  <!-- Filters -->
+  <p-card class="filters-card">
+    <ng-template pTemplate="content">
+      <form [formGroup]="filterForm" class="filters-form">
+        <div class="filter-row">
+          <div class="filter-field">
+            <label for="search">Rechercher</label>
+            <span class="p-input-icon-left w-full">
+              <i class="pi pi-search"></i>
+              <input
+                pInputText
+                id="search"
+                formControlName="search"
+                placeholder="Rechercher par email ou sujet..."
+                class="w-full" />
+            </span>
+          </div>
+
+          <div class="filter-field">
+            <label for="status">Statut</label>
+            <p-select
+              id="status"
+              formControlName="status"
+              [options]="statusOptions"
+              placeholder="Tous les statuts"
+              styleClass="w-full">
+            </p-select>
+          </div>
+
+          <div class="filter-field">
+            <label for="domain">Domaine</label>
+            <p-select
+              id="domain"
+              formControlName="domain"
+              [options]="domainOptions"
+              placeholder="Tous les domaines"
+              styleClass="w-full">
+            </p-select>
+          </div>
+
+          <div class="filter-field">
+            <label for="dateRange">Période</label>
+            <p-datepicker
+              id="dateRange"
+              formControlName="dateRange"
+              selectionMode="range"
+              [showIcon]="true"
+              dateFormat="dd/mm/yy"
+              placeholder="Sélectionner une période"
+              styleClass="w-full">
+            </p-datepicker>
+          </div>
+        </div>
+
+        <div class="filter-actions">
+          <p-button
+            label="Appliquer"
+            icon="pi pi-check"
+            (onClick)="applyFilters()">
+          </p-button>
+          <p-button
+            label="Réinitialiser"
+            icon="pi pi-times"
+            severity="secondary"
+            [text]="true"
+            (onClick)="clearFilters()">
+          </p-button>
+        </div>
+      </form>
+    </ng-template>
+  </p-card>
+
+  <!-- Messages Table -->
+  <p-card class="messages-card">
+    <ng-template pTemplate="content">
+      <p-table
+        [value]="messages"
+        [loading]="loading"
+        [paginator]="true"
+        [rows]="pageSize"
+        [totalRecords]="totalRecords"
+        [lazy]="true"
+        (onLazyLoad)="onPageChange($event)"
+        [showCurrentPageReport]="true"
+        currentPageReportTemplate="Affichage de {first} à {last} sur {totalRecords} messages"
+        [rowsPerPageOptions]="[10, 25, 50]"
+        styleClass="p-datatable-sm"
+        [globalFilterFields]="['sender_email', 'recipient_email', 'subject']">
+
+        <ng-template pTemplate="header">
+          <tr>
+            <th style="width: 60px"></th>
+            <th>De / À</th>
+            <th>Sujet</th>
+            <th>Statut</th>
+            <th>Taille</th>
+            <th>Date</th>
+            <th style="width: 150px">Actions</th>
+          </tr>
+        </ng-template>
+
+        <ng-template pTemplate="body" let-message>
+          <tr [class.message-row-clickable]="true" (click)="viewMessageDetails(message)">
+            <!-- Avatar -->
+            <td>
+              <p-avatar
+                [label]="message.senderInitials"
+                size="normal"
+                shape="circle"
+                [style]="{'background-color': getAvatarColor(message.status), 'color': '#ffffff'}">
+              </p-avatar>
+            </td>
+
+            <!-- From / To -->
+            <td>
+              <div class="email-cell">
+                <div class="email-line">
+                  <span class="email-label">De:</span>
+                  <span class="email-value">{{ message.sender_email }}</span>
+                </div>
+                <div class="email-line">
+                  <span class="email-label">À:</span>
+                  <span class="email-value">{{ message.recipient_email }}</span>
+                </div>
+                <div class="email-line forwarded" *ngIf="message.forwarded_to">
+                  <i class="pi pi-arrow-right"></i>
+                  <span class="email-value">{{ truncateText(message.forwarded_to, 30) }}</span>
+                </div>
+              </div>
+            </td>
+
+            <!-- Subject -->
+            <td>
+              <div class="subject-cell">
+                <div class="subject-title">
+                  <span class="subject-text">{{ truncateText(message.subject, 40) }}</span>
+                  <i
+                    *ngIf="message.has_attachments"
+                    class="pi pi-paperclip attachment-icon"
+                    pTooltip="Contient des pièces jointes"
+                    tooltipPosition="top">
+                  </i>
+                </div>
+                <div class="subject-preview">{{ truncateText(message.body_preview, 60) }}</div>
+              </div>
+            </td>
+
+            <!-- Status -->
+            <td>
+              <div class="status-cell">
+                <p-tag
+                  [value]="getStatusLabel(message.status)"
+                  [severity]="getStatusSeverity(message.status)">
+                </p-tag>
+                <div *ngIf="message.error_message" class="error-hint">
+                  <i class="pi pi-exclamation-circle"></i>
+                  <span>{{ message.error_message }}</span>
+                </div>
+              </div>
+            </td>
+
+            <!-- Size -->
+            <td>
+              <span class="size-text">{{ formatSize(message.size_bytes) }}</span>
+            </td>
+
+            <!-- Date -->
+            <td>
+              <div class="date-cell">
+                <span class="date-text">{{ message.timeAgo }}</span>
+              </div>
+            </td>
+
+            <!-- Actions -->
+            <td (click)="$event.stopPropagation()">
+              <div class="action-buttons">
+                <p-button
+                  icon="pi pi-eye"
+                  [text]="true"
+                  [rounded]="true"
+                  severity="secondary"
+                  size="small"
+                  pTooltip="Voir les détails"
+                  tooltipPosition="top"
+                  (onClick)="viewMessageDetails(message)">
+                </p-button>
+                <p-button
+                  *ngIf="message.status === 'failed' || message.status === 'bounced'"
+                  icon="pi pi-refresh"
+                  [text]="true"
+                  [rounded]="true"
+                  severity="info"
+                  size="small"
+                  pTooltip="Réessayer"
+                  tooltipPosition="top"
+                  (onClick)="retryMessage(message)">
+                </p-button>
+                <p-button
+                  icon="pi pi-trash"
+                  [text]="true"
+                  [rounded]="true"
+                  severity="danger"
+                  size="small"
+                  pTooltip="Supprimer"
+                  tooltipPosition="top"
+                  (onClick)="deleteMessage(message)">
+                </p-button>
+              </div>
+            </td>
+          </tr>
+        </ng-template>
+
+        <ng-template pTemplate="emptymessage">
+          <tr>
+            <td colspan="7" class="empty-message">
+              <div class="empty-state">
+                <i class="pi pi-inbox"></i>
+                <h3>Aucun message</h3>
+                <p>Aucun message n'a été transféré pour le moment.</p>
+              </div>
+            </td>
+          </tr>
+        </ng-template>
+      </p-table>
+    </ng-template>
+  </p-card>
+</div>
+
+<!-- Message Detail Dialog -->
+<p-dialog
+  [header]="'Détails du message'"
+  [(visible)]="displayDetailDialog"
+  [modal]="true"
+  [style]="{width: '700px'}"
+  [draggable]="false"
+  [resizable]="false">
+  <ng-template pTemplate="content">
+    <div class="message-detail" *ngIf="selectedMessage">
+      <!-- Status Banner -->
+      <div class="detail-status-banner" [class]="'status-' + selectedMessage.status">
+        <div class="status-info">
+          <i class="pi" [class]="selectedMessage.status === 'delivered' ? 'pi-check-circle' : selectedMessage.status === 'pending' ? 'pi-clock' : 'pi-exclamation-triangle'"></i>
+          <div>
+            <h4>{{ getStatusLabel(selectedMessage.status) }}</h4>
+            <p *ngIf="selectedMessage.error_message">{{ selectedMessage.error_message }}</p>
+          </div>
+        </div>
+        <p-tag
+          [value]="getStatusLabel(selectedMessage.status)"
+          [severity]="getStatusSeverity(selectedMessage.status)">
+        </p-tag>
+      </div>
+
+      <!-- Message Info -->
+      <div class="detail-section">
+        <h4>Informations générales</h4>
+        <div class="detail-grid">
+          <div class="detail-item">
+            <span class="detail-label">ID du message:</span>
+            <span class="detail-value">{{ selectedMessage.message_id }}</span>
+          </div>
+          <div class="detail-item">
+            <span class="detail-label">Date de réception:</span>
+            <span class="detail-value">{{ formatDate(selectedMessage.created_at) }}</span>
+          </div>
+          <div class="detail-item">
+            <span class="detail-label">Taille:</span>
+            <span class="detail-value">{{ formatSize(selectedMessage.size_bytes) }}</span>
+          </div>
+          <div class="detail-item">
+            <span class="detail-label">Pièces jointes:</span>
+            <span class="detail-value">{{ selectedMessage.has_attachments ? 'Oui' : 'Non' }}</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- Email Details -->
+      <div class="detail-section">
+        <h4>Détails de l'email</h4>
+        <div class="detail-grid">
+          <div class="detail-item full-width">
+            <span class="detail-label">De:</span>
+            <span class="detail-value email">{{ selectedMessage.sender_email }}</span>
+          </div>
+          <div class="detail-item full-width">
+            <span class="detail-label">À:</span>
+            <span class="detail-value email">{{ selectedMessage.recipient_email }}</span>
+          </div>
+          <div class="detail-item full-width" *ngIf="selectedMessage.forwarded_to">
+            <span class="detail-label">Transféré à:</span>
+            <span class="detail-value email">{{ selectedMessage.forwarded_to }}</span>
+          </div>
+          <div class="detail-item full-width">
+            <span class="detail-label">Sujet:</span>
+            <span class="detail-value">{{ selectedMessage.subject }}</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- Message Preview -->
+      <div class="detail-section" *ngIf="selectedMessage.body_preview">
+        <h4>Aperçu du message</h4>
+        <div class="message-preview">
+          {{ selectedMessage.body_preview }}
+        </div>
+      </div>
+    </div>
+  </ng-template>
+  <ng-template pTemplate="footer">
+    <p-button
+      label="Fermer"
+      severity="secondary"
+      (onClick)="displayDetailDialog = false">
+    </p-button>
+    <p-button
+      *ngIf="selectedMessage && (selectedMessage.status === 'failed' || selectedMessage.status === 'bounced')"
+      label="Réessayer"
+      icon="pi pi-refresh"
+      (onClick)="retryMessage(selectedMessage!); displayDetailDialog = false">
+    </p-button>
+  </ng-template>
+</p-dialog>
+
+<!-- Toast Notifications -->
+<p-toast position="top-right"></p-toast>
