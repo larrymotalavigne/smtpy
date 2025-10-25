@@ -128,7 +128,7 @@ async def get_overall_stats(
 async def get_time_series(
     date_from: Optional[str] = Query(None),
     date_to: Optional[str] = Query(None),
-    granularity: str = Query("day", regex="^(day|week|month)$"),
+    granularity: str = Query("day", pattern="^(day|week|month)$"),
     domain_id: Optional[int] = Query(None),
     session: AsyncSession = Depends(get_async_session),
     current_user: dict = Depends(get_current_user)
@@ -338,7 +338,7 @@ async def get_top_aliases(
 async def get_statistics(
     date_from: Optional[str] = Query(None),
     date_to: Optional[str] = Query(None),
-    granularity: str = Query("day", regex="^(day|week|month)$"),
+    granularity: str = Query("day", pattern="^(day|week|month)$"),
     domain_id: Optional[int] = Query(None),
     session: AsyncSession = Depends(get_async_session),
     current_user: dict = Depends(get_current_user)

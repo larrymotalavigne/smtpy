@@ -37,7 +37,10 @@
       "Bash(export NVM_DIR=\"$HOME/.nvm\")",
       "Bash([ -s \"$NVM_DIR/nvm.sh\" ])",
       "Bash(. \"$NVM_DIR/nvm.sh\")",
-      "WebFetch(domain:primeng.org)"
+      "WebFetch(domain:primeng.org)",
+      "Bash(uv add:*)",
+      "Bash(tee:*)",
+      "Bash(chmod:*)"
     ],
     "deny": [],
     "ask": []

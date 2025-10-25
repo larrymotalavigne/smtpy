@@ -313,13 +313,13 @@ class TestMessagesController:
 class TestMessagesDatabase:
     """Test messages database operations."""
 
-    async def test_create_message(self, async_db: AsyncSession):
+    async def test_create_message(self, async_db: AsyncSession, test_domain):
         """Test creating a message in the database."""
-        # First create a domain (assuming domain ID 1 exists or mocking)
+        # Use test_domain fixture to ensure domain exists
         message = await messages_database.create_message(
             db=async_db,
             message_id="test-message-123",
-            domain_id=1,
+            domain_id=test_domain.id,
             sender_email="sender@example.com",
             recipient_email="recipient@example.com",
             subject="Test Subject",
@@ -327,24 +327,24 @@ class TestMessagesDatabase:
             size_bytes=1024,
             has_attachments=False
         )
-        
+
         assert message.message_id == "test-message-123"
         assert message.sender_email == "sender@example.com"
         assert message.recipient_email == "recipient@example.com"
         assert message.subject == "Test Subject"
         assert message.status == MessageStatus.PENDING
 
-    async def test_get_message_by_message_id(self, async_db: AsyncSession):
+    async def test_get_message_by_message_id(self, async_db: AsyncSession, test_domain):
         """Test retrieving message by unique message ID."""
         # Create a test message first
         created_message = await messages_database.create_message(
             db=async_db,
             message_id="test-get-message-456",
-            domain_id=1,
+            domain_id=test_domain.id,
             sender_email="test@example.com",
             recipient_email="user@example.com"
         )
-        
+
         # Retrieve the message
         retrieved_message = await messages_database.get_message_by_message_id(
             db=async_db,
@@ -355,13 +355,13 @@ class TestMessagesDatabase:
         assert retrieved_message.message_id == "test-get-message-456"
         assert retrieved_message.id == created_message.id
 
-    async def test_update_message_status(self, async_db: AsyncSession):
+    async def test_update_message_status(self, async_db: AsyncSession, test_domain):
         """Test updating message status."""
         # Create a test message first
         created_message = await messages_database.create_message(
             db=async_db,
             message_id="test-update-789",
-            domain_id=1,
+            domain_id=test_domain.id,
             sender_email="test@example.com",
             recipient_email="user@example.com"
         )
@@ -395,13 +395,13 @@ class TestMessagesDatabase:
         assert stats["total_messages"] >= 0
         assert isinstance(stats["status_breakdown"], dict)
 
-    async def test_search_messages(self, async_db: AsyncSession):
+    async def test_search_messages(self, async_db: AsyncSession, test_domain):
         """Test searching messages."""
         # Create a test message with searchable content
         await messages_database.create_message(
             db=async_db,
             message_id="searchable-message-123",
-            domain_id=1,
+            domain_id=test_domain.id,
             sender_email="searchable@example.com",
             recipient_email="recipient@example.com",
             subject="Searchable Subject"
@@ -420,24 +420,24 @@ class TestMessagesDatabase:
         # Note: Results might be empty due to test database isolation
         # but the function should not raise errors
 
-    async def test_get_messages_by_thread(self, async_db: AsyncSession):
+    async def test_get_messages_by_thread(self, async_db: AsyncSession, test_domain):
         """Test getting messages by thread ID."""
         thread_id = "test-thread-456"
-        
+
         # Create test messages in the same thread
         await messages_database.create_message(
             db=async_db,
             message_id="thread-msg-1",
-            domain_id=1,
+            domain_id=test_domain.id,
             sender_email="sender1@example.com",
             recipient_email="recipient@example.com",
             thread_id=thread_id
         )
-        
+
         await messages_database.create_message(
             db=async_db,
             message_id="thread-msg-2",
-            domain_id=1,
+            domain_id=test_domain.id,
             sender_email="sender2@example.com",
             recipient_email="recipient@example.com",
             thread_id=thread_id

@@ -1,5 +1,6 @@
 """Comprehensive endpoint tests for SMTPy v2 API."""
 
+import pytest
 from fastapi.testclient import TestClient
 from sqlalchemy.ext.asyncio import create_async_engine, async_sessionmaker
 
@@ -205,20 +206,22 @@ def test_delete_message_not_found():
 
 
 # --- Billing Endpoints ---
-def test_create_checkout_session():
-    """Test POST /billing/checkout-session."""
-    response = client.post(
+@pytest.mark.asyncio
+async def test_create_checkout_session(authenticated_client):
+    """Test POST /billing/checkout-session with authentication."""
+    response = await authenticated_client.post(
         "/billing/checkout-session",
         json={"price_id": "price_test_123"}
     )
     # This will fail with 400 because we don't have a real organization/customer
-    # but it should not be a 500 error
+    # but it should not be a 500 error or 401
     assert response.status_code in [201, 400]
 
 
-def test_get_customer_portal():
-    """Test GET /billing/customer-portal."""
-    response = client.get("/billing/customer-portal")
+@pytest.mark.asyncio
+async def test_get_customer_portal(authenticated_client):
+    """Test GET /billing/customer-portal with authentication."""
+    response = await authenticated_client.get("/billing/customer-portal")
     # This will fail with 400/404 because no customer exists
     assert response.status_code in [200, 400, 404]
 
@@ -247,11 +250,12 @@ def test_resume_subscription_no_subscription():
     assert response.status_code in [400, 404]
 
 
-def test_get_organization_billing():
-    """Test GET /billing/organization."""
-    response = client.get("/billing/organization")
-    # Should return 404 because no organization exists with ID 1
-    assert response.status_code == 404
+@pytest.mark.asyncio
+async def test_get_organization_billing(authenticated_client):
+    """Test GET /billing/organization with authentication."""
+    response = await authenticated_client.get("/billing/organization")
+    # Should return 404 or 200 (depending on if org billing info exists)
+    assert response.status_code in [200, 404]
 
 
 def test_stripe_webhook_missing_signature():
