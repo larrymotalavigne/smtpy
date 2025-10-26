@@ -5,7 +5,7 @@ description = "Custom email aliasing and forwarding."
 authors = [
     { name = "SMTPy Team", email = "team@smtpy.local" }
 ]
-requires-python = ">=3.13"
+requires-python = ">=3.14"
 
 dependencies = [
     "aiosmtpd~=1.4.6",
