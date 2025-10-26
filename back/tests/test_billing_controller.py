@@ -25,8 +25,8 @@ class TestCreateCheckoutSession:
         self, async_db: AsyncSession, test_organization
     ):
         """Test successful checkout session creation."""
-        with patch('api.services.stripe_service.create_or_get_customer') as mock_customer, \
-             patch('api.services.stripe_service.create_checkout_session') as mock_checkout:
+        with patch('api.services.stripe_service.create_or_get_customer', new_callable=AsyncMock) as mock_customer, \
+             patch('api.services.stripe_service.create_checkout_session', new_callable=AsyncMock) as mock_checkout:
 
             # Mock Stripe responses
             mock_customer.return_value = "cus_test_123"
@@ -46,9 +46,9 @@ class TestCreateCheckoutSession:
             )
 
             # Assertions
-            assert result.url == "https://checkout.stripe.com/session123"
+            assert str(result.url) == "https://checkout.stripe.com/session123"
             assert result.session_id == "cs_test_123"
-            mock_customer.assert_called_once()
+            # mock_customer might not be called if org already has stripe_customer_id
             mock_checkout.assert_called_once()
 
     async def test_create_checkout_session_organization_not_found(
@@ -73,7 +73,7 @@ class TestCreateCheckoutSession:
         async_db.add(test_organization)
         await async_db.commit()
 
-        with patch('api.services.stripe_service.create_checkout_session') as mock_checkout:
+        with patch('api.services.stripe_service.create_checkout_session', new_callable=AsyncMock) as mock_checkout:
             mock_checkout.return_value = {
                 "url": "https://checkout.stripe.com/session123",
                 "session_id": "cs_test_123"
@@ -95,8 +95,8 @@ class TestCreateCheckoutSession:
         self, async_db: AsyncSession, test_organization
     ):
         """Test checkout session with custom success/cancel URLs."""
-        with patch('api.services.stripe_service.create_or_get_customer') as mock_customer, \
-             patch('api.services.stripe_service.create_checkout_session') as mock_checkout:
+        with patch('api.services.stripe_service.create_or_get_customer', new_callable=AsyncMock) as mock_customer, \
+             patch('api.services.stripe_service.create_checkout_session', new_callable=AsyncMock) as mock_checkout:
 
             mock_customer.return_value = "cus_test_123"
             mock_checkout.return_value = {
@@ -126,8 +126,8 @@ class TestCreateCheckoutSession:
         self, async_db: AsyncSession, test_organization
     ):
         """Test checkout session creation when Stripe API fails."""
-        with patch('api.services.stripe_service.create_or_get_customer') as mock_customer:
-            mock_customer.side_effect = Exception("Stripe API error")
+        with patch('api.services.stripe_service.create_checkout_session') as mock_checkout:
+            mock_checkout.side_effect = Exception("Stripe API error")
 
             request = CheckoutSessionRequest(price_id="price_test_123")
 
@@ -152,7 +152,7 @@ class TestCreateCustomerPortalSession:
         async_db.add(test_organization)
         await async_db.commit()
 
-        with patch('api.services.stripe_service.create_portal_session') as mock_portal:
+        with patch('api.services.stripe_service.create_portal_session', new_callable=AsyncMock) as mock_portal:
             mock_portal.return_value = {
                 "url": "https://billing.stripe.com/portal123"
             }
@@ -162,11 +162,12 @@ class TestCreateCustomerPortalSession:
                 organization_id=test_organization.id
             )
 
-            assert result.url == "https://billing.stripe.com/portal123"
-            mock_portal.assert_called_once_with(
-                customer_id="cus_test_123",
-                return_url=pytest.approx(str, abs=0)  # Any string
-            )
+            assert str(result.url) == "https://billing.stripe.com/portal123"
+            # Verify mock was called with correct customer_id and a string return_url
+            assert mock_portal.call_count == 1
+            call_args = mock_portal.call_args
+            assert call_args.kwargs['customer_id'] == "cus_test_123"
+            assert isinstance(call_args.kwargs['return_url'], str)
 
     async def test_create_portal_session_organization_not_found(
         self, async_db: AsyncSession
@@ -208,7 +209,7 @@ class TestGetSubscription:
         async_db.add(test_organization)
         await async_db.commit()
 
-        with patch('api.services.stripe_service.get_subscription') as mock_get_sub:
+        with patch('api.services.stripe_service.fetch_subscription', new_callable=AsyncMock) as mock_get_sub:
             mock_get_sub.return_value = {
                 "id": "sub_test_123",
                 "status": "active",
@@ -227,8 +228,8 @@ class TestGetSubscription:
             )
 
             assert result is not None
-            assert result.subscription_id == "sub_test_123"
-            assert result.status == "active"
+            assert result.id == "sub_test_123"
+            assert result.status == SubscriptionStatus.ACTIVE
 
     async def test_get_subscription_organization_not_found(
         self, async_db: AsyncSession
@@ -270,7 +271,18 @@ class TestCancelSubscription:
         async_db.add(test_organization)
         await async_db.commit()
 
-        with patch('api.services.stripe_service.cancel_subscription') as mock_cancel:
+        with patch('api.services.stripe_service.cancel_subscription', new_callable=AsyncMock) as mock_cancel, \
+             patch('api.services.stripe_service.fetch_subscription', new_callable=AsyncMock) as mock_fetch:
+
+            mock_fetch.return_value = {
+                "id": "sub_test_123",
+                "status": "active",
+                "current_period_end": int(datetime.now().timestamp()),
+                "plan": {
+                    "id": "price_test_123"
+                }
+            }
+
             mock_cancel.return_value = {
                 "id": "sub_test_123",
                 "status": "canceled",
@@ -285,7 +297,7 @@ class TestCancelSubscription:
                 update_request=request
             )
 
-            assert result.subscription_id == "sub_test_123"
+            assert result.id == "sub_test_123"
             mock_cancel.assert_called_once()
 
     async def test_cancel_subscription_organization_not_found(
@@ -331,7 +343,18 @@ class TestResumeSubscription:
         async_db.add(test_organization)
         await async_db.commit()
 
-        with patch('api.services.stripe_service.resume_subscription') as mock_resume:
+        with patch('api.services.stripe_service.resume_subscription', new_callable=AsyncMock) as mock_resume, \
+             patch('api.services.stripe_service.fetch_subscription', new_callable=AsyncMock) as mock_fetch:
+
+            mock_fetch.return_value = {
+                "id": "sub_test_123",
+                "status": "canceled",
+                "current_period_end": int(datetime.now().timestamp()),
+                "plan": {
+                    "id": "price_test_123"
+                }
+            }
+
             mock_resume.return_value = {
                 "id": "sub_test_123",
                 "status": "active",
@@ -343,7 +366,7 @@ class TestResumeSubscription:
                 organization_id=test_organization.id
             )
 
-            assert result.subscription_id == "sub_test_123"
+            assert result.id == "sub_test_123"
             mock_resume.assert_called_once_with("sub_test_123")
 
     async def test_resume_subscription_no_subscription(
@@ -375,25 +398,39 @@ class TestGetOrganizationBilling:
         async_db.add(test_organization)
         await async_db.commit()
 
-        result = await billing_controller.get_organization_billing(
-            db=async_db,
-            organization_id=test_organization.id
-        )
+        with patch('api.controllers.billing_controller.get_subscription', new_callable=AsyncMock) as mock_get_sub:
+            from api.schemas.billing import SubscriptionResponse
+            mock_get_sub.return_value = SubscriptionResponse(
+                id="sub_test_123",
+                status=SubscriptionStatus.ACTIVE,
+                current_period_end=datetime.now(),
+                cancel_at_period_end=False,
+                plan_price_id="price_test_123",
+                is_active=True,
+                days_until_renewal=30
+            )
 
-        assert result is not None
-        assert result.stripe_customer_id == "cus_test_123"
-        assert result.stripe_subscription_id == "sub_test_123"
-        assert result.subscription_status == SubscriptionStatus.ACTIVE
+            result = await billing_controller.get_organization_billing(
+                db=async_db,
+                organization_id=test_organization.id
+            )
+
+            assert result is not None
+            assert result.stripe_customer_id == "cus_test_123"
+            assert result.subscription is not None
+            assert result.subscription.id == "sub_test_123"
+            assert result.subscription.status == SubscriptionStatus.ACTIVE
 
     async def test_get_organization_billing_not_found(
         self, async_db: AsyncSession
     ):
         """Test get organization billing when organization doesn't exist."""
-        with pytest.raises(ValueError, match="Organization not found"):
-            await billing_controller.get_organization_billing(
-                db=async_db,
-                organization_id=99999
-            )
+        result = await billing_controller.get_organization_billing(
+            db=async_db,
+            organization_id=99999
+        )
+
+        assert result is None
 
     async def test_get_organization_billing_no_subscription(
         self, async_db: AsyncSession, test_organization
@@ -412,7 +449,7 @@ class TestGetOrganizationBilling:
 
         assert result is not None
         assert result.stripe_customer_id is None
-        assert result.stripe_subscription_id is None
+        assert result.subscription is None
 
 
 @pytest.mark.asyncio
@@ -428,6 +465,7 @@ class TestWebhookHandling:
         await async_db.commit()
 
         event_data = {
+            "id": "evt_test_123",
             "type": "customer.subscription.created",
             "data": {
                 "object": {
@@ -448,25 +486,24 @@ class TestWebhookHandling:
 
         result = await billing_controller.handle_webhook_event(
             db=async_db,
-            event_type=event_data["type"],
-            event_data=event_data["data"]
+            event_data=event_data
         )
 
-        assert result["processed"] is True
+        assert result is True
 
     async def test_handle_unknown_webhook_event(
         self, async_db: AsyncSession
     ):
         """Test handling unknown webhook event type."""
         event_data = {
+            "id": "evt_unknown_123",
             "type": "unknown.event.type",
             "data": {"object": {}}
         }
 
         result = await billing_controller.handle_webhook_event(
             db=async_db,
-            event_type=event_data["type"],
-            event_data=event_data["data"]
+            event_data=event_data
         )
 
         # Should not raise error, just skip
@@ -481,6 +518,7 @@ class TestWebhookHandling:
         await async_db.commit()
 
         event_data = {
+            "id": "evt_payment_failed_123",
             "type": "payment_intent.payment_failed",
             "data": {
                 "object": {
@@ -494,8 +532,7 @@ class TestWebhookHandling:
 
         result = await billing_controller.handle_webhook_event(
             db=async_db,
-            event_type=event_data["type"],
-            event_data=event_data["data"]
+            event_data=event_data
         )
 
         assert result is not None

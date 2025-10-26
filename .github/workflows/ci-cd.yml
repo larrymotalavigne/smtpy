@@ -87,11 +87,52 @@ jobs:
           format: 'sarif'
           output: 'trivy-results.sarif'
 
-      - name: Upload Trivy results
+      - name: Upload Trivy results to GitHub Security tab
         uses: github/codeql-action/upload-sarif@v3
         if: always()
+        continue-on-error: true
         with:
           sarif_file: 'trivy-results.sarif'
+
+      - name: Upload Trivy results as artifact
+        uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: trivy-results
+          path: trivy-results.sarif
+          retention-days: 30
+
+      - name: Display Trivy scan summary
+        if: always()
+        run: |
+          if [ -f "trivy-results.sarif" ]; then
+            echo "### Security Scan Results" >> $GITHUB_STEP_SUMMARY
+            echo "" >> $GITHUB_STEP_SUMMARY
+            echo "Trivy security scan completed. Results available as workflow artifact." >> $GITHUB_STEP_SUMMARY
+            echo "" >> $GITHUB_STEP_SUMMARY
+
+            # Count vulnerabilities by severity
+            critical=$(jq '[.runs[].results[] | select(.level == "error")] | length' trivy-results.sarif 2>/dev/null || echo "0")
+            high=$(jq '[.runs[].results[] | select(.level == "warning")] | length' trivy-results.sarif 2>/dev/null || echo "0")
+            medium=$(jq '[.runs[].results[] | select(.level == "note")] | length' trivy-results.sarif 2>/dev/null || echo "0")
+
+            echo "| Severity | Count |" >> $GITHUB_STEP_SUMMARY
+            echo "|----------|-------|" >> $GITHUB_STEP_SUMMARY
+            echo "| Critical/High | $critical |" >> $GITHUB_STEP_SUMMARY
+            echo "| Medium | $high |" >> $GITHUB_STEP_SUMMARY
+            echo "| Low/Info | $medium |" >> $GITHUB_STEP_SUMMARY
+            echo "" >> $GITHUB_STEP_SUMMARY
+
+            if [ "$critical" -gt "0" ]; then
+              echo "⚠️ **Warning:** Critical/High severity vulnerabilities found!" >> $GITHUB_STEP_SUMMARY
+            else
+              echo "✅ No critical vulnerabilities found." >> $GITHUB_STEP_SUMMARY
+            fi
+
+            echo "" >> $GITHUB_STEP_SUMMARY
+            echo "**Note:** To view results in GitHub Security tab, enable Code Scanning in repository settings." >> $GITHUB_STEP_SUMMARY
+            echo "See: Settings → Security & analysis → Code scanning" >> $GITHUB_STEP_SUMMARY
+          fi
 
   build-and-push:
     name: Build and Push Images

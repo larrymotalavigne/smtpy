@@ -40,7 +40,8 @@
       "WebFetch(domain:primeng.org)",
       "Bash(uv add:*)",
       "Bash(tee:*)",
-      "Bash(chmod:*)"
+      "Bash(chmod:*)",
+      "Bash(make test:*)"
     ],
     "deny": [],
     "ask": []
