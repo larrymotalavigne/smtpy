@@ -225,10 +225,11 @@ jobs:
             export GHCR_OWNER=larrymotalavigne
             export TAG="latest"
             export DOCKER_REGISTRY=ghcr.io
+            export GITHUB_PAT=${{ secrets.PAT }}
 
-            # Login to registry
+            # Login to registry (using --password-stdin for security)
             echo "Logging in to GitHub Container Registry..."
-            docker login ghcr.io -u ${{ secrets.REGISTRY_USERNAME }} -p ${{ secrets.REGISTRY_PASSWORD }}
+            echo "$GITHUB_PAT" | docker login ghcr.io -u "$GHCR_OWNER" --password-stdin
 
             # Pull latest images
             echo "Pulling latest images..."
