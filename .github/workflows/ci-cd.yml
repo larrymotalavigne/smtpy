@@ -102,7 +102,7 @@ jobs:
             
             export GHCR_OWNER=larrymotalavigne
             export TAG="latest"
- k
+            
             docker login ghcr.io -u ${{ secrets.REGISTRY_USERNAME }} -p ${{ secrets.REGISTRY_PASSWORD }}
             docker compose pull
             docker compose up -d --remove-orphans
