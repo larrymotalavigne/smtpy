@@ -41,7 +41,8 @@
       "Bash(uv add:*)",
       "Bash(tee:*)",
       "Bash(chmod:*)",
-      "Bash(make test:*)"
+      "Bash(make test:*)",
+      "Bash(uv lock:*)"
     ],
     "deny": [],
     "ask": []

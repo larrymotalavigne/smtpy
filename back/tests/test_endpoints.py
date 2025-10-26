@@ -209,13 +209,25 @@ def test_delete_message_not_found():
 @pytest.mark.asyncio
 async def test_create_checkout_session(authenticated_client):
     """Test POST /billing/checkout-session with authentication."""
-    response = await authenticated_client.post(
-        "/billing/checkout-session",
-        json={"price_id": "price_test_123"}
-    )
-    # This will fail with 400 because we don't have a real organization/customer
-    # but it should not be a 500 error or 401
-    assert response.status_code in [201, 400]
+    from unittest.mock import patch, AsyncMock
+
+    with patch('api.services.stripe_service.create_or_get_customer', new_callable=AsyncMock) as mock_customer, \
+         patch('api.services.stripe_service.create_checkout_session', new_callable=AsyncMock) as mock_checkout:
+
+        mock_customer.return_value = "cus_test_123"
+        mock_checkout.return_value = {
+            "url": "https://checkout.stripe.com/test",
+            "session_id": "cs_test_123"
+        }
+
+        response = await authenticated_client.post(
+            "/billing/checkout-session",
+            json={"price_id": "price_test_123"}
+        )
+
+        assert response.status_code == 201
+        assert "url" in response.json()
+        assert "session_id" in response.json()
 
 
 @pytest.mark.asyncio
