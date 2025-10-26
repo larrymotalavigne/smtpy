@@ -1,0 +1,263 @@
+# Production Docker Compose Configuration for SMTPy
+#
+# This file defines a production-ready deployment with:
+# - Resource limits
+# - Health checks
+# - Restart policies
+# - Security configurations
+# - Environment variable management
+#
+# Usage:
+#   docker-compose -f docker-compose.prod.yml up -d
+#
+# Prerequisites:
+#   - Set environment variables in .env.production
+#   - Build production images or use GHCR images
+#   - Configure external secrets management (recommended)
+
+version: '3.8'
+
+services:
+  # PostgreSQL Database
+  db:
+    container_name: smtpy-db-prod
+    image: postgres:16-alpine
+    environment:
+      POSTGRES_DB: ${POSTGRES_DB:-smtpy}
+      POSTGRES_USER: ${POSTGRES_USER:-postgres}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:?POSTGRES_PASSWORD must be set}
+      POSTGRES_INITDB_ARGS: "-E UTF8 --locale=en_US.UTF-8"
+      PGDATA: /var/lib/postgresql/data/pgdata
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+      - ./backups:/backups  # Mount for database backups
+    ports:
+      - "${POSTGRES_PORT:-5432}:5432"
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER:-postgres} -d ${POSTGRES_DB:-smtpy}"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 10s
+    restart: unless-stopped
+    deploy:
+      resources:
+        limits:
+          cpus: '2'
+          memory: 2G
+        reservations:
+          cpus: '1'
+          memory: 1G
+    networks:
+      - smtpy-network
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "10m"
+        max-file: "3"
+
+  # Redis Cache (optional but recommended for production)
+  redis:
+    container_name: smtpy-redis-prod
+    image: redis:7-alpine
+    command: redis-server --appendonly yes --requirepass ${REDIS_PASSWORD:?REDIS_PASSWORD must be set}
+    volumes:
+      - redis_data:/data
+    ports:
+      - "${REDIS_PORT:-6379}:6379"
+    healthcheck:
+      test: ["CMD", "redis-cli", "--raw", "incr", "ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    restart: unless-stopped
+    deploy:
+      resources:
+        limits:
+          cpus: '1'
+          memory: 512M
+        reservations:
+          cpus: '0.5'
+          memory: 256M
+    networks:
+      - smtpy-network
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "10m"
+        max-file: "3"
+
+  # SMTP Server
+  smtp:
+    container_name: smtpy-smtp-prod
+    image: ${DOCKER_REGISTRY:-ghcr.io}/${GHCR_OWNER}/smtpy-smtp:${TAG:-latest}
+    environment:
+      - SMTP_PORT=1025
+      - API_URL=http://api:8000
+      - LOG_LEVEL=${LOG_LEVEL:-INFO}
+    ports:
+      - "${SMTP_PORT:-1025}:1025"
+    healthcheck:
+      test: ["CMD-SHELL", "python -c 'import socket; s=socket.socket(); s.connect((\"localhost\", 1025)); s.close()'"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 30s
+    restart: unless-stopped
+    deploy:
+      resources:
+        limits:
+          cpus: '1'
+          memory: 1G
+        reservations:
+          cpus: '0.5'
+          memory: 512M
+    networks:
+      - smtpy-network
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "10m"
+        max-file: "3"
+
+  # API Server
+  api:
+    container_name: smtpy-api-prod
+    image: ${DOCKER_REGISTRY:-ghcr.io}/${GHCR_OWNER}/smtpy-api:${TAG:-latest}
+    environment:
+      # Database
+      - DATABASE_URL=postgresql+psycopg://${POSTGRES_USER:-postgres}:${POSTGRES_PASSWORD}@db:5432/${POSTGRES_DB:-smtpy}
+
+      # Redis (if using)
+      - REDIS_URL=redis://default:${REDIS_PASSWORD}@redis:6379/0
+
+      # Security
+      - SECRET_KEY=${SECRET_KEY:?SECRET_KEY must be set}
+      - DEBUG=false
+      - IS_PRODUCTION=true
+
+      # Stripe
+      - STRIPE_API_KEY=${STRIPE_API_KEY:?STRIPE_API_KEY must be set}
+      - STRIPE_WEBHOOK_SECRET=${STRIPE_WEBHOOK_SECRET:?STRIPE_WEBHOOK_SECRET must be set}
+      - STRIPE_SUCCESS_URL=${STRIPE_SUCCESS_URL:-https://yourdomain.com/billing/success}
+      - STRIPE_CANCEL_URL=${STRIPE_CANCEL_URL:-https://yourdomain.com/billing/cancel}
+      - STRIPE_PORTAL_RETURN_URL=${STRIPE_PORTAL_RETURN_URL:-https://yourdomain.com/billing}
+
+      # CORS
+      - CORS_ORIGINS=${CORS_ORIGINS:-https://yourdomain.com}
+
+      # Workers
+      - API_WORKERS=${API_WORKERS:-4}
+
+      # Logging
+      - LOG_LEVEL=${LOG_LEVEL:-INFO}
+
+    ports:
+      - "${API_PORT:-8000}:8000"
+
+    depends_on:
+      db:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+      smtp:
+        condition: service_started
+
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8000/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 40s
+
+    restart: unless-stopped
+
+    deploy:
+      resources:
+        limits:
+          cpus: '2'
+          memory: 2G
+        reservations:
+          cpus: '1'
+          memory: 1G
+      replicas: 2  # Run multiple instances for high availability
+
+    networks:
+      - smtpy-network
+
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "10m"
+        max-file: "3"
+
+    # Run migrations before starting
+    command: >
+      sh -c "
+        echo 'Waiting for database to be ready...' &&
+        sleep 5 &&
+        echo 'Running database migrations...' &&
+        alembic upgrade head &&
+        echo 'Starting API server with $$API_WORKERS workers...' &&
+        uvicorn main:create_app --host 0.0.0.0 --port 8000 --factory --workers $$API_WORKERS
+      "
+
+  # Frontend (Nginx serving Angular app)
+  frontend:
+    container_name: smtpy-frontend-prod
+    image: ${DOCKER_REGISTRY:-ghcr.io}/${GHCR_OWNER}/smtpy-frontend:${TAG:-latest}
+    ports:
+      - "${HTTP_PORT:-80}:80"
+      - "${HTTPS_PORT:-443}:443"
+
+    volumes:
+      # Mount SSL certificates for HTTPS
+      - ./ssl:/etc/nginx/ssl:ro
+      # Mount custom nginx config if needed
+      - ./nginx.conf:/etc/nginx/nginx.conf:ro
+
+    depends_on:
+      api:
+        condition: service_healthy
+
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:80"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 10s
+
+    restart: unless-stopped
+
+    deploy:
+      resources:
+        limits:
+          cpus: '1'
+          memory: 512M
+        reservations:
+          cpus: '0.25'
+          memory: 128M
+
+    networks:
+      - smtpy-network
+
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "10m"
+        max-file: "3"
+
+# Network configuration
+networks:
+  smtpy-network:
+    driver: bridge
+    ipam:
+      config:
+        - subnet: 172.28.0.0/16
+
+# Volume configuration
+volumes:
+  postgres_data:
+    driver: local
+  redis_data:
+    driver: local

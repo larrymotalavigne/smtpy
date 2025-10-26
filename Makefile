@@ -1,4 +1,4 @@
-.PHONY: help install run stop logs clean compose-up compose-down up down build test
+.PHONY: help install run stop logs clean compose-up compose-down up down build test lint format
 
 IMAGE_NAME=smtpy-app
 CONTAINER_NAME=smtpy-app
@@ -11,6 +11,8 @@ help:
 	@echo "  make stop          Stop the running containers (docker-compose down)"
 	@echo "  make logs          Show logs from the containers"
 	@echo "  make test          Run the test suite with pytest"
+	@echo "  make lint          Run ruff linter on the codebase"
+	@echo "  make format        Format code with ruff"
 	@echo "  make clean         Remove images and containers"
 	@echo "  make compose-up    Start with docker-compose (alias for run)"
 	@echo "  make compose-down  Stop docker-compose stack (alias for stop)"
@@ -41,4 +43,11 @@ clean: stop
 compose-up: run
 
 compose-down: stop
+
+lint:
+	uv run ruff check back/
+
+format:
+	uv run ruff check --fix back/
+	uv run ruff format back/
 

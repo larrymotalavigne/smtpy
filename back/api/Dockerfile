@@ -14,7 +14,7 @@ RUN uv sync --frozen
 ENV PATH="/app/.venv/bin:$PATH"
 
 # Copy the rest of the application code
-COPY . .
+COPY ./back/api .
 
 # Expose API port only
 EXPOSE 8000

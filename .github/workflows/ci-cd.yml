@@ -3,6 +3,8 @@ name: CI/CD Pipeline
 on:
   push:
     branches: [ main, develop ]
+    tags:
+      - 'v*'
   pull_request:
     branches: [ main ]
 
@@ -10,8 +12,13 @@ permissions:
   contents: read
   packages: write
 
+env:
+  REGISTRY: ghcr.io
+  OWNER: larrymotalavigne
+
 jobs:
   test:
+    name: Run Tests
     runs-on: ubuntu-latest
     steps:
       - name: Checkout code
@@ -26,68 +33,136 @@ jobs:
         run: |
           make install
 
-      - name: Run tests
+      - name: Run tests with coverage
         run: |
           make test
+          # Future: Generate coverage report and upload to codecov
 
-  build-and-push:
-    needs: test
+      - name: Upload test results
+        if: always()
+        uses: actions/upload-artifact@v3
+        with:
+          name: test-results
+          path: |
+            htmlcov/
+            .coverage
+
+  lint:
+    name: Lint Code
     runs-on: ubuntu-latest
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v4
+        with:
+          python-version: '3.13'
+
+      - name: Install dependencies
+        run: |
+          make install
+
+      - name: Run linter
+        run: |
+          make lint || true  # Don't fail pipeline on lint errors yet
+
+  security-scan:
+    name: Security Scan
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Run Trivy vulnerability scanner
+        uses: aquasecurity/trivy-action@master
+        with:
+          scan-type: 'fs'
+          scan-ref: '.'
+          format: 'sarif'
+          output: 'trivy-results.sarif'
+
+      - name: Upload Trivy results
+        uses: github/codeql-action/upload-sarif@v2
+        if: always()
+        with:
+          sarif_file: 'trivy-results.sarif'
+
+  build-and-push:
+    name: Build and Push Images
+    needs: [test, lint]
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        include:
+          - service: api
+            dockerfile: ./back/api/Dockerfile.prod
+            context: .
+          - service: smtp
+            dockerfile: ./back/smtp/Dockerfile.prod
+            context: .
+          - service: frontend
+            dockerfile: ./front/Dockerfile.prod
+            context: ./front
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
 
       - name: Log in to GitHub Container Registry
         uses: docker/login-action@v3
         with:
-          registry: ghcr.io
+          registry: ${{ env.REGISTRY }}
           username: ${{ github.actor }}
           password: ${{ secrets.GITHUB_TOKEN }}
 
-      - name: Build and push SMTP Docker image
-        uses: docker/build-push-action@v5
+      - name: Extract metadata
+        id: meta
+        uses: docker/metadata-action@v5
         with:
-          context: ./back/smtp
-          push: true
+          images: ${{ env.REGISTRY }}/${{ env.OWNER }}/smtpy-${{ matrix.service }}
           tags: |
-            ghcr.io/larrymotalavigne/smtpy-smtp:${{ github.sha }}
-            ghcr.io/larrymotalavigne/smtpy-smtp:latest
+            type=ref,event=branch
+            type=ref,event=pr
+            type=semver,pattern={{version}}
+            type=semver,pattern={{major}}.{{minor}}
+            type=sha,prefix={{branch}}-
+            type=raw,value=latest,enable={{is_default_branch}}
 
-      - name: Build and push API Docker image
+      - name: Build and push ${{ matrix.service }} image
         uses: docker/build-push-action@v5
         with:
-          context: ./back/api
+          context: ${{ matrix.context }}
+          file: ${{ matrix.dockerfile }}
           push: true
-          tags: |
-            ghcr.io/larrymotalavigne/smtpy-api:${{ github.sha }}
-            ghcr.io/larrymotalavigne/smtpy-api:latest
-
-      - name: Build and push Frontend Docker image
-        uses: docker/build-push-action@v5
-        with:
-          context: ./front
-          push: true
-          tags: |
-            ghcr.io/larrymotalavigne/smtpy-frontend:${{ github.sha }}
-            ghcr.io/larrymotalavigne/smtpy-frontend:latest
+          tags: ${{ steps.meta.outputs.tags }}
+          labels: ${{ steps.meta.outputs.labels }}
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
+          platforms: linux/amd64
 
   deploy:
+    name: Deploy to Production
     needs: build-and-push
     runs-on: ubuntu-latest
     if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+    environment:
+      name: production
+      url: https://smtpy.fr
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
 
-
-      - name: Copy docker-compose files to UNRAID
+      - name: Copy production files to server
         uses: appleboy/scp-action@v0.1.7
         with:
           host: ${{ secrets.UNRAID_SSH_HOST }}
           port: 2345
           username: ${{ secrets.UNRAID_SSH_USER }}
           key: ${{ secrets.UNRAID_SSH_KEY }}
-          source: "docker-compose.yml"
+          source: "docker-compose.prod.yml,.env.production.template"
           target: "/srv/smtpy/"
 
       - name: Deploy with Docker Compose via SSH
@@ -99,25 +174,71 @@ jobs:
           key: ${{ secrets.UNRAID_SSH_KEY }}
           script: |
             cd /srv/smtpy/
-            
+
+            # Set environment variables
             export GHCR_OWNER=larrymotalavigne
             export TAG="latest"
-            
+            export DOCKER_REGISTRY=ghcr.io
+
+            # Login to registry
+            echo "Logging in to GitHub Container Registry..."
             docker login ghcr.io -u ${{ secrets.REGISTRY_USERNAME }} -p ${{ secrets.REGISTRY_PASSWORD }}
-            docker compose pull
-            docker compose up -d --remove-orphans
-            
-            # Clean up unused images to prevent orphan images
+
+            # Pull latest images
+            echo "Pulling latest images..."
+            docker compose -f docker-compose.prod.yml pull
+
+            # Deploy with rolling update for zero downtime
+            echo "Deploying services..."
+
+            # Update database services first
+            docker compose -f docker-compose.prod.yml up -d --no-deps db redis
+            sleep 5
+
+            # Update backend services with rolling update
+            echo "Updating API with rolling restart..."
+            docker compose -f docker-compose.prod.yml up -d --no-deps --scale api=1 api
+            sleep 10
+            docker compose -f docker-compose.prod.yml up -d --no-deps --scale api=2 api
+
+            # Update SMTP server
+            docker compose -f docker-compose.prod.yml up -d --no-deps smtp
+
+            # Update frontend
+            docker compose -f docker-compose.prod.yml up -d --no-deps frontend
+
+            # Remove orphaned containers
+            docker compose -f docker-compose.prod.yml up -d --remove-orphans
+
+            # Clean up unused images
             echo "Cleaning up unused Docker images..."
             docker image prune -f
             echo "✅ Cleaned up unused Docker images"
 
+            # Show running containers
+            echo "Running containers:"
+            docker compose -f docker-compose.prod.yml ps
+
   health-check:
+    name: Health Check
     needs: deploy
     runs-on: ubuntu-latest
     if: github.event_name == 'push' && github.ref == 'refs/heads/main'
     steps:
-      - name: Health Check Services
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Copy verification script to server
+        uses: appleboy/scp-action@v0.1.7
+        with:
+          host: ${{ secrets.UNRAID_SSH_HOST }}
+          port: 2345
+          username: ${{ secrets.UNRAID_SSH_USER }}
+          key: ${{ secrets.UNRAID_SSH_KEY }}
+          source: "scripts/verify-deployment.sh"
+          target: "/srv/smtpy/"
+
+      - name: Run health checks
         uses: appleboy/ssh-action@v1.0.3
         with:
           host: ${{ secrets.UNRAID_SSH_HOST }}
@@ -125,35 +246,79 @@ jobs:
           username: ${{ secrets.UNRAID_SSH_USER }}
           key: ${{ secrets.UNRAID_SSH_KEY }}
           script: |
-            # Wait for services to start
-            echo "Waiting for services to start..."
-            sleep 10
-            
-            # Check if API is running and responding
+            cd /srv/smtpy/
+
+            # Wait for services to stabilize
+            echo "Waiting for services to stabilize..."
+            sleep 30
+
+            # Make script executable
+            chmod +x scripts/verify-deployment.sh
+
+            # Run comprehensive verification
+            echo "Running deployment verification..."
+            ./scripts/verify-deployment.sh --verbose
+
+            # Additional external health checks
+            echo ""
+            echo "Running external health checks..."
+
+            # Check API health endpoint
             echo "Checking API health..."
-            if curl -f -s http://smtpy.fr/ > /dev/null; then
-              echo "✅ API is running and responding on port 1001"
+            if curl -f -s https://smtpy.fr/health > /dev/null; then
+              echo "✅ API is running and responding"
             else
               echo "❌ API health check failed"
               exit 1
             fi
-            
-            # Check if SMTP server is running
+
+            # Check SMTP server (internal)
             echo "Checking SMTP server..."
-            if nc -z smtp.smtpy.fr 1025; then
-              echo "✅ SMTP server is running and listening on port 1025"
+            if docker exec smtpy-smtp-prod python -c "import socket; s=socket.socket(); s.connect(('localhost', 1025)); s.close()"; then
+              echo "✅ SMTP server is running and listening"
             else
               echo "❌ SMTP server health check failed"
               exit 1
             fi
-            
-            # Check if Frontend is running
+
+            # Check Frontend
             echo "Checking Frontend..."
-            if curl -f -s http://smtpy.fr:80/ > /dev/null; then
-              echo "✅ Frontend is running and responding on port 80"
+            if curl -f -s https://smtpy.fr/ > /dev/null; then
+              echo "✅ Frontend is running and responding"
             else
               echo "❌ Frontend health check failed"
               exit 1
             fi
-            
-            echo "🎉 All services are running successfully!"
+
+            # Check database connectivity
+            echo "Checking database..."
+            if docker exec smtpy-db-prod pg_isready -U postgres > /dev/null; then
+              echo "✅ Database is ready"
+            else
+              echo "❌ Database health check failed"
+              exit 1
+            fi
+
+            # Check Redis
+            echo "Checking Redis..."
+            if docker exec smtpy-redis-prod redis-cli --raw incr ping > /dev/null; then
+              echo "✅ Redis is responding"
+            else
+              echo "❌ Redis health check failed"
+              exit 1
+            fi
+
+            echo ""
+            echo "🎉 All health checks passed! Deployment successful!"
+
+      - name: Notify deployment success
+        if: success()
+        run: |
+          echo "✅ Deployment to production completed successfully"
+          echo "URL: https://smtpy.fr"
+
+      - name: Notify deployment failure
+        if: failure()
+        run: |
+          echo "❌ Deployment failed - health checks did not pass"
+          exit 1
