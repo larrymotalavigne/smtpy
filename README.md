@@ -345,6 +345,40 @@ For detailed API documentation, visit http://localhost:8000/docs when the applic
 
 ## Production Deployment
 
+### Provide .env.production via GitHub Secrets
+
+You can store the entire .env.production in GitHub Secrets and let the deploy workflow recreate it securely on the server.
+
+Recommended approach (base64-encoded):
+
+1. Create and verify your .env.production locally (use .env.production.template as a guide).
+2. Base64-encode the file (no line wrapping):
+   - macOS/Linux (BSD base64):
+     - cat .env.production | base64 > env.b64
+   - GNU coreutils (Linux):
+     - base64 -w0 .env.production > env.b64
+3. Copy the contents of env.b64 and create a new GitHub repository secret named ENV_PRODUCTION_B64 with that value.
+4. The CI/CD workflow will decode this secret on the server into /srv/smtpy/.env.production and pass it to docker compose via --env-file.
+
+Alternative (plaintext secret):
+
+- Create a secret named ENV_PRODUCTION containing the raw file content. This works, but long multi-line secrets are more reliable and safer when base64-encoded. Note: our workflow prefers ENV_PRODUCTION_B64 when both are set.
+
+Fallback (individual secrets):
+
+- If neither ENV_PRODUCTION_B64 nor ENV_PRODUCTION is present, the deploy step falls back to individual secrets that docker-compose.prod.yml requires. Ensure these repository secrets exist:
+  - POSTGRES_PASSWORD
+  - REDIS_PASSWORD
+  - SECRET_KEY
+  - STRIPE_API_KEY
+  - STRIPE_WEBHOOK_SECRET
+
+Security notes:
+
+- Do not commit .env.production to the repo. It is already .gitignore'd.
+- Use strong, unique values and rotate regularly.
+- If your org enforces SSO for GHCR, enable SSO on the PAT used in the workflow (secret PAT).
+
 ### Docker Deployment
 
 1. **Configure production environment:**
