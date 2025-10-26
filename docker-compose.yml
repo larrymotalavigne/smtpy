@@ -1,4 +1,9 @@
 services:
+  # Set GHCR_OWNER (and optional TAG) in environment before running docker compose
+  # Example export on server:
+  #   export GHCR_OWNER=$(echo "$GITHUB_REPOSITORY_OWNER" | tr '[:upper:]' '[:lower:]')
+  #   export TAG=latest
+
   db:
     container_name: smtpy-db
     image: postgres:16
@@ -16,11 +21,16 @@ services:
       timeout: 5s
       retries: 5
 
+  smtp:
+    container_name: smtpy-smtp
+    image: ghcr.io/${GHCR_OWNER}/smtpy-smtp:${TAG:-latest}
+    ports:
+      - "1025:1025"
+    restart: unless-stopped
+
   api:
     container_name: smtpy-api
-    build:
-      context: ./back/api
-      dockerfile: Dockerfile
+    image: ghcr.io/${GHCR_OWNER}/smtpy-api:${TAG:-latest}
     environment:
       - DATABASE_URL=postgresql+asyncpg://postgres:postgres@db:5432/smtpy
       - STRIPE_API_KEY=${STRIPE_API_KEY:-}
@@ -28,11 +38,11 @@ services:
       - DEBUG=true
     ports:
       - "8000:8000"
-    volumes:
-      - ./back/api:/app
     depends_on:
       db:
         condition: service_healthy
+      smtp:
+        condition: service_started
     restart: unless-stopped
     command: >
       sh -c "
@@ -41,14 +51,12 @@ services:
         echo 'Running database migrations...' &&
         alembic upgrade head &&
         echo 'Starting API server...' &&
-        uvicorn main:create_app --host 0.0.0.0 --port 8000 --factory --reload
+        uvicorn main:create_app --host 0.0.0.0 --port 8000 --factory
       "
 
   frontend:
     container_name: smtpy-frontend
-    build:
-      context: ./front
-      dockerfile: Dockerfile
+    image: ghcr.io/${GHCR_OWNER}/smtpy-frontend:${TAG:-latest}
     ports:
       - "80:80"
     depends_on:

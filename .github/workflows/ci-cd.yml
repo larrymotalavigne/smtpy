@@ -6,6 +6,10 @@ on:
   pull_request:
     branches: [ main ]
 
+permissions:
+  contents: read
+  packages: write
+
 jobs:
   test:
     runs-on: ubuntu-latest
@@ -33,12 +37,12 @@ jobs:
       - name: Checkout code
         uses: actions/checkout@v4
 
-      - name: Log in to Private Registry
+      - name: Log in to GitHub Container Registry
         uses: docker/login-action@v3
         with:
-          registry: registry.atomdev.fr
-          username: ${{ secrets.REGISTRY_USERNAME }}
-          password: ${{ secrets.REGISTRY_PASSWORD }}
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
 
       - name: Build and push SMTP Docker image
         uses: docker/build-push-action@v5
@@ -46,8 +50,8 @@ jobs:
           context: ./back/smtp
           push: true
           tags: |
-            registry.atomdev.fr/smtpy-smtp:${{ github.sha }}
-            registry.atomdev.fr/smtpy-smtp:latest
+            ghcr.io/${{ toLower(github.repository_owner) }}/smtpy-smtp:${{ github.sha }}
+            ghcr.io/${{ toLower(github.repository_owner) }}/smtpy-smtp:latest
 
       - name: Build and push API Docker image
         uses: docker/build-push-action@v5
@@ -55,8 +59,8 @@ jobs:
           context: ./back/api
           push: true
           tags: |
-            registry.atomdev.fr/smtpy-api:${{ github.sha }}
-            registry.atomdev.fr/smtpy-api:latest
+            ghcr.io/${{ toLower(github.repository_owner) }}/smtpy-api:${{ github.sha }}
+            ghcr.io/${{ toLower(github.repository_owner) }}/smtpy-api:latest
 
       - name: Build and push Frontend Docker image
         uses: docker/build-push-action@v5
@@ -64,8 +68,8 @@ jobs:
           context: ./front
           push: true
           tags: |
-            registry.atomdev.fr/smtpy-frontend:${{ github.sha }}
-            registry.atomdev.fr/smtpy-frontend:latest
+            ghcr.io/${{ toLower(github.repository_owner) }}/smtpy-frontend:${{ github.sha }}
+            ghcr.io/${{ toLower(github.repository_owner) }}/smtpy-frontend:latest
 
   deploy:
     needs: build-and-push
@@ -95,7 +99,11 @@ jobs:
           key: ${{ secrets.UNRAID_SSH_KEY }}
           script: |
             cd /srv/smtpy/
-            docker login registry.atomdev.fr -u ${{ secrets.REGISTRY_USERNAME }} -p ${{ secrets.REGISTRY_PASSWORD }}
+            # Configure GHCR owner (lowercase) and tag to use
+            export GHCR_OWNER="${{ toLower(github.repository_owner) }}"
+            export TAG="latest"
+
+            docker login ghcr.io -u ${{ secrets.REGISTRY_USERNAME }} -p ${{ secrets.REGISTRY_PASSWORD }}
             docker compose pull
             docker compose up -d --remove-orphans
             
