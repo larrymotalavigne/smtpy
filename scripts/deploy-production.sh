@@ -68,6 +68,13 @@ echo ""
 
 # Step 3: Stop existing containers
 echo -e "${BLUE}[3/7]${NC} Stopping existing containers..."
+
+# Force stop and remove any existing SMTPy containers (even if not managed by current compose project)
+echo "  Force stopping any existing SMTPy containers..."
+docker ps -a --filter "name=smtpy-" --format "{{.Names}}" | xargs -r docker stop || true
+docker ps -a --filter "name=smtpy-" --format "{{.Names}}" | xargs -r docker rm || true
+
+# Stop and remove containers managed by compose
 docker compose -f $COMPOSE_FILE $COMPOSE_ENV_FILE_OPT down --remove-orphans || true
 echo -e "${GREEN}✓ Old containers stopped${NC}"
 echo ""

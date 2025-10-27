@@ -29,8 +29,8 @@ services:
     volumes:
       - postgres_data:/var/lib/postgresql/data
       - ./backups:/backups  # Mount for database backups
-    ports:
-      - "${POSTGRES_PORT:-5432}:5432"
+    # Note: No external port mapping - database is only accessible within Docker network
+    # This prevents port conflicts and improves security
     healthcheck:
       test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER:-postgres} -d ${POSTGRES_DB:-smtpy}"]
       interval: 10s
@@ -61,8 +61,8 @@ services:
     command: redis-server --appendonly yes --requirepass ${REDIS_PASSWORD:?REDIS_PASSWORD must be set}
     volumes:
       - redis_data:/data
-    ports:
-      - "${REDIS_PORT:-6379}:6379"
+    # Note: No external port mapping - Redis is only accessible within Docker network
+    # This prevents port conflicts and improves security
     healthcheck:
       test: ["CMD", "redis-cli", "--raw", "incr", "ping"]
       interval: 10s
@@ -93,8 +93,11 @@ services:
       - SMTP_PORT=1025
       - API_URL=http://api:8000
       - LOG_LEVEL=${LOG_LEVEL:-INFO}
-    ports:
-      - "${SMTP_PORT:-1025}:1025"
+    # Note: SMTP port can be exposed if you need external SMTP access
+    # For internal-only use (via API), comment out the ports section
+    # Uncomment the line below if you need external SMTP server access:
+    # ports:
+    #   - "${SMTP_PORT:-1025}:1025"
     healthcheck:
       test: ["CMD-SHELL", "python -c 'import socket; s=socket.socket(); s.connect((\"localhost\", 1025)); s.close()'"]
       interval: 30s
@@ -150,8 +153,9 @@ services:
       # Logging
       - LOG_LEVEL=${LOG_LEVEL:-INFO}
 
-    ports:
-      - "${API_PORT:-8000}:8000"
+    # Note: No external port mapping - API is accessed via nginx reverse proxy
+    # The nginx proxy at nginx.atomdev.fr will route traffic to this service
+    # This prevents port conflicts with other services on the host
 
     depends_on:
       db:
@@ -204,9 +208,10 @@ services:
   frontend:
     container_name: smtpy-frontend-prod
     image: ${DOCKER_REGISTRY:-ghcr.io}/${GHCR_OWNER}/smtpy-frontend:${TAG:-latest}
-    ports:
-      - "${HTTP_PORT:-80}:80"
-      - "${HTTPS_PORT:-443}:443"
+
+    # Note: No external port mapping - frontend is accessed via nginx reverse proxy
+    # The nginx proxy at nginx.atomdev.fr will route traffic to this service
+    # This prevents port conflicts with other services on the host (especially port 80/443)
 
     volumes:
       # Mount SSL certificates for HTTPS

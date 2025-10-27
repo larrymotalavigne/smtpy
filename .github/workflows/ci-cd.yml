@@ -257,6 +257,11 @@ jobs:
             echo "Pulling latest images..."
             docker compose -f docker-compose.prod.yml $COMPOSE_ENV_FILE_OPT pull
 
+            # Force stop and remove any existing SMTPy containers (even if not managed by current compose project)
+            echo "Force stopping any existing SMTPy containers..."
+            docker ps -a --filter "name=smtpy-" --format "{{.Names}}" | xargs -r docker stop || true
+            docker ps -a --filter "name=smtpy-" --format "{{.Names}}" | xargs -r docker rm || true
+
             # Stop old containers if they exist (for clean deployment)
             echo "Stopping existing containers..."
             docker compose -f docker-compose.prod.yml $COMPOSE_ENV_FILE_OPT down --remove-orphans || true
