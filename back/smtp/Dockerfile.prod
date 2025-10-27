@@ -33,11 +33,12 @@ WORKDIR /app
 # Copy virtual environment from builder
 COPY --from=builder /app/.venv /app/.venv
 
-# Copy application code
-COPY ./back/smtp ./
+# Copy application code into 'smtp' subdirectory to maintain import paths
+COPY ./back/smtp ./smtp
 
-# Ensure venv is in PATH
+# Ensure venv is in PATH and set PYTHONPATH
 ENV PATH="/app/.venv/bin:$PATH" \
+    PYTHONPATH="/app" \
     PYTHONUNBUFFERED=1 \
     PYTHONDONTWRITEBYTECODE=1
 
@@ -54,5 +55,5 @@ HEALTHCHECK --interval=30s --timeout=10s --start-period=30s --retries=3 \
 # Expose SMTP port
 EXPOSE 1025
 
-# Run SMTP server
-CMD ["python", "main.py"]
+# Run SMTP server from smtp directory
+CMD ["python", "smtp/main.py"]

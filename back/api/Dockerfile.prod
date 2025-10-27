@@ -41,15 +41,16 @@ RUN apt-get update && \
 # Copy virtual environment from builder
 COPY --from=builder /app/.venv /app/.venv
 
-# Copy application code
-COPY ./back/api ./
+# Copy application code into 'api' subdirectory to maintain import paths
+COPY ./back/api ./api
 
 # Copy Alembic migration files (from back/ directory)
 COPY ./back/alembic.ini ./alembic.ini
 COPY ./back/alembic ./alembic
 
-# Ensure venv is in PATH
+# Ensure venv is in PATH and set PYTHONPATH to /app so 'api' module can be found
 ENV PATH="/app/.venv/bin:$PATH" \
+    PYTHONPATH="/app" \
     PYTHONUNBUFFERED=1 \
     PYTHONDONTWRITEBYTECODE=1
 
@@ -66,5 +67,5 @@ HEALTHCHECK --interval=30s --timeout=10s --start-period=40s --retries=3 \
 # Expose API port
 EXPOSE 8000
 
-# Run with uvicorn
-CMD ["uvicorn", "main:create_app", "--host", "0.0.0.0", "--port", "8000", "--factory", "--workers", "4"]
+# Run with uvicorn from api directory
+CMD ["uvicorn", "api.main:create_app", "--host", "0.0.0.0", "--port", "8000", "--factory", "--workers", "4"]
