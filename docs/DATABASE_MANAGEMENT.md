@@ -21,7 +21,7 @@
 
 **Database Management System**: PostgreSQL 16
 **Deployment**: Docker container (`smtpy-db-prod`)
-**Image**: `postgres:16-alpine`
+**Image**: `postgres:18-alpine`
 **Data Volume**: `smtpy_postgres_data`
 **Backup Location**: `/srv/smtpy/backups/`
 

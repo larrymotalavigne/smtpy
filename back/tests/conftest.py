@@ -89,7 +89,7 @@ def patch_settings():
 def postgres_container(event_loop):
     """Start PostgreSQL testcontainer for the entire test session."""
     container = PostgresContainer(
-        image="postgres:16",
+        image="postgres:18",
         driver="psycopg"  # Use psycopg (v3) driver
     )
     container.start()

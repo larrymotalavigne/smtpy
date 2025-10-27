@@ -15,13 +15,11 @@
 #   - Build production images or use GHCR images
 #   - Configure external secrets management (recommended)
 
-version: '3.8'
-
 services:
   # PostgreSQL Database
   db:
     container_name: smtpy-db-prod
-    image: postgres:16-alpine
+    image: postgres:18-alpine
     environment:
       POSTGRES_DB: ${POSTGRES_DB:-smtpy}
       POSTGRES_USER: ${POSTGRES_USER:-postgres}
@@ -122,7 +120,7 @@ services:
 
   # API Server
   api:
-    container_name: smtpy-api-prod
+    # Note: No container_name when using replicas - Docker Compose will auto-generate names
     image: ${DOCKER_REGISTRY:-ghcr.io}/${GHCR_OWNER}/smtpy-api:${TAG:-latest}
     environment:
       # Database
@@ -180,7 +178,7 @@ services:
         reservations:
           cpus: '1'
           memory: 1G
-      replicas: 2  # Run multiple instances for high availability
+      replicas: 2  # Run multiple instances for high availability (container names will be auto-generated)
 
     networks:
       - smtpy-network

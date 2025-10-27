@@ -52,7 +52,7 @@ Created comprehensive production configuration with:
 #### Services Configured
 
 1. **PostgreSQL Database**
-   - Image: `postgres:16-alpine`
+   - Image: `postgres:18-alpine`
    - Resources: 2 CPU cores, 2GB RAM (limit)
    - Health checks every 10s
    - Persistent volume (postgres_data)

@@ -6,7 +6,7 @@ services:
 
   db:
     container_name: smtpy-db
-    image: postgres:16
+    image: postgres:18
     environment:
       - POSTGRES_DB=smtpy
       - POSTGRES_USER=postgres

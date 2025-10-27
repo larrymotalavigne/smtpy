@@ -253,7 +253,7 @@ Our multi-stage builds produce optimized images:
 - **API**: ~200MB (Python 3.13-slim based)
 - **SMTP**: ~180MB (Python 3.13-slim based)
 - **Frontend**: ~50MB (Nginx-alpine based)
-- **PostgreSQL**: ~240MB (postgres:16-alpine)
+- **PostgreSQL**: ~240MB (postgres:18-alpine)
 - **Redis**: ~40MB (redis:7-alpine)
 
 **Total**: ~710MB for all images

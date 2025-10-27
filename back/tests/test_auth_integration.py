@@ -19,7 +19,7 @@ from api.core.config import SETTINGS
 @pytest.fixture(scope="session")
 def postgres_container():
     """Start PostgreSQL container for testing."""
-    with PostgresContainer("postgres:16") as postgres:
+    with PostgresContainer("postgres:18") as postgres:
         yield postgres
 
 
