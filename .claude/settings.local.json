@@ -42,7 +42,8 @@
       "Bash(tee:*)",
       "Bash(chmod:*)",
       "Bash(make test:*)",
-      "Bash(uv lock:*)"
+      "Bash(uv lock:*)",
+      "Bash(git log:*)"
     ],
     "deny": [],
     "ask": []
