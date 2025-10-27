@@ -20,8 +20,8 @@ RUN pip install --no-cache-dir uv
 # Copy dependency files
 COPY ./pyproject.toml ./uv.lock ./
 
-# Install Python dependencies in virtual environment
-RUN uv sync --frozen --no-dev
+# Install Python dependencies in virtual environment (including alembic for migrations)
+RUN uv sync --frozen
 
 # Stage 2: Runtime - Minimal production image
 FROM python:3.14-slim
