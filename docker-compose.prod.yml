@@ -213,11 +213,9 @@ services:
     # The nginx proxy at nginx.atomdev.fr will route traffic to this service
     # This prevents port conflicts with other services on the host (especially port 80/443)
 
-    volumes:
-      # Mount SSL certificates for HTTPS
-      - ./ssl:/etc/nginx/ssl:ro
-      # Mount custom nginx config if needed
-      - ./nginx.conf:/etc/nginx/nginx.conf:ro
+    # Note: No volume mounts needed - nginx config and SSL are handled by:
+    # 1. Internal nginx config baked into the image (for serving Angular app)
+    # 2. External Nginx Proxy Manager (for SSL termination and routing)
 
     depends_on:
       api:
