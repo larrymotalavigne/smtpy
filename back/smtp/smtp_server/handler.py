@@ -6,7 +6,12 @@ from email.message import EmailMessage
 
 from aiosmtpd.handlers import AsyncMessage
 
-import smtp.forwarding.forwarder
+# Import forwarder - works in both development and production containers
+try:
+    import smtp.forwarding.forwarder as forwarder_module  # Development path
+except ModuleNotFoundError:
+    import forwarding.forwarder as forwarder_module       # Production container path
+
 from core.database.models import Domain, Alias, ActivityLog
 from core.utils.db import get_db
 from core.utils.validation import validate_email, ValidationError
@@ -208,7 +213,7 @@ class SMTPHandler(AsyncMessage):
 
         # Forward email to all resolved targets
         try:
-            smtp.forwarding.forwarder.forward_email(message, list(all_targets), mail_from="noreply@localhost")
+            forwarder_module.forward_email(message, list(all_targets), mail_from="noreply@localhost")
             logging.info(
                 f"Email forwarded successfully",
                 extra={
