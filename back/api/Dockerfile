@@ -16,6 +16,10 @@ ENV PATH="/app/.venv/bin:$PATH"
 # Copy the rest of the application code
 COPY ./back/api .
 
+# Copy Alembic migration files (from back/ directory)
+COPY ./back/alembic.ini ./alembic.ini
+COPY ./back/alembic ./alembic
+
 # Expose API port only
 EXPOSE 8000
 

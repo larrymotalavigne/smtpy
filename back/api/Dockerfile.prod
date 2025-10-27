@@ -44,6 +44,10 @@ COPY --from=builder /app/.venv /app/.venv
 # Copy application code
 COPY ./back/api ./
 
+# Copy Alembic migration files (from back/ directory)
+COPY ./back/alembic.ini ./alembic.ini
+COPY ./back/alembic ./alembic
+
 # Ensure venv is in PATH
 ENV PATH="/app/.venv/bin:$PATH" \
     PYTHONUNBUFFERED=1 \
