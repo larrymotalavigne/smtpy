@@ -27,6 +27,10 @@ class Settings(BaseSettings):
     API_HOST: str = Field(default="0.0.0.0", description="API host")
     API_PORT: int = Field(default=8000, description="API port")
     DEBUG: bool = Field(default=False, description="Debug mode")
+
+    # SMTP Forwarding Settings (for smtp/forwarding/forwarder.py)
+    SMTP_HOST: str = Field(default="localhost", description="SMTP relay host for forwarding")
+    SMTP_PORT: int = Field(default=25, description="SMTP relay port for forwarding")
     
     # Security
     SECRET_KEY: str = Field(
