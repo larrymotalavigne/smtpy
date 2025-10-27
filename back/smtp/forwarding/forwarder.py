@@ -2,7 +2,7 @@ import logging
 import smtplib
 from email.message import EmailMessage
 
-from core.config import SETTINGS
+from api.core.config import SETTINGS
 
 SMTP_HOST = SETTINGS.SMTP_HOST
 SMTP_PORT = SETTINGS.SMTP_PORT

@@ -5,8 +5,8 @@ import bcrypt
 from datetime import datetime
 from typing import Optional, TYPE_CHECKING
 
-from sqlalchemy import Boolean, Enum, Integer, String, DateTime, ForeignKey
-from sqlalchemy.orm import Mapped, mapped_column, relationship
+from sqlalchemy import Boolean, Enum, Integer, String, DateTime, ForeignKey, Column
+from sqlalchemy.orm import Mapped, relationship
 
 from .base import Base, TimestampMixin
 
@@ -26,32 +26,32 @@ class User(Base, TimestampMixin):
     __tablename__ = "users"
 
     # Primary key
-    id: Mapped[int] = mapped_column(Integer, primary_key=True, autoincrement=True)
+    id: Mapped[int] = Column(Integer, primary_key=True, autoincrement=True)
 
     # User credentials
-    username: Mapped[str] = mapped_column(
+    username: Mapped[str] = Column(
         String(50), nullable=False, unique=True, index=True, doc="Unique username"
     )
-    email: Mapped[str] = mapped_column(
+    email: Mapped[str] = Column(
         String(320), nullable=False, unique=True, index=True, doc="User email address"
     )
-    password_hash: Mapped[str] = mapped_column(
+    password_hash: Mapped[str] = Column(
         String(255), nullable=False, doc="Hashed password (bcrypt)"
     )
 
     # User status
-    is_active: Mapped[bool] = mapped_column(
+    is_active: Mapped[bool] = Column(
         Boolean, nullable=False, default=True, doc="Is user account active"
     )
-    is_verified: Mapped[bool] = mapped_column(
+    is_verified: Mapped[bool] = Column(
         Boolean, nullable=False, default=False, doc="Is email verified"
     )
-    role: Mapped[UserRole] = mapped_column(
+    role: Mapped[UserRole] = Column(
         Enum(UserRole), nullable=False, default=UserRole.USER, doc="User role"
     )
 
     # Organization relationship
-    organization_id: Mapped[Optional[int]] = mapped_column(
+    organization_id: Mapped[Optional[int]] = Column(
         ForeignKey("organizations.id", ondelete="SET NULL"),
         nullable=True,
         index=True,
@@ -59,7 +59,7 @@ class User(Base, TimestampMixin):
     )
 
     # Login tracking
-    last_login: Mapped[Optional[datetime]] = mapped_column(
+    last_login: Mapped[Optional[datetime]] = Column(
         DateTime(timezone=True), nullable=True, doc="Last successful login timestamp"
     )
 
@@ -108,18 +108,18 @@ class PasswordResetToken(Base):
 
     __tablename__ = "password_reset_tokens"
 
-    id: Mapped[int] = mapped_column(Integer, primary_key=True, autoincrement=True)
-    user_id: Mapped[int] = mapped_column(
+    id: Mapped[int] = Column(Integer, primary_key=True, autoincrement=True)
+    user_id: Mapped[int] = Column(
         ForeignKey("users.id", ondelete="CASCADE"), nullable=False, index=True
     )
-    token: Mapped[str] = mapped_column(
+    token: Mapped[str] = Column(
         String(255), nullable=False, unique=True, index=True
     )
-    expires_at: Mapped[datetime] = mapped_column(
+    expires_at: Mapped[datetime] = Column(
         DateTime(timezone=True), nullable=False, index=True
     )
-    used: Mapped[bool] = mapped_column(Boolean, nullable=False, default=False)
-    created_at: Mapped[datetime] = mapped_column(
+    used: Mapped[bool] = Column(Boolean, nullable=False, default=False)
+    created_at: Mapped[datetime] = Column(
         DateTime(timezone=True), server_default="now()", nullable=False
     )
 
@@ -137,18 +137,18 @@ class EmailVerificationToken(Base):
 
     __tablename__ = "email_verification_tokens"
 
-    id: Mapped[int] = mapped_column(Integer, primary_key=True, autoincrement=True)
-    user_id: Mapped[int] = mapped_column(
+    id: Mapped[int] = Column(Integer, primary_key=True, autoincrement=True)
+    user_id: Mapped[int] = Column(
         ForeignKey("users.id", ondelete="CASCADE"), nullable=False, index=True
     )
-    token: Mapped[str] = mapped_column(
+    token: Mapped[str] = Column(
         String(255), nullable=False, unique=True, index=True
     )
-    expires_at: Mapped[datetime] = mapped_column(
+    expires_at: Mapped[datetime] = Column(
         DateTime(timezone=True), nullable=False
     )
-    used: Mapped[bool] = mapped_column(Boolean, nullable=False, default=False)
-    created_at: Mapped[datetime] = mapped_column(
+    used: Mapped[bool] = Column(Boolean, nullable=False, default=False)
+    created_at: Mapped[datetime] = Column(
         DateTime(timezone=True), server_default="now()", nullable=False
     )
 

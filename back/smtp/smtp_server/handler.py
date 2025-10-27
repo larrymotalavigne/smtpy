@@ -5,16 +5,16 @@ from datetime import datetime, UTC
 from email.message import EmailMessage
 
 from aiosmtpd.handlers import AsyncMessage
+from pydantic_core._pydantic_core import ValidationError
+
+from api.core.db import get_async_session
+from api.models import Domain
 
 # Import forwarder - works in both development and production containers
 try:
     import smtp.forwarding.forwarder as forwarder_module  # Development path
 except ModuleNotFoundError:
     import forwarding.forwarder as forwarder_module       # Production container path
-
-from core.database.models import Domain, Alias, ActivityLog
-from core.utils.db import get_db
-from core.utils.validation import validate_email, ValidationError
 
 
 class SMTPHandler(AsyncMessage):

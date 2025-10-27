@@ -4,8 +4,8 @@ import enum
 from datetime import datetime
 from typing import Optional
 
-from sqlalchemy import Enum, Integer, String, DateTime
-from sqlalchemy.orm import Mapped, mapped_column, relationship
+from sqlalchemy import Enum, Integer, String, DateTime, Column
+from sqlalchemy.orm import Mapped, relationship
 
 from .base import Base, TimestampMixin
 
@@ -28,28 +28,28 @@ class Organization(Base, TimestampMixin):
     __tablename__ = "organizations"
     
     # Primary key
-    id: Mapped[int] = mapped_column(Integer, primary_key=True, autoincrement=True)
+    id: Mapped[int] = Column(Integer, primary_key=True, autoincrement=True)
     
     # Organization details
-    name: Mapped[str] = mapped_column(String(255), nullable=False, doc="Organization name")
-    email: Mapped[str] = mapped_column(
+    name: Mapped[str] = Column(String(255), nullable=False, doc="Organization name")
+    email: Mapped[str] = Column(
         String(320), nullable=False, unique=True, doc="Organization primary email"
     )
     
     # Stripe billing integration
-    stripe_customer_id: Mapped[Optional[str]] = mapped_column(
+    stripe_customer_id: Mapped[Optional[str]] = Column(
         String(255), nullable=True, unique=True, doc="Stripe customer ID"
     )
-    stripe_subscription_id: Mapped[Optional[str]] = mapped_column(
+    stripe_subscription_id: Mapped[Optional[str]] = Column(
         String(255), nullable=True, unique=True, doc="Stripe subscription ID"
     )
-    subscription_status: Mapped[Optional[SubscriptionStatus]] = mapped_column(
+    subscription_status: Mapped[Optional[SubscriptionStatus]] = Column(
         Enum(SubscriptionStatus), nullable=True, default=None, doc="Current subscription status"
     )
-    current_period_end: Mapped[Optional[datetime]] = mapped_column(
+    current_period_end: Mapped[Optional[datetime]] = Column(
         DateTime(timezone=True), nullable=True, doc="Current billing period end date"
     )
-    plan_price_id: Mapped[Optional[str]] = mapped_column(
+    plan_price_id: Mapped[Optional[str]] = Column(
         String(255), nullable=True, doc="Stripe price ID for current plan"
     )
     

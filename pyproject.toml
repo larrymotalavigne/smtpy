@@ -36,7 +36,6 @@ dev = [
     "ruff",
     "mypy",
     "testcontainers",
-    "aiosqlite",
 ]
 
 [tool.uv]
