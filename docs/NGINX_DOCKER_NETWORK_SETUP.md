@@ -3,6 +3,8 @@
 **Date**: 2025-10-27
 **Purpose**: Configure host nginx to communicate with SMTPy Docker containers
 
+> **Note**: If you're using **Nginx Proxy Manager**, see [NGINX_PROXY_MANAGER_SETUP.md](./NGINX_PROXY_MANAGER_SETUP.md) for easier setup instructions. This guide is for manual nginx configurations.
+
 ## Problem
 
 When running nginx on the host (e.g., `nginx.atomdev.fr`) and SMTPy services in Docker containers, there are two networking challenges:

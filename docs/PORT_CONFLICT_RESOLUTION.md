@@ -190,7 +190,19 @@ This will:
 
 ### Step 2: Connect Nginx to Docker Network
 
-**If nginx is running in Docker**:
+**If using Nginx Proxy Manager** (nginx-proxy-manager-official):
+```bash
+# Find NPM container
+docker ps | grep nginx-proxy-manager
+
+# Connect to SMTPy network
+docker network connect smtpy_smtpy-network <npm-container-name>
+
+# Then configure via NPM web UI (port 81)
+# See: docs/NGINX_PROXY_MANAGER_SETUP.md for detailed instructions
+```
+
+**If using standard nginx in Docker**:
 ```bash
 # Find nginx container
 docker ps | grep nginx
@@ -358,7 +370,8 @@ All changes have been verified:
 
 ## Related Documentation
 
-- [Nginx Docker Network Setup](./NGINX_DOCKER_NETWORK_SETUP.md) - Detailed network configuration
+- [Nginx Proxy Manager Setup](./NGINX_PROXY_MANAGER_SETUP.md) - **Recommended**: Setup guide for NPM users
+- [Nginx Docker Network Setup](./NGINX_DOCKER_NETWORK_SETUP.md) - Manual nginx configuration
 - [Deployment Fixes](./DEPLOYMENT_FIXES.md) - Container cleanup and deployment process
 - [Deployment Guide](./DEPLOYMENT_GUIDE.md) - General deployment instructions
 - [Nginx Deployment](./NGINX_DEPLOYMENT.md) - SSL/TLS configuration

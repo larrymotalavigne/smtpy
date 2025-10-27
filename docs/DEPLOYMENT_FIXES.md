@@ -330,7 +330,9 @@ docker exec -i smtpy-db-prod psql -U postgres smtpy < backup.sql
 
 ## Related Documentation
 
-- [Nginx Docker Network Setup](./NGINX_DOCKER_NETWORK_SETUP.md) - **NEW**: Connect nginx to Docker network
+- [Nginx Proxy Manager Setup](./NGINX_PROXY_MANAGER_SETUP.md) - **Recommended**: For NPM users
+- [Nginx Docker Network Setup](./NGINX_DOCKER_NETWORK_SETUP.md) - For manual nginx setup
+- [Port Conflict Resolution](./PORT_CONFLICT_RESOLUTION.md) - Complete fix summary
 - [GHCR Authentication](./GHCR_AUTHENTICATION.md)
 - [PostgreSQL 18 Upgrade](./POSTGRESQL_18_UPGRADE.md)
 - [Deployment Guide](./DEPLOYMENT_GUIDE.md)
