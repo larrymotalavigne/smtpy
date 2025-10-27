@@ -10,13 +10,17 @@ COPY ./pyproject.toml ./uv.lock ./
 RUN pip install uv
 RUN uv sync --frozen
 
-# Ensure the virtual environment is in PATH
-ENV PATH="/app/.venv/bin:$PATH"
+# Ensure the virtual environment is in PATH and set PYTHONPATH
+ENV PATH="/app/.venv/bin:$PATH" \
+    PYTHONPATH="/app"
 
-# Copy the rest of the application code
-COPY ./back/smtp .
+# Copy the application code into 'smtp' subdirectory
+COPY ./back/smtp ./smtp
+
+# Copy shared 'core' module from API (SMTP depends on core.database, core.utils, core.config)
+COPY ./back/api/core ./core
 
 # Expose SMTP port only
 EXPOSE 1025
 
-CMD ["python", "main.py"]
+CMD ["python", "smtp/main.py"]

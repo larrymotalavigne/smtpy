@@ -36,6 +36,9 @@ COPY --from=builder /app/.venv /app/.venv
 # Copy application code into 'smtp' subdirectory to maintain import paths
 COPY ./back/smtp ./smtp
 
+# Copy shared 'core' module from API (SMTP depends on core.database, core.utils, core.config)
+COPY ./back/api/core ./core
+
 # Ensure venv is in PATH and set PYTHONPATH
 ENV PATH="/app/.venv/bin:$PATH" \
     PYTHONPATH="/app" \
