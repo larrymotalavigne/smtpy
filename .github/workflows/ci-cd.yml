@@ -257,27 +257,37 @@ jobs:
             echo "Pulling latest images..."
             docker compose -f docker-compose.prod.yml $COMPOSE_ENV_FILE_OPT pull
 
+            # Stop old containers if they exist (for clean deployment)
+            echo "Stopping existing containers..."
+            docker compose -f docker-compose.prod.yml $COMPOSE_ENV_FILE_OPT down --remove-orphans || true
+
             # Deploy with rolling update for zero downtime
             echo "Deploying services..."
 
-            # Update database services first
+            # Start database services first
+            echo "Starting database and Redis..."
             docker compose -f docker-compose.prod.yml $COMPOSE_ENV_FILE_OPT up -d --no-deps db redis
-            sleep 5
 
-            # Update backend services with rolling update
-            echo "Updating API with rolling restart..."
-            docker compose -f docker-compose.prod.yml $COMPOSE_ENV_FILE_OPT up -d --no-deps --scale api=1 api
+            # Wait for database to be healthy
+            echo "Waiting for database to be ready..."
             sleep 10
-            docker compose -f docker-compose.prod.yml $COMPOSE_ENV_FILE_OPT up -d --no-deps --scale api=2 api
+            docker compose -f docker-compose.prod.yml $COMPOSE_ENV_FILE_OPT exec -T db pg_isready -U postgres || sleep 5
 
-            # Update SMTP server
+            # Start SMTP server
+            echo "Starting SMTP server..."
             docker compose -f docker-compose.prod.yml $COMPOSE_ENV_FILE_OPT up -d --no-deps smtp
 
-            # Update frontend
-            docker compose -f docker-compose.prod.yml $COMPOSE_ENV_FILE_OPT up -d --no-deps frontend
+            # Start API with replicas
+            echo "Starting API servers (2 replicas)..."
+            docker compose -f docker-compose.prod.yml $COMPOSE_ENV_FILE_OPT up -d --scale api=2 api
 
-            # Remove orphaned containers
-            docker compose -f docker-compose.prod.yml $COMPOSE_ENV_FILE_OPT up -d --remove-orphans
+            # Wait for API to be healthy
+            echo "Waiting for API to be healthy..."
+            sleep 15
+
+            # Start frontend
+            echo "Starting frontend..."
+            docker compose -f docker-compose.prod.yml $COMPOSE_ENV_FILE_OPT up -d --no-deps frontend
 
             # Clean up unused images
             echo "Cleaning up unused Docker images..."
