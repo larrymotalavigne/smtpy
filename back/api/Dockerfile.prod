@@ -31,12 +31,13 @@ RUN groupadd -r smtpy && useradd -r -g smtpy smtpy
 
 WORKDIR /app
 
-# Install only runtime dependencies
+# Install only runtime dependencies (including uv for running alembic migrations)
 RUN apt-get update && \
     apt-get install -y --no-install-recommends \
         libpq5 \
         curl \
-    && rm -rf /var/lib/apt/lists/*
+    && rm -rf /var/lib/apt/lists/* \
+    && pip install --no-cache-dir uv
 
 # Copy virtual environment from builder
 COPY --from=builder /app/.venv /app/.venv
