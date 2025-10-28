@@ -142,7 +142,7 @@ Configure these variables in your `.env` file:
 ### Database Configuration
 ```bash
 # Production (PostgreSQL)
-DATABASE_URL=postgresql+asyncpg://postgres:postgres@localhost:5432/smtpy
+DATABASE_URL=postgresql+psycopg://postgres:postgres@localhost:5432/smtpy
 
 # Development (SQLite)
 SMTPY_DB_PATH=/path/to/dev.db

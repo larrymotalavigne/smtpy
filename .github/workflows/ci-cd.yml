@@ -74,6 +74,85 @@ jobs:
         run: |
           make lint || true  # Don't fail pipeline on lint errors yet
 
+  e2e-tests:
+    name: E2E Tests
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: 'npm'
+          cache-dependency-path: front/package-lock.json
+
+      - name: Install frontend dependencies
+        working-directory: ./front
+        run: npm ci --legacy-peer-deps
+
+      - name: Install Playwright browsers
+        working-directory: ./front
+        run: npx playwright install chromium --with-deps
+
+      - name: Start services with Docker Compose
+        run: |
+          docker compose -f docker-compose.dev.yml up -d --build
+          echo "Waiting for services to be ready..."
+          sleep 30
+
+      - name: Wait for frontend to be ready
+        run: |
+          echo "Waiting for frontend on http://localhost:4200..."
+          timeout 120 bash -c 'until curl -f http://localhost:4200 > /dev/null 2>&1; do sleep 2; done'
+          echo "Frontend is ready!"
+
+      - name: Wait for API to be ready
+        run: |
+          echo "Waiting for API on http://localhost:8000..."
+          timeout 120 bash -c 'until curl -f http://localhost:8000/health > /dev/null 2>&1; do sleep 2; done'
+          echo "API is ready!"
+
+      - name: Seed test database
+        run: |
+          echo "Seeding test database with admin user..."
+          docker exec smtpy-api-dev python scripts/seed_dev_db.py || echo "Seed may have already run"
+
+      - name: Run E2E tests
+        working-directory: ./front
+        run: npm run test:e2e
+
+      - name: Upload E2E test results
+        if: always()
+        uses: actions/upload-artifact@v5
+        with:
+          name: playwright-report
+          path: front/playwright-report/
+          retention-days: 30
+
+      - name: Upload E2E test screenshots
+        if: failure()
+        uses: actions/upload-artifact@v5
+        with:
+          name: playwright-screenshots
+          path: front/test-results/
+          retention-days: 7
+
+      - name: Show Docker logs on failure
+        if: failure()
+        run: |
+          echo "=== API Logs ==="
+          docker logs smtpy-api-dev --tail 100
+          echo "=== Frontend Logs ==="
+          docker logs smtpy-frontend-dev --tail 100
+          echo "=== SMTP Logs ==="
+          docker logs smtpy-smtp-dev --tail 100
+
+      - name: Cleanup
+        if: always()
+        run: docker compose -f docker-compose.dev.yml down -v
+
   security-scan:
     name: Security Scan
     runs-on: ubuntu-latest

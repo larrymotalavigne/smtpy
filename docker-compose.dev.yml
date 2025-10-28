@@ -85,13 +85,15 @@ services:
       - ./back/shared:/app/shared
       - ./back/alembic:/app/alembic
       - ./back/alembic.ini:/app/alembic.ini
+      - ./back/scripts:/app/scripts
     # Override command to start API with hot reload
-    # Note: Run migrations manually with: docker exec smtpy-api-dev /app/.venv/bin/python -m alembic upgrade head
     command: >
       sh -c "
         echo 'Waiting for database to be ready...' &&
         sleep 5 &&
-        echo 'Starting API server with hot reload (skip migrations for now)...' &&
+        echo 'Seeding development database (tables will be created on first API startup)...' &&
+        python scripts/seed_dev_db.py || echo 'Seed script will run after tables are created' &&
+        echo 'Starting API server with hot reload...' &&
         uvicorn api.main:create_app --host 0.0.0.0 --port 8000 --factory --reload
       "
 
@@ -103,7 +105,7 @@ services:
     volumes:
       - ./front:/app
       - /app/node_modules  # Prevent overwriting node_modules
-    command: bash -c "npm install --legacy-peer-deps && npm start"
+    command: bash -c "npm install --legacy-peer-deps && npm start -- --host 0.0.0.0"
     ports:
       - "4200:4200"
     depends_on:

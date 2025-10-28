@@ -447,7 +447,7 @@ export class Component implements OnDestroy {
 
 ```bash
 # Database
-DATABASE_URL=postgresql+asyncpg://user:pass@localhost/smtpy
+DATABASE_URL=postgresql+psycopg://user:pass@localhost/smtpy
 SMTPY_DB_PATH=/path/to/dev.db
 
 # API

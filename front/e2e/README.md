@@ -67,9 +67,19 @@ These tests validate critical user journeys and scenarios across the SMTPy front
 ## Running Tests
 
 ### Prerequisites
-1. **Backend must be running** on `http://localhost:8000`
-2. **Frontend will auto-start** on `http://localhost:4200` (handled by playwright.config.ts)
-3. **Database with test data** (at minimum, admin user with credentials: admin/password)
+1. **Services must be running** using Docker Compose:
+   ```bash
+   docker compose -f docker-compose.dev.yml up -d
+   ```
+   This starts:
+   - Backend API on `http://localhost:8000`
+   - Frontend on `http://localhost:4200`
+   - PostgreSQL database on `localhost:5432`
+   - SMTP server on `localhost:1025`
+
+2. **Test database seeded** with admin user (admin/password)
+   - Seeding happens automatically when API starts
+   - Or run manually: `docker exec smtpy-api-dev python scripts/seed_dev_db.py`
 
 ### Commands
 
@@ -163,23 +173,36 @@ Error: expect(page).toHaveURL(/\/dashboard/) - Expected URL to match /\/dashboar
 
 ## CI/CD Integration
 
-Tests are configured for CI environments:
+E2E tests are automatically run in the CI/CD pipeline on every push and pull request.
 
-```yaml
-# GitHub Actions example
-- name: Install dependencies
-  run: npm ci && npx playwright install --with-deps chromium
+### GitHub Actions Workflow
 
-- name: Run E2E tests
-  run: npm run test:e2e
+The E2E tests job in `.github/workflows/ci-cd.yml`:
+1. **Sets up environment**: Installs Node.js and dependencies
+2. **Installs Playwright**: Installs Chromium browser with system dependencies
+3. **Starts services**: Brings up all services with Docker Compose
+4. **Waits for readiness**: Ensures frontend and API are responsive
+5. **Runs tests**: Executes all E2E tests with retries in CI mode
+6. **Uploads artifacts**: Saves test reports and screenshots
+7. **Shows logs**: Displays container logs on failure for debugging
+8. **Cleans up**: Stops and removes all containers
 
-- name: Upload test results
-  uses: actions/upload-artifact@v3
-  if: always()
-  with:
-    name: playwright-report
-    path: playwright-report/
-```
+### CI Configuration
+
+- **Workers**: 1 worker in CI (sequential execution for stability)
+- **Retries**: 2 retries per test in CI
+- **Timeout**: 30 seconds per test
+- **Reporters**: HTML and GitHub annotations in CI
+- **Test Database Seeding**: Admin user (admin/password) automatically created before tests
+- **Quality Gate**: E2E test failures now block deployment (October 28, 2025)
+
+### Viewing Results
+
+After a CI run:
+1. Go to the Actions tab in GitHub
+2. Click on the workflow run
+3. Download the `playwright-report` artifact for detailed HTML report
+4. Check the "E2E Tests" job for inline GitHub annotations
 
 ## Best Practices
 

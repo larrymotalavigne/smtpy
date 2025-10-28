@@ -49,7 +49,12 @@
       "Bash(make run:*)",
       "Bash(docker logs:*)",
       "Bash(docker exec:*)",
-      "Bash(docker run:*)"
+      "Bash(docker run:*)",
+      "Bash(timeout 120 npx playwright install:*)",
+      "Bash(npx playwright --version)",
+      "Bash(docker restart:*)",
+      "Bash(timeout 180 npm run build:*)",
+      "Bash(gh auth:*)"
     ],
     "deny": [],
     "ask": []

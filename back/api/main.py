@@ -43,9 +43,107 @@ def create_app() -> FastAPI:
 
     app = FastAPI(
         title="SMTPy v2 API",
-        description="Self-hosted email forwarding + domain management service",
+        description="""
+## SMTPy - Self-hosted Email Forwarding Service
+
+A comprehensive email forwarding and domain management platform built with FastAPI.
+
+### Features
+
+* **Email Forwarding**: Catch-all email forwarding with custom aliases
+* **Domain Management**: Multi-domain support with DNS verification
+* **Subscription Billing**: Stripe integration for tiered plans
+* **Real-time Statistics**: Email delivery tracking and analytics
+* **Secure Authentication**: Session-based auth with bcrypt password hashing
+
+### Authentication
+
+This API uses **session-based authentication** with HTTP-only cookies. To authenticate:
+
+1. Call `POST /auth/login` with credentials
+2. Cookie is set automatically on successful login
+3. Include cookies in all subsequent requests
+4. Call `POST /auth/logout` to end session
+
+### Rate Limiting
+
+Authentication endpoints (`/auth/login`, `/auth/register`, `/auth/password-reset`)
+are rate-limited to 10 requests per minute per IP address.
+
+### Error Responses
+
+All endpoints return errors in a consistent format:
+
+```json
+{
+  "success": false,
+  "message": "Error description",
+  "errors": ["Detailed error 1", "Detailed error 2"]
+}
+```
+
+### Response Format
+
+Success responses follow this structure:
+
+```json
+{
+  "success": true,
+  "message": "Operation successful",
+  "data": { /* Response data */ }
+}
+```
+        """,
         version="2.0.0",
         docs_url='/docs',
+        redoc_url='/redoc',
+        openapi_tags=[
+            {
+                "name": "health",
+                "description": "Health check endpoints for monitoring service status"
+            },
+            {
+                "name": "authentication",
+                "description": "User registration, login, logout, and password management"
+            },
+            {
+                "name": "domains",
+                "description": "Domain registration, verification, and DNS configuration"
+            },
+            {
+                "name": "messages",
+                "description": "Email message viewing, filtering, and management"
+            },
+            {
+                "name": "billing",
+                "description": "Subscription plans, Stripe checkout, and usage limits"
+            },
+            {
+                "name": "subscriptions",
+                "description": "Active subscription management and cancellation"
+            },
+            {
+                "name": "statistics",
+                "description": "Email delivery statistics and analytics"
+            },
+            {
+                "name": "webhooks",
+                "description": "Stripe webhook handlers for payment events"
+            },
+            {
+                "name": "utilities",
+                "description": "Utility endpoints for DNS checks and system status"
+            }
+        ],
+        contact={
+            "name": "SMTPy Support",
+            "url": "https://smtpy.fr",
+            "email": "support@smtpy.fr"
+        },
+        license_info={
+            "name": "MIT License",
+            "url": "https://opensource.org/licenses/MIT"
+        },
         lifespan=lifespan
     )
 

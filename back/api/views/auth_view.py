@@ -23,9 +23,25 @@ SESSION_MAX_AGE = 7 * 24 * 60 * 60  # 7 days in seconds
 # Pydantic models for request/response
 class RegisterRequest(BaseModel):
     """User registration request."""
-    username: str = Field(..., min_length=3, max_length=50, pattern=r'^[a-zA-Z0-9_-]+$')
-    email: EmailStr
-    password: str = Field(..., min_length=8)
+    username: str = Field(
+        ...,
+        min_length=3,
+        max_length=50,
+        pattern=r'^[a-zA-Z0-9_-]+$',
+        description="Username (3-50 characters, alphanumeric with dashes/underscores)",
+        examples=["john_doe", "user123"]
+    )
+    email: EmailStr = Field(
+        ...,
+        description="Valid email address",
+        examples=["user@example.com"]
+    )
+    password: str = Field(
+        ...,
+        min_length=8,
+        description="Password (min 8 chars, must include uppercase, lowercase, and number/special char)",
+        examples=["SecurePass123!"]
+    )
 
     @field_validator('password')
     @classmethod
@@ -39,11 +55,42 @@ class RegisterRequest(BaseModel):
             raise ValueError('Password must contain at least one number or special character')
         return v
 
+    model_config = {
+        "json_schema_extra": {
+            "examples": [
+                {
+                    "username": "john_doe",
+                    "email": "john@example.com",
+                    "password": "SecurePass123!"
+                }
+            ]
+        }
+    }
+
 
 class LoginRequest(BaseModel):
     """User login request."""
-    username: str  # Can be username or email
-    password: str
+    username: str = Field(
+        ...,
+        description="Username or email address",
+        examples=["admin", "user@example.com"]
+    )
+    password: str = Field(
+        ...,
+        description="User password",
+        examples=["password"]
+    )
+
+    model_config = {
+        "json_schema_extra": {
+            "examples": [
+                {
+                    "username": "admin",
+                    "password": "password"
+                }
+            ]
+        }
+    }
 
 
 class PasswordResetRequest(BaseModel):
@@ -120,7 +167,76 @@ async def require_auth(current_user: Optional[dict] = Depends(get_current_user))
     return current_user
 
 
-@router.post("/register")
+@router.post(
+    "/register",
+    summary="Register New User",
+    description="""
+    Register a new user account with the following steps:
+
+    1. Validates username, email, and password requirements
+    2. Creates a new organization for the user
+    3. Creates the user account with USER role
+    4. Automatically logs in the user with a session cookie
+
+    **Password Requirements:**
+    - Minimum 8 characters
+    - At least one uppercase letter
+    - At least one lowercase letter
+    - At least one number or special character
+
+    **Rate Limit:** 10 requests per minute
+    """,
+    responses={
+        200: {
+            "description": "User registered successfully",
+            "content": {
+                "application/json": {
+                    "example": {
+                        "success": True,
+                        "message": "User registered successfully",
+                        "data": {
+                            "user": {
+                                "id": 1,
+                                "username": "john_doe",
+                                "email": "john@example.com",
+                                "is_active": True,
+                                "role": "user",
+                                "created_at": "2025-10-28T12:00:00",
+                                "updated_at": "2025-10-28T12:00:00"
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        400: {
+            "description": "Username or email already registered",
+            "content": {
+                "application/json": {
+                    "example": {
+                        "detail": "Username already registered"
+                    }
+                }
+            }
+        },
+        422: {
+            "description": "Validation error (invalid email, weak password, etc.)",
+            "content": {
+                "application/json": {
+                    "example": {
+                        "detail": [
+                            {
+                                "type": "value_error",
+                                "loc": ["body", "password"],
+                                "msg": "Password must contain at least one uppercase letter"
+                            }
+                        ]
+                    }
+                }
+            }
+        }
+    }
+)
 async def register(
         data: RegisterRequest,
         response: Response,
@@ -187,7 +303,63 @@ async def register(
         raise HTTPException(status_code=500, detail=f"Registration failed: {str(e)}")
 
 
-@router.post("/login")
+@router.post(
+    "/login",
+    summary="User Login",
+    description="""
+    Authenticate user and create a session cookie.
+
+    **Authentication Flow:**
+    1. Accepts username or email address
+    2. Verifies password using bcrypt
+    3. Creates secure session cookie (HTTP-only, 7-day expiry)
+    4. Returns user profile and session token
+
+    **Rate Limit:** 10 requests per minute
+
+    **Session Cookie:**
+    - Name: `session`
+    - HTTP-only: True
+    - Secure: True (in production)
+    - SameSite: Lax
+    - Max-Age: 7 days
+    """,
+    responses={
+        200: {
+            "description": "Login successful",
+            "content": {
+                "application/json": {
+                    "example": {
+                        "success": True,
+                        "message": "Login successful",
+                        "data": {
+                            "user": {
+                                "id": 1,
+                                "username": "admin",
+                                "email": "admin@example.com",
+                                "is_active": True,
+                                "role": "admin",
+                                "created_at": "2025-10-28T12:00:00",
+                                "updated_at": "2025-10-28T12:00:00"
+                            },
+                            "access_token": "session_token_here"
+                        }
+                    }
+                }
+            }
+        },
+        401: {
+            "description": "Invalid credentials",
+            "content": {
+                "application/json": {
+                    "example": {
+                        "detail": "Invalid credentials"
+                    }
+                }
+            }
+        }
+    }
+)
 async def login(
         data: LoginRequest,
         response: Response,
