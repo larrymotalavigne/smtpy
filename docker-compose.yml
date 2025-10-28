@@ -49,7 +49,7 @@ services:
         echo 'Waiting for database to be ready...' &&
         sleep 5 &&
         echo 'Running database migrations...' &&
-        uv run alembic upgrade head &&
+        alembic upgrade head &&
         echo 'Starting API server...' &&
         uvicorn api.main:create_app --host 0.0.0.0 --port 8000 --factory
       "
