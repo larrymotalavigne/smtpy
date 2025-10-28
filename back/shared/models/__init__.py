@@ -6,6 +6,8 @@ from .user import User, UserRole, PasswordResetToken, EmailVerificationToken
 from .domain import Domain
 from .message import Message, MessageStatus
 from .event import Event
+from .alias import Alias
+from .activity_log import ActivityLog
 
 __all__ = [
     "Base",
@@ -19,4 +21,6 @@ __all__ = [
     "Message",
     "MessageStatus",
     "Event",
+    "Alias",
+    "ActivityLog",
 ]

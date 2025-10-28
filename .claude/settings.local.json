@@ -14,7 +14,6 @@
       "Bash(uv run:*)",
       "Bash(uv pip:*)",
       "Bash(git add:*)",
-      "Bash(git commit:*)",
       "Bash(grep:*)",
       "Bash(find:*)",
       "Bash(npm init playwright:*)",
@@ -44,7 +43,13 @@
       "Bash(make test:*)",
       "Bash(uv lock:*)",
       "Bash(git log:*)",
-      "Bash(tree:*)"
+      "Bash(tree:*)",
+      "Bash(cd:*)",
+      "Bash(docker compose:*)",
+      "Bash(make run:*)",
+      "Bash(docker logs:*)",
+      "Bash(docker exec:*)",
+      "Bash(docker run:*)"
     ],
     "deny": [],
     "ask": []

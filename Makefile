@@ -29,10 +29,10 @@ test:
 	uv run --active --all-extras --frozen pytest -c pyproject.toml $(PYTEST_EXTRA_ARGS)
 
 run:
-	docker compose up -d --build
+	docker compose -f docker-compose.dev.yml up -d --build
 
 stop:
-	docker compose down
+	docker compose -f docker-compose.dev.yml down
 
 logs:
 	docker compose -f docker-compose.dev.yml logs -f
