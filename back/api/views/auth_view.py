@@ -1,18 +1,16 @@
 """Authentication views for SMTPy v2."""
 
-from datetime import datetime, timezone
 from typing import Optional
 
 from fastapi import APIRouter, Depends, HTTPException, Response, Request
+from itsdangerous import URLSafeTimedSerializer, BadSignature, SignatureExpired
 from pydantic import BaseModel, EmailStr, Field, field_validator
 from sqlalchemy.ext.asyncio import AsyncSession
-from itsdangerous import URLSafeTimedSerializer, BadSignature, SignatureExpired
 
 from ..core.config import SETTINGS
 from ..core.db import get_async_session
 from ..database.users_database import UsersDatabase
 from ..models import UserRole
-
 
 router = APIRouter(prefix="/auth", tags=["authentication"])
 
@@ -90,8 +88,8 @@ class AuthResponse(BaseModel):
 
 # Dependency to get current user from session
 async def get_current_user(
-    request: Request,
-    session: AsyncSession = Depends(get_async_session)
+        request: Request,
+        session: AsyncSession = Depends(get_async_session)
 ) -> Optional[dict]:
     """Get current user from session cookie."""
     session_cookie = request.cookies.get(SESSION_COOKIE_NAME)
@@ -124,9 +122,9 @@ async def require_auth(current_user: Optional[dict] = Depends(get_current_user))
 
 @router.post("/register")
 async def register(
-    data: RegisterRequest,
-    response: Response,
-    session: AsyncSession = Depends(get_async_session)
+        data: RegisterRequest,
+        response: Response,
+        session: AsyncSession = Depends(get_async_session)
 ):
     """Register a new user."""
     # Check if username already exists
@@ -191,9 +189,9 @@ async def register(
 
 @router.post("/login")
 async def login(
-    data: LoginRequest,
-    response: Response,
-    session: AsyncSession = Depends(get_async_session)
+        data: LoginRequest,
+        response: Response,
+        session: AsyncSession = Depends(get_async_session)
 ):
     """Login user and create session."""
     # Verify credentials
@@ -252,8 +250,8 @@ async def logout(response: Response):
 
 @router.get("/me")
 async def get_current_user_info(
-    current_user: Optional[dict] = Depends(get_current_user),
-    session: AsyncSession = Depends(get_async_session)
+        current_user: Optional[dict] = Depends(get_current_user),
+        session: AsyncSession = Depends(get_async_session)
 ):
     """Get current authenticated user information."""
     if not current_user:
@@ -273,8 +271,8 @@ async def get_current_user_info(
 
 @router.post("/request-password-reset")
 async def request_password_reset(
-    data: PasswordResetRequest,
-    session: AsyncSession = Depends(get_async_session)
+        data: PasswordResetRequest,
+        session: AsyncSession = Depends(get_async_session)
 ):
     """Request a password reset token."""
     # Get user by email
@@ -318,8 +316,8 @@ async def request_password_reset(
 
 @router.post("/reset-password")
 async def reset_password(
-    data: ResetPasswordRequest,
-    session: AsyncSession = Depends(get_async_session)
+        data: ResetPasswordRequest,
+        session: AsyncSession = Depends(get_async_session)
 ):
     """Reset password using reset token."""
     # Get reset token

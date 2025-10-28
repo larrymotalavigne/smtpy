@@ -49,9 +49,9 @@ services:
         echo 'Waiting for database to be ready...' &&
         sleep 5 &&
         echo 'Running database migrations...' &&
-        alembic upgrade head &&
+        uv run alembic upgrade head &&
         echo 'Starting API server...' &&
-        uvicorn main:create_app --host 0.0.0.0 --port 8000 --factory
+        uvicorn api.main:create_app --host 0.0.0.0 --port 8000 --factory
       "
 
   frontend:

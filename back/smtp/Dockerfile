@@ -17,8 +17,9 @@ ENV PATH="/app/.venv/bin:$PATH" \
 # Copy the application code into 'smtp' subdirectory
 COPY ./back/smtp ./smtp
 
-# Copy shared 'core' module from API (SMTP depends on core.database, core.utils, core.config)
+# Copy shared modules from API (SMTP depends on core and models)
 COPY ./back/api/core ./core
+COPY ./back/api/models ./models
 
 # Expose SMTP port only
 EXPOSE 1025
