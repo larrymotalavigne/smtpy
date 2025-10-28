@@ -21,7 +21,7 @@ async def debug_client():
     SETTINGS.DATABASE_URL = async_url
 
     # Create engine and tables
-    import api.core.db as db_module
+    import shared.core.db as db_module
     original_engine = db_module.async_engine
     original_sessionmaker = db_module.async_sessionmaker_factory
 

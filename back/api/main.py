@@ -1,25 +1,15 @@
-import logging
 import os
 from contextlib import asynccontextmanager
 
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 
-# Import with fallback for production container (no 'api' module prefix)
-try:
-    from shared.core.config import SETTINGS
-    from shared.core.db import create_tables
-    from shared.core.logging_config import setup_logging, get_logger
-    from shared.core.middlewares import SecurityHeadersMiddleware, SessionTimeoutMiddleware, SimpleRateLimiter
-    from api.views import auth_view, billing_view, domains_view, messages_view, subscriptions_view, webhooks_view, statistics_view
-    from api.views import utils_view
-except ModuleNotFoundError:
-    from core.config import SETTINGS
-    from core.db import create_tables
-    from core.logging_config import setup_logging, get_logger
-    from core.middlewares import SecurityHeadersMiddleware, SessionTimeoutMiddleware, SimpleRateLimiter
-    from views import auth_view, billing_view, domains_view, messages_view, subscriptions_view, webhooks_view, statistics_view
-    from views import utils_view
+from api.views import auth_view, billing_view, domains_view, messages_view, subscriptions_view, webhooks_view, statistics_view
+from api.views import utils_view
+from shared.core.config import SETTINGS
+from shared.core.db import create_tables
+from shared.core.logging_config import setup_logging, get_logger
+from shared.core.middlewares import SecurityHeadersMiddleware, SimpleRateLimiter
 
 # Initialize logging
 setup_logging()

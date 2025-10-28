@@ -1,13 +1,10 @@
 """Structured JSON logging configuration for SMTPy API."""
 import logging
 import sys
+
 from pythonjsonlogger.json import JsonFormatter
 
-# Import with fallback for production container
-try:
-    from api.core.config import SETTINGS
-except ModuleNotFoundError:
-    from core.config import SETTINGS
+from shared.core.config import SETTINGS
 
 
 def setup_logging() -> None:

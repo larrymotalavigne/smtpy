@@ -1,18 +1,19 @@
 """Integration tests for authentication with real PostgreSQL database using testcontainers."""
 
+import asyncio
+from datetime import datetime, timedelta, timezone
+
+import httpx
 import pytest
 import pytest_asyncio
-from datetime import datetime, timedelta, timezone
-from testcontainers.postgres import PostgresContainer
-from sqlalchemy.ext.asyncio import create_async_engine, async_sessionmaker
 from sqlalchemy import text
-import asyncio
-import httpx
+from sqlalchemy.ext.asyncio import create_async_engine, async_sessionmaker
+from testcontainers.postgres import PostgresContainer
 
-from api.main import create_app
-from shared.models import Base, User, UserRole
 from api.database.users_database import UsersDatabase
+from api.main import create_app
 from shared.core.config import SETTINGS
+from shared.models import Base, UserRole
 
 
 # Testcontainer fixture for PostgreSQL
@@ -84,7 +85,7 @@ async def async_session(async_engine):
 @pytest_asyncio.fixture
 async def client(postgres_container):
     """Create async HTTP client with test database."""
-    import api.core.db as db_module
+    import shared.core.db as db_module
 
     # Get database URL
     db_url = postgres_container.get_connection_url()
@@ -116,9 +117,9 @@ async def client(postgres_container):
     from httpx import ASGITransport
     transport = ASGITransport(app=app)
     async with httpx.AsyncClient(
-        transport=transport,
-        base_url="http://test",
-        follow_redirects=True
+            transport=transport,
+            base_url="http://test",
+            follow_redirects=True
     ) as ac:
         yield ac
 
