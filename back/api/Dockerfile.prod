@@ -53,10 +53,12 @@ COPY ./back/alembic.ini ./alembic.ini
 COPY ./back/alembic ./alembic
 
 # Ensure venv is in PATH and set PYTHONPATH to /app so 'api' module can be found
+# Disable uv cache to avoid permission issues with non-root user
 ENV PATH="/app/.venv/bin:$PATH" \
     PYTHONPATH="/app" \
     PYTHONUNBUFFERED=1 \
-    PYTHONDONTWRITEBYTECODE=1
+    PYTHONDONTWRITEBYTECODE=1 \
+    UV_NO_CACHE=1
 
 # Change ownership to non-root user
 RUN chown -R smtpy:smtpy /app
