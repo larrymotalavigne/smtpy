@@ -5,8 +5,8 @@ from typing import Dict, Any, Optional
 
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from ..core.config import SETTINGS
-from ..models.organization import SubscriptionStatus
+from shared.core.config import SETTINGS
+from shared.models.organization import SubscriptionStatus
 from ..database import billing_database
 from ..services import stripe_service
 from ..schemas.billing import (

@@ -7,8 +7,8 @@ from email.message import EmailMessage
 from aiosmtpd.handlers import AsyncMessage
 from pydantic_core._pydantic_core import ValidationError
 
-from core.db import get_async_session, get_db
-from models import Domain, Alias, ActivityLog
+from shared.core.db import get_async_session, get_db
+from shared.models import Domain, Alias, ActivityLog
 from pydantic import validate_email
 
 # Import forwarder - works in both development and production containers

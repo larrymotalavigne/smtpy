@@ -21,25 +21,15 @@ import logging
 logger = logging.getLogger("alembic.env")
 
 # Import the settings to get the default DATABASE_URL
-# Note: In development, imports are from 'api.core', in production container from 'core'
-try:
-    from api.core.config import SETTINGS
-except ModuleNotFoundError:
-    from core.config import SETTINGS
+# All shared modules are now in 'shared' module
+from shared.core.config import SETTINGS
 
 # Import all models to ensure they're registered with Base.metadata
-try:
-    from api.models.base import Base
-    from api.models.organization import Organization
-    from api.models.domain import Domain
-    from api.models.message import Message
-    from api.models.event import Event, BillingWebhookEvent
-except ModuleNotFoundError:
-    from models.base import Base
-    from models.organization import Organization
-    from models.domain import Domain
-    from models.message import Message
-    from models.event import Event, BillingWebhookEvent
+from shared.models.base import Base
+from shared.models.organization import Organization
+from shared.models.domain import Domain
+from shared.models.message import Message
+from shared.models.event import Event, BillingWebhookEvent
 
 database_url = SETTINGS.DATABASE_URL
 

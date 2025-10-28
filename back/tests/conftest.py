@@ -56,7 +56,7 @@ def event_loop():
 @pytest.fixture(scope="session", autouse=True)
 def patch_settings():
     """Patch SETTINGS for test environment."""
-    from api.core.config import SETTINGS
+    from shared.core.config import SETTINGS
 
     # Store original values
     original_database_url = SETTINGS.DATABASE_URL
@@ -102,7 +102,7 @@ def postgres_container(event_loop):
 @pytest_asyncio.fixture(scope="session")
 async def async_engine(postgres_container, patch_settings, event_loop):
     """Create async SQLAlchemy engine connected to PostgreSQL testcontainer."""
-    from api.models.base import Base
+    from shared.models.base import Base
 
     # Get connection URL from container
     db_url = postgres_container.get_connection_url()
@@ -149,7 +149,7 @@ async def clean_database(async_engine):
     This runs once per test class to avoid excessive cleanup overhead.
     Uses PostgreSQL-specific session_replication_role for faster truncation.
     """
-    from api.models.base import Base
+    from shared.models.base import Base
 
     async with async_engine.begin() as conn:
         # Disable foreign key checks temporarily for faster cleanup
@@ -172,7 +172,7 @@ async def async_db(async_engine):
     - Cleans all tables before the test
     - Automatically rolls back after the test
     """
-    from api.models.base import Base
+    from shared.models.base import Base
 
     # Create session maker
     testing_async_session_local = async_sessionmaker(
@@ -221,7 +221,7 @@ async def client(async_engine, patch_settings, event_loop):
     - Shares the same PostgreSQL container across all tests
     """
     from api.main import create_app
-    from api.core.db import get_async_session
+    from shared.core.db import get_async_session
 
     # Create test session maker
     testing_async_session_local = async_sessionmaker(
@@ -303,7 +303,7 @@ async def authenticated_client(client, async_db):
 @pytest.fixture(scope="session")
 def sync_engine(postgres_container):
     """Create synchronous SQLAlchemy engine for legacy tests."""
-    from api.models.base import Base
+    from shared.models.base import Base
 
     # Get connection URL from container
     db_url = postgres_container.get_connection_url()
@@ -324,7 +324,7 @@ def sync_engine(postgres_container):
 @pytest.fixture(scope="class")
 def db(sync_engine):
     """Provide synchronous database session for legacy tests."""
-    from api.models.base import Base
+    from shared.models.base import Base
 
     testing_session_local = sessionmaker(
         autocommit=False,
@@ -371,7 +371,7 @@ def mock_stripe(monkeypatch):
 @pytest_asyncio.fixture
 async def test_organization(async_db):
     """Create a test organization for tests that need one."""
-    from api.models.organization import Organization
+    from shared.models.organization import Organization
 
     org = Organization(
         id=1,
@@ -393,7 +393,7 @@ async def test_domain(async_db, test_organization):
 
     Depends on test_organization fixture.
     """
-    from api.models.domain import Domain, DomainStatus
+    from shared.models.domain import Domain, DomainStatus
 
     domain = Domain(
         id=1,
@@ -419,7 +419,7 @@ async def test_user(async_db, test_organization):
 
     Depends on test_organization fixture.
     """
-    from api.models.user import User, UserRole
+    from shared.models.user import User, UserRole
     from passlib.context import CryptContext
 
     pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")

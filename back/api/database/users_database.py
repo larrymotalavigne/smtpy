@@ -8,7 +8,7 @@ from typing import Optional
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from ..models import User, PasswordResetToken, EmailVerificationToken, UserRole
+from shared.models import User, PasswordResetToken, EmailVerificationToken, UserRole
 
 
 class UsersDatabase:

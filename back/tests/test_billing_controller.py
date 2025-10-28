@@ -10,7 +10,7 @@ from unittest.mock import AsyncMock, patch, MagicMock
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from api.controllers import billing_controller
-from api.models.organization import Organization, SubscriptionStatus
+from shared.models.organization import Organization, SubscriptionStatus
 from api.schemas.billing import (
     CheckoutSessionRequest,
     SubscriptionUpdateRequest

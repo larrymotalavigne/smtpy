@@ -6,7 +6,7 @@ from fastapi import APIRouter, Depends, HTTPException, Request, status
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from ..controllers import billing_controller
-from ..core.db import get_db
+from shared.core.db import get_db
 from ..services import stripe_service
 from ..schemas.common import ErrorResponse
 

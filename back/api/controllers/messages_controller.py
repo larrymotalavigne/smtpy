@@ -5,7 +5,7 @@ from typing import Optional
 
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from ..models.message import MessageStatus
+from shared.models.message import MessageStatus
 from ..database import messages_database
 from ..schemas.common import PaginatedResponse
 from ..schemas.message import (

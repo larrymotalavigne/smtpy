@@ -43,7 +43,8 @@
       "Bash(chmod:*)",
       "Bash(make test:*)",
       "Bash(uv lock:*)",
-      "Bash(git log:*)"
+      "Bash(git log:*)",
+      "Bash(tree:*)"
     ],
     "deny": [],
     "ask": []

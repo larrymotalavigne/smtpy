@@ -6,7 +6,7 @@ from sqlalchemy import select, update, delete, func
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.orm import selectinload
 
-from ..models.domain import Domain, DomainStatus
+from shared.models.domain import Domain, DomainStatus
 
 
 async def create_domain(

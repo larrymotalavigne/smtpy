@@ -6,8 +6,8 @@ from sqlalchemy import text
 from sqlalchemy.ext.asyncio import create_async_engine, async_sessionmaker
 
 from api.main import create_app
-from api.core.config import SETTINGS
-from api.models.base import Base
+from shared.core.config import SETTINGS
+from shared.models.base import Base
 
 
 @pytest_asyncio.fixture

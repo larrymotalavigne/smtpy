@@ -4,7 +4,7 @@ from typing import Optional
 
 from pydantic import Field
 
-from ..models.message import MessageStatus
+from shared.models.message import MessageStatus
 from .common import BaseSchema, TimestampSchema
 
 

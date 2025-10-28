@@ -14,6 +14,9 @@ RUN uv sync --frozen
 ENV PATH="/app/.venv/bin:$PATH" \
     PYTHONPATH="/app"
 
+# Copy shared modules first
+COPY ./back/shared ./shared
+
 # Copy the application code into 'api' subdirectory to maintain import paths
 COPY ./back/api ./api
 

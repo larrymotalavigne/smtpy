@@ -3,7 +3,7 @@
 import pytest
 from datetime import datetime, timedelta, timezone
 
-from api.models import User, PasswordResetToken, EmailVerificationToken, UserRole
+from shared.models import User, PasswordResetToken, EmailVerificationToken, UserRole
 
 
 class TestUserModel:

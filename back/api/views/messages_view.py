@@ -7,8 +7,8 @@ from fastapi import APIRouter, Depends, HTTPException, Query, status
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from ..controllers import messages_controller
-from ..core.db import get_db
-from ..models.message import MessageStatus
+from shared.core.db import get_db
+from shared.models.message import MessageStatus
 from ..schemas.common import PaginatedResponse, PaginationParams, ErrorResponse
 from ..schemas.message import (
     MessageResponse,

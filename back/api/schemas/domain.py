@@ -4,7 +4,7 @@ from typing import Optional
 
 from pydantic import Field, field_validator
 
-from ..models.domain import DomainStatus
+from shared.models.domain import DomainStatus
 from .common import BaseSchema, TimestampSchema
 
 

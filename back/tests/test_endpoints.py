@@ -5,7 +5,7 @@ from fastapi.testclient import TestClient
 from sqlalchemy.ext.asyncio import create_async_engine, async_sessionmaker
 
 from api.main import create_app
-from api.core.db import get_db
+from shared.core.db import get_db
 
 # Create test database
 test_database_url = "sqlite+aiosqlite:///:memory:"
@@ -30,7 +30,7 @@ async def get_test_db():
 
 # Create database tables
 async def create_test_tables():
-    from api.models.base import Base
+    from shared.models.base import Base
     async with test_engine.begin() as conn:
         await conn.run_sync(Base.metadata.create_all)
 

@@ -7,8 +7,8 @@ from sqlalchemy import select, update, delete, func, and_, or_
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.orm import selectinload
 
-from ..models.message import Message, MessageStatus
-from ..models.domain import Domain
+from shared.models.message import Message, MessageStatus
+from shared.models.domain import Domain
 
 
 async def create_message(

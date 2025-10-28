@@ -7,8 +7,8 @@ from sqlalchemy import select, update, func
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.orm import selectinload
 
-from ..models.organization import Organization, SubscriptionStatus
-from ..models.event import BillingWebhookEvent
+from shared.models.organization import Organization, SubscriptionStatus
+from shared.models.event import BillingWebhookEvent
 
 
 async def get_organization_by_id(db: AsyncSession, organization_id: int) -> Optional[Organization]:
@@ -240,7 +240,7 @@ async def get_organizations_with_expiring_subscriptions(
 
 async def count_domains_for_organization(db: AsyncSession, organization_id: int) -> int:
     """Count domains for billing usage tracking."""
-    from ..models.domain import Domain
+    from shared.models.domain import Domain
     
     stmt = (
         select(func.count(Domain.id))
@@ -256,8 +256,8 @@ async def count_messages_for_organization(
     since_date: Optional[datetime] = None
 ) -> int:
     """Count messages for billing usage tracking."""
-    from ..models.message import Message
-    from ..models.domain import Domain
+    from shared.models.message import Message
+    from shared.models.domain import Domain
     
     stmt = (
         select(func.count(Message.id))

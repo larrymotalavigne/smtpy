@@ -6,8 +6,8 @@ from typing import Optional
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy import select, func
 
-from ..models.domain import Domain, DomainStatus
-from ..models.message import Message, MessageStatus
+from shared.models.domain import Domain, DomainStatus
+from shared.models.message import Message, MessageStatus
 from ..database import domains_database
 from ..schemas.common import PaginatedResponse
 from ..schemas.domain import (

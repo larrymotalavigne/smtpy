@@ -10,9 +10,9 @@ import asyncio
 import httpx
 
 from api.main import create_app
-from api.models import Base, User, UserRole
+from shared.models import Base, User, UserRole
 from api.database.users_database import UsersDatabase
-from api.core.config import SETTINGS
+from shared.core.config import SETTINGS
 
 
 # Testcontainer fixture for PostgreSQL

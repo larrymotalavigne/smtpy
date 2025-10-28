@@ -5,7 +5,7 @@ from typing import Optional
 
 from pydantic import Field, HttpUrl
 
-from ..models.organization import SubscriptionStatus
+from shared.models.organization import SubscriptionStatus
 from .common import BaseSchema
 
 

@@ -7,10 +7,10 @@ from fastapi.middleware.cors import CORSMiddleware
 
 # Import with fallback for production container (no 'api' module prefix)
 try:
-    from api.core.config import SETTINGS
-    from api.core.db import create_tables
-    from api.core.logging_config import setup_logging, get_logger
-    from api.core.middlewares import SecurityHeadersMiddleware, SessionTimeoutMiddleware, SimpleRateLimiter
+    from shared.core.config import SETTINGS
+    from shared.core.db import create_tables
+    from shared.core.logging_config import setup_logging, get_logger
+    from shared.core.middlewares import SecurityHeadersMiddleware, SessionTimeoutMiddleware, SimpleRateLimiter
     from api.views import auth_view, billing_view, domains_view, messages_view, subscriptions_view, webhooks_view, statistics_view
     from api.views import utils_view
 except ModuleNotFoundError:

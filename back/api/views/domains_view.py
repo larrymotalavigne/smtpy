@@ -4,7 +4,7 @@ from fastapi import APIRouter, Depends, HTTPException, Query, status
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from ..controllers import domains_controller
-from ..core.db import get_db
+from shared.core.db import get_db
 from ..schemas.common import PaginatedResponse, PaginationParams, ErrorResponse
 from ..schemas.domain import (
     DomainCreate,

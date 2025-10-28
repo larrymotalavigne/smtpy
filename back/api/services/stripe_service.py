@@ -3,7 +3,7 @@
 import stripe
 from typing import Dict, Any, Optional
 
-from ..core.config import SETTINGS
+from shared.core.config import SETTINGS
 
 # Initialize Stripe with API key
 stripe.api_key = SETTINGS.STRIPE_API_KEY

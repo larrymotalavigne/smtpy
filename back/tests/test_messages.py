@@ -6,8 +6,8 @@ from fastapi.testclient import TestClient
 from sqlalchemy.ext.asyncio import AsyncSession, create_async_engine, async_sessionmaker
 
 from api.main import create_app
-from api.core.db import get_db
-from api.models.message import MessageStatus
+from shared.core.db import get_db
+from shared.models.message import MessageStatus
 from api.controllers import messages_controller
 from api.database import messages_database
 from api.schemas.message import MessageFilter
@@ -35,7 +35,7 @@ async def get_test_db():
 
 # Create database tables
 async def create_test_tables():
-    from api.models.base import Base
+    from shared.models.base import Base
     async with test_engine.begin() as conn:
         await conn.run_sync(Base.metadata.create_all)
 

@@ -9,7 +9,7 @@ from fastapi import APIRouter, Depends, HTTPException, status
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from ..controllers import billing_controller
-from ..core.db import get_db
+from shared.core.db import get_db
 from ..schemas.common import ErrorResponse
 from ..views.auth_view import get_current_user
 from ..schemas.billing import (

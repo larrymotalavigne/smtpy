@@ -7,10 +7,10 @@ from itsdangerous import URLSafeTimedSerializer, BadSignature, SignatureExpired
 from pydantic import BaseModel, EmailStr, Field, field_validator
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from ..core.config import SETTINGS
-from ..core.db import get_async_session
+from shared.core.config import SETTINGS
+from shared.core.db import get_async_session
 from ..database.users_database import UsersDatabase
-from ..models import UserRole
+from shared.models import UserRole
 
 router = APIRouter(prefix="/auth", tags=["authentication"])
 
@@ -139,7 +139,7 @@ async def register(
 
     try:
         # Create organization for the new user
-        from ..models.organization import Organization
+        from shared.models.organization import Organization
 
         organization = Organization(
             name=f"{data.username}'s Organization",

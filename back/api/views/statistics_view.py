@@ -6,8 +6,8 @@ from fastapi import APIRouter, Depends, Query, HTTPException
 from sqlalchemy import func, select, and_, case
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from ..core.db import get_async_session
-from ..models import Message, Domain, MessageStatus
+from shared.core.db import get_async_session
+from shared.models import Message, Domain, MessageStatus
 from ..views.auth_view import get_current_user
 
 router = APIRouter(prefix="/statistics", tags=["statistics"])
