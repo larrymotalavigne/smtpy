@@ -83,7 +83,7 @@ services:
     volumes:
       - ./back/api:/app/api
       - ./back/shared:/app/shared
-      - ./back/alembic:/app/alembic
+      - ./back/migrations:/app/migrations
       - ./back/alembic.ini:/app/alembic.ini
       - ./back/scripts:/app/scripts
     # Override command to start API with hot reload

@@ -22,7 +22,7 @@ COPY ./back/api ./api
 
 # Copy Alembic migration files (from back/ directory)
 COPY ./back/alembic.ini ./alembic.ini
-COPY ./back/alembic ./alembic
+COPY ./back/migrations ./migrations
 
 # Expose API port only
 EXPOSE 8000

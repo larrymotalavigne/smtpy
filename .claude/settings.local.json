@@ -54,7 +54,8 @@
       "Bash(npx playwright --version)",
       "Bash(docker restart:*)",
       "Bash(timeout 180 npm run build:*)",
-      "Bash(gh auth:*)"
+      "Bash(gh auth:*)",
+      "Bash(docker build:*)"
     ],
     "deny": [],
     "ask": []

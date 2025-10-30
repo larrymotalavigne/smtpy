@@ -49,7 +49,7 @@ COPY ./back/api ./api
 
 # Copy Alembic migration files (from back/ directory)
 COPY ./back/alembic.ini ./alembic.ini
-COPY ./back/alembic ./alembic
+COPY ./back/migrations ./migrations
 
 # Ensure venv is in PATH and set PYTHONPATH to /app so 'api' module can be found
 ENV PATH="/app/.venv/bin:$PATH" \
