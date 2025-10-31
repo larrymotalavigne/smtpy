@@ -74,20 +74,42 @@ frontend:
 
 ## Deployment
 
-### On Production Server
+### Automatic Deployment (CI/CD)
+
+The CI/CD pipeline will automatically:
+1. Build the frontend image with the correct production environment
+2. Push it to GitHub Container Registry (GHCR)
+3. Deploy it to production when you push to the `main` branch
+
+Simply push your changes:
+```bash
+git push origin main
+```
+
+The GitHub Actions workflow will handle the rest.
+
+### Manual Deployment on Production Server
+
+If you need to deploy manually (bypassing CI/CD):
 
 1. **Pull the latest code:**
    ```bash
+   cd /srv/smtpy
    git pull origin main
    ```
 
-2. **Run the deployment script:**
+2. **Option A - Pull from GHCR (recommended if CI/CD built it):**
+   ```bash
+   ./deploy-frontend-fix.sh --pull
+   ```
+
+3. **Option B - Build locally on server:**
    ```bash
    ./deploy-frontend-fix.sh
    ```
 
-This script will:
-- Build a new frontend Docker image with the corrected configuration
+The script will:
+- Build/pull the new frontend Docker image with the corrected configuration
 - Stop and remove the old frontend container
 - Start the new frontend container
 - Display logs and status

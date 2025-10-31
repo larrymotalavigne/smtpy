@@ -206,8 +206,8 @@ services:
 
   # Frontend (Nginx serving Angular app)
   frontend:
-    container_name: smtpy-frontend
-    image: smtpy-frontend:latest
+    container_name: smtpy-frontend-prod
+    image: ${DOCKER_REGISTRY:-ghcr.io}/${GHCR_OWNER}/smtpy-frontend:${TAG:-latest}
 
     # Note: No external port mapping - frontend is accessed via nginx reverse proxy
     # The nginx proxy at nginx.atomdev.fr will route traffic to this service
