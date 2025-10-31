@@ -11,7 +11,8 @@ export default defineConfig({
   retries: process.env.CI ? 2 : 0,
   workers: process.env.CI ? 1 : 3,
   reporter: process.env.CI ? [['html'], ['github']] : 'html',
-  timeout: 30000,
+  timeout: 30000, // 30 seconds per test
+  globalTimeout: process.env.CI ? 600000 : 0, // 10 minutes total in CI, no limit locally
 
   use: {
     baseURL: 'http://localhost:4200',

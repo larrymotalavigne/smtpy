@@ -121,6 +121,7 @@ jobs:
 
       - name: Run E2E tests
         working-directory: ./front
+        timeout-minutes: 15
         run: npm run test:e2e
 
       - name: Upload E2E test results
