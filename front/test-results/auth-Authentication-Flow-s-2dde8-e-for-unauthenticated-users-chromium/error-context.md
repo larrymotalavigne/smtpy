@@ -1,0 +1,174 @@
+# Page snapshot
+
+```yaml
+- generic [active] [ref=e1]:
+  - generic [ref=e4]:
+    - generic [ref=e5]:
+      - generic [ref=e6]:
+        - button "" [ref=e7] [cursor=pointer]:
+          - generic [ref=e8]: 
+        - link "SAKAI" [ref=e9] [cursor=pointer]:
+          - /url: /
+          - img [ref=e10]
+          - generic [ref=e14]: SAKAI
+      - generic [ref=e15]:
+        - generic [ref=e16]:
+          - button "" [ref=e17] [cursor=pointer]:
+            - generic [ref=e18]: 
+          - button "" [ref=e20] [cursor=pointer]:
+            - generic [ref=e21]: 
+        - text: 
+        - generic [ref=e23]:
+          - button "" [ref=e24] [cursor=pointer]:
+            - generic [ref=e25]: 
+          - button "" [ref=e26] [cursor=pointer]:
+            - generic [ref=e27]: 
+          - button "" [ref=e28] [cursor=pointer]:
+            - generic [ref=e29]: 
+    - list [ref=e32]:
+      - listitem [ref=e33]:
+        - generic [ref=e34]: Home
+        - text: 
+        - list [ref=e35]:
+          - listitem [ref=e36]:
+            - link " Dashboard" [ref=e37] [cursor=pointer]:
+              - /url: /
+              - generic [ref=e38]: 
+              - generic [ref=e39]: Dashboard
+      - listitem [ref=e40]:
+        - generic [ref=e41]: Market
+        - text: 
+        - list [ref=e42]:
+          - listitem [ref=e43]:
+            - link " Market Analysis" [ref=e44] [cursor=pointer]:
+              - /url: /market
+              - generic [ref=e45]: 
+              - generic [ref=e46]: Market Analysis
+          - listitem [ref=e47]:
+            - link " Watchlist" [ref=e48] [cursor=pointer]:
+              - /url: /watchlist
+              - generic [ref=e49]: 
+              - generic [ref=e50]: Watchlist
+          - listitem [ref=e51]:
+            - link " Market Screener" [ref=e52] [cursor=pointer]:
+              - /url: /screener
+              - generic [ref=e53]: 
+              - generic [ref=e54]: Market Screener
+      - listitem [ref=e55]:
+        - generic [ref=e56]: Trading
+        - text: 
+        - list [ref=e57]:
+          - listitem [ref=e58]:
+            - link " Strategy Backtesting" [ref=e59] [cursor=pointer]:
+              - /url: /strategy
+              - generic [ref=e60]: 
+              - generic [ref=e61]: Strategy Backtesting
+          - listitem [ref=e62]:
+            - link " Strategy Comparison" [ref=e63] [cursor=pointer]:
+              - /url: /strategy/compare
+              - generic [ref=e64]: 
+              - generic [ref=e65]: Strategy Comparison
+      - listitem [ref=e66]:
+        - generic [ref=e67]: Portfolio
+        - text: 
+        - list [ref=e68]:
+          - listitem [ref=e69]:
+            - link " Portfolio Management" [ref=e70] [cursor=pointer]:
+              - /url: /portfolio
+              - generic [ref=e71]: 
+              - generic [ref=e72]: Portfolio Management
+          - listitem [ref=e73]:
+            - link " Alerts & Notifications" [ref=e74] [cursor=pointer]:
+              - /url: /alerts
+              - generic [ref=e75]: 
+              - generic [ref=e76]: Alerts & Notifications
+    - generic [ref=e77]:
+      - generic [ref=e79]:
+        - generic [ref=e80]:
+          - generic [ref=e81]: Dashboard
+          - generic [ref=e82]: Welcome to your market analysis dashboard
+        - generic [ref=e83]:
+          - generic [ref=e86]:
+            - generic [ref=e87]: Market Overview
+            - generic [ref=e88]:
+              - generic [ref=e90]:
+                - generic [ref=e91]: S&P 500
+                - generic [ref=e92]: 4,783.45
+                - generic [ref=e93]:
+                  - generic [ref=e94]: 
+                  - text: +32.18 (+0.68%)
+              - generic [ref=e96]:
+                - generic [ref=e97]: Dow Jones
+                - generic [ref=e98]: 37,305.16
+                - generic [ref=e99]:
+                  - generic [ref=e100]: 
+                  - text: +156.89 (+0.42%)
+              - generic [ref=e102]:
+                - generic [ref=e103]: NASDAQ
+                - generic [ref=e104]: 14,813.92
+                - generic [ref=e105]:
+                  - generic [ref=e106]: 
+                  - text: +85.26 (+0.58%)
+            - img [ref=e109]
+          - generic [ref=e112]:
+            - generic [ref=e113]:
+              - generic [ref=e114]: Portfolio Summary
+              - button "View Details" [ref=e116] [cursor=pointer]:
+                - generic [ref=e117]: View Details
+            - generic [ref=e118]:
+              - generic [ref=e119]:
+                - generic [ref=e120]: Total Value
+                - generic [ref=e121]: $50,000.25
+                - generic [ref=e122]: +$1,250.50 (2.56%)
+              - generic [ref=e123]:
+                - generic [ref=e124]: Total Gain/Loss
+                - generic [ref=e125]: +$4,550.25
+                - generic [ref=e126]: 10.01% return
+            - img [ref=e129]
+          - generic [ref=e132]:
+            - generic [ref=e133]:
+              - generic [ref=e134]: Watchlist
+              - button "View All" [ref=e136] [cursor=pointer]:
+                - generic [ref=e137]: View All
+            - table [ref=e140]:
+              - rowgroup [ref=e141]:
+                - row "Symbol Price Change % Change" [ref=e142]:
+                  - cell "Symbol" [ref=e143]
+                  - cell "Price" [ref=e144]
+                  - cell "Change" [ref=e145]
+                  - cell "% Change" [ref=e146]
+              - rowgroup [ref=e147]:
+                - row "AAPL $175.50 +$2.35 +1.36%" [ref=e148] [cursor=pointer]:
+                  - cell "AAPL" [ref=e149]
+                  - cell "$175.50" [ref=e150]
+                  - cell "+$2.35" [ref=e151]
+                  - cell "+1.36%" [ref=e152]
+                - row "MSFT $310.25 +$4.12 +1.35%" [ref=e153] [cursor=pointer]:
+                  - cell "MSFT" [ref=e154]
+                  - cell "$310.25" [ref=e155]
+                  - cell "+$4.12" [ref=e156]
+                  - cell "+1.35%" [ref=e157]
+                - row "GOOGL $115.75 -$1.25 -1.07%" [ref=e158] [cursor=pointer]:
+                  - cell "GOOGL" [ref=e159]
+                  - cell "$115.75" [ref=e160]
+                  - cell "-$1.25" [ref=e161]
+                  - cell "-1.07%" [ref=e162]
+                - row "AMZN $112.50 -$0.85 -0.75%" [ref=e163] [cursor=pointer]:
+                  - cell "AMZN" [ref=e164]
+                  - cell "$112.50" [ref=e165]
+                  - cell "-$0.85" [ref=e166]
+                  - cell "-0.75%" [ref=e167]
+                - row "TSLA $248.30 +$8.45 +3.52%" [ref=e168] [cursor=pointer]:
+                  - cell "TSLA" [ref=e169]
+                  - cell "$248.30" [ref=e170]
+                  - cell "+$8.45" [ref=e171]
+                  - cell "+3.52%" [ref=e172]
+      - generic [ref=e174]:
+        - text: SAKAI by
+        - link "PrimeNG" [ref=e175] [cursor=pointer]:
+          - /url: https://primeng.org
+  - generic [ref=e178]:
+    - generic [ref=e179]: "TS2345: Argument of type 'string[]' is not assignable to parameter of type 'string'."
+    - generic [ref=e180]: src/app/pages/watchlist/watchlist-page.ts:283:45
+    - generic [ref=e181]: Click outside, press Esc key, or fix the code to dismiss.
+```

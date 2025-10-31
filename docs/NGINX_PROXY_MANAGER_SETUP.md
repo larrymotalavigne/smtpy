@@ -1,7 +1,7 @@
 # Nginx Proxy Manager Setup for SMTPy
 
 **Date**: 2025-10-27
-**Proxy Manager**: nginx-proxy-manager-official
+**Proxy Manager**: Nginx-Proxy-Manager-Official
 **Status**: ✅ Ready to Configure
 
 ## Overview
@@ -430,4 +430,4 @@ docker cp <npm-container-name>:/tmp/npm-backup.tar.gz ./npm-backup-$(date +%Y%m%
 
 **Last Updated**: 2025-10-27
 **Status**: ✅ Ready for NPM Configuration
-**NPM Version**: Works with nginx-proxy-manager-official (any recent version)
+**NPM Version**: Works with Nginx-Proxy-Manager-Official (any recent version)

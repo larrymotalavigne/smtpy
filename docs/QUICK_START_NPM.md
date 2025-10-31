@@ -1,6 +1,6 @@
 # Quick Start: SMTPy with Nginx Proxy Manager
 
-**For**: Unraid users with nginx-proxy-manager-official
+**For**: Unraid users with Nginx-Proxy-Manager-Official
 **Time**: ~5 minutes after deployment completes
 
 ## Step 1: Wait for Deployment
@@ -28,10 +28,10 @@ You should see:
 
 # Find your NPM container name
 docker ps | grep nginx-proxy-manager
-# Example output: nginx-proxy-manager-official
+# Example output: Nginx-Proxy-Manager-Official
 
 # Connect NPM to SMTPy Docker network
-docker network connect smtpy_smtpy-network nginx-proxy-manager-official
+docker network connect smtpy_smtpy-network Nginx-Proxy-Manager-Official
 
 # Verify (should show both NPM and SMTPy containers)
 docker network inspect smtpy_smtpy-network
@@ -77,8 +77,8 @@ Email:             your-email@example.com
 
 ```bash
 # Test from NPM container
-docker exec nginx-proxy-manager-official curl http://smtpy-frontend-prod:80
-docker exec nginx-proxy-manager-official curl http://smtpy-api-1:8000/health
+docker exec Nginx-Proxy-Manager-Official curl http://smtpy-frontend-prod:80
+docker exec Nginx-Proxy-Manager-Official curl http://smtpy-api-1:8000/health
 
 # Test external access
 curl https://smtpy.fr/
@@ -106,15 +106,15 @@ docker ps | grep smtpy
 
 Check NPM can reach containers:
 ```bash
-docker exec nginx-proxy-manager-official ping smtpy-frontend-prod
+docker exec Nginx-Proxy-Manager-Official ping smtpy-frontend-prod
 ```
 
 ### "Could not resolve host"
 
 Reconnect NPM to network:
 ```bash
-docker network connect smtpy_smtpy-network nginx-proxy-manager-official
-docker restart nginx-proxy-manager-official
+docker network connect smtpy_smtpy-network Nginx-Proxy-Manager-Official
+docker restart Nginx-Proxy-Manager-Official
 ```
 
 ### SSL Certificate Failed

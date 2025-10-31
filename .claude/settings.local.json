@@ -55,7 +55,9 @@
       "Bash(docker restart:*)",
       "Bash(timeout 180 npm run build:*)",
       "Bash(gh auth:*)",
-      "Bash(docker build:*)"
+      "Bash(docker build:*)",
+      "Bash(git commit:*)",
+      "Bash(npx playwright show-report:*)"
     ],
     "deny": [],
     "ask": []

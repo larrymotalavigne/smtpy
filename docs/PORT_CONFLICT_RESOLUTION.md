@@ -190,7 +190,7 @@ This will:
 
 ### Step 2: Connect Nginx to Docker Network
 
-**If using Nginx Proxy Manager** (nginx-proxy-manager-official):
+**If using Nginx Proxy Manager** (Nginx-Proxy-Manager-Official):
 ```bash
 # Find NPM container
 docker ps | grep nginx-proxy-manager
