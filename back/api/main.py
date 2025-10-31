@@ -170,7 +170,7 @@ Success responses follow this structure:
     # IMPORTANT: In production, restrict origins to your actual frontend domain
     app.add_middleware(
         CORSMiddleware,
-        allow_origins=["http://localhost:4200", "http://127.0.0.1:4200"],  # Angular dev server
+        allow_origins=["http://localhost:4200", "http://127.0.0.1:4200", "https://smtpy.fr"],  # Angular dev server
         allow_credentials=True,  # Required for cookies
         allow_methods=["*"],  # Allow all HTTP methods
         allow_headers=["*"],  # Allow all headers
