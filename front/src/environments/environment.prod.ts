@@ -1,6 +1,6 @@
 export const environment = {
   production: true,
-  apiUrl: '/api',  // Use relative path, nginx will proxy to backend
+  apiUrl: 'https://api.smtpy.fr',
   appName: 'SMTPy',
   version: '2.0.0'
 };
