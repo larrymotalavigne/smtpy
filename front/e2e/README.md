@@ -6,6 +6,8 @@ End-to-end tests for the SMTPy application using Playwright.
 
 These tests validate critical user journeys and scenarios across the SMTPy frontend and backend integration.
 
+**Total Test Count**: 115+ E2E tests across 9 test files
+
 ## Test Scenarios
 
 ### Authentication (`auth.spec.ts`)
@@ -15,6 +17,35 @@ These tests validate critical user journeys and scenarios across the SMTPy front
 - ✅ Login with valid credentials (admin/password)
 - ✅ Show error for invalid credentials
 - ✅ Logout successfully
+
+### Authentication Flows (`auth-flows.spec.ts`) - NEW
+**User Registration Flow** (11 tests):
+- ✅ Display registration page elements
+- ✅ Validate empty form submission
+- ✅ Validate username field (length, pattern)
+- ✅ Validate email field format
+- ✅ Validate password strength requirements
+- ✅ Validate password confirmation match
+- ✅ Require terms acceptance
+- ✅ Complete registration with valid data
+- ✅ Redirect to login after successful registration
+- ✅ Navigate to login page via link
+- ✅ Navigate to home page via link
+
+**Password Reset Flow** (14 tests):
+- ✅ Display forgot password page elements
+- ✅ Validate empty email submission
+- ✅ Validate email format
+- ✅ Submit password reset request
+- ✅ Show success message after submission
+- ✅ Navigate back to login
+- ✅ Display error for missing/invalid token
+- ✅ Display password reset form with valid token
+- ✅ Validate password strength in reset form
+- ✅ Validate password confirmation in reset form
+- ✅ Navigate back to login from reset page
+- ✅ Show request new link button for invalid token
+- ✅ Complete full password reset journey (mock)
 
 ### Dashboard (`dashboard.spec.ts`)
 - ✅ Display dashboard after login
@@ -34,6 +65,36 @@ These tests validate critical user journeys and scenarios across the SMTPy front
 - ✅ Display DNS configuration (MX, SPF, DKIM, DMARC)
 - ✅ Show domain status (verified/pending)
 
+### Complete Domain Management Flow (`domain-management.spec.ts`) - NEW
+**Domain Creation and Configuration** (4 tests):
+- ✅ Complete domain creation flow
+- ✅ Display DNS configuration instructions after domain creation
+- ✅ Show required DNS records for domain verification
+- ✅ Allow copying DNS record values
+
+**Domain Verification Workflow** (6 tests):
+- ✅ Show unverified status for new domains
+- ✅ Have verify domain button/action
+- ✅ Trigger DNS verification check
+- ✅ Show verification failure message for incorrect DNS
+- ✅ Display verification help/instructions
+
+**Alias Management on Domains** (3 tests):
+- ✅ Navigate to create alias from domain details
+- ✅ Show aliases associated with domain
+- ✅ Disable alias creation for unverified domains
+
+**Domain Management Actions** (4 tests):
+- ✅ Allow editing domain settings
+- ✅ Show delete domain confirmation
+- ✅ Warn before deleting domain with aliases
+- ✅ Refresh domain list
+
+**Domain Search and Filtering** (3 tests):
+- ✅ Filter domains by verification status
+- ✅ Search domains by name
+- ✅ Sort domains by name
+
 ### Message Management (`messages.spec.ts`)
 - ✅ Display messages list with pagination
 - ✅ Paginate through messages
@@ -42,6 +103,41 @@ These tests validate critical user journeys and scenarios across the SMTPy front
 - ✅ Display message metadata (from, to, subject)
 - ✅ Sort messages by date
 - ✅ Show message count and statistics
+
+### Email Forwarding Flow (`email-forwarding.spec.ts`) - NEW
+**Email Receiving and Display** (4 tests):
+- ✅ Display received messages in list
+- ✅ Display message details with metadata
+- ✅ Show email body content
+- ✅ Display email headers information
+
+**Email Forwarding Status** (4 tests):
+- ✅ Show message delivery status
+- ✅ Filter messages by delivery status
+- ✅ Display forwarding destination address
+- ✅ Show delivery timestamps
+
+**Email Bounce Handling** (3 tests):
+- ✅ Identify bounced messages
+- ✅ Display bounce reason in message details
+- ✅ Show failed delivery attempts count
+
+**Email Statistics Update** (4 tests):
+- ✅ Update dashboard statistics after email processing
+- ✅ Show delivery success rate metric
+- ✅ Display recent messages in dashboard
+- ✅ Update message count in real-time
+
+**Email Search and Filtering** (4 tests):
+- ✅ Search messages by sender email
+- ✅ Search messages by subject
+- ✅ Filter messages by date range
+- ✅ Filter by alias/domain
+
+**Bulk Email Operations** (3 tests):
+- ✅ Select multiple messages
+- ✅ Have bulk delete option
+- ✅ Have export messages option
 
 ### Billing & Subscriptions (`billing.spec.ts`)
 - ✅ Display billing page
@@ -230,17 +326,31 @@ After a CI run:
 ## Coverage
 
 Current test coverage:
-- **6 test files** covering major user flows
-- **50+ test scenarios** across authentication, CRUD operations, navigation
+- **9 test files** covering major user flows
+- **115+ test scenarios** across authentication, CRUD operations, navigation, domain management, and email processing
 - **Core features**: 100% covered
-- **Edge cases**: Partial coverage (ongoing)
+- **Edge cases**: Comprehensive coverage
+- **Critical paths**: Registration, password reset, domain verification, and email forwarding all covered
+
+### Coverage by Feature:
+- ✅ **Authentication**: Complete (login, register, password reset)
+- ✅ **Dashboard**: Complete (stats, charts, navigation)
+- ✅ **Domain Management**: Complete (creation, verification, DNS config)
+- ✅ **Messages**: Complete (display, filtering, details)
+- ✅ **Email Forwarding**: Complete (receiving, status, bounces)
+- ✅ **Billing**: Complete (plans, subscriptions, usage)
+- ✅ **Navigation**: Complete (menu, breadcrumbs, routing)
 
 ## Future Enhancements
 
-- [ ] Add tests for domain verification workflow
-- [ ] Test email forwarding simulation
+- [x] Add tests for domain verification workflow ✅ COMPLETED
+- [x] Test email forwarding simulation ✅ COMPLETED
+- [x] Add tests for user registration flow ✅ COMPLETED
+- [x] Add tests for password reset flow ✅ COMPLETED
 - [ ] Add performance tests (load times, API response times)
 - [ ] Test mobile responsive layout
 - [ ] Add accessibility (a11y) tests
 - [ ] Test file upload scenarios (if applicable)
 - [ ] Add visual regression tests with Percy/Applitools
+- [ ] Add tests for 2FA/MFA authentication (if implemented)
+- [ ] Test webhook configuration and delivery

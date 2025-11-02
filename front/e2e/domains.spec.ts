@@ -3,7 +3,7 @@ import { test, expect } from '@playwright/test';
 test.describe('Domain Management', () => {
   test.beforeEach(async ({ page }) => {
     // Login before each test
-    await page.goto('/login');
+    await page.goto('/auth/login');
     await page.locator('#username').fill('admin');
     await page.locator('#password input').fill('password');
     await page.getByRole('button', { name: /se connecter/i }).click();

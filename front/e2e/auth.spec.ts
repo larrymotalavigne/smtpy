@@ -20,7 +20,7 @@ test.describe('Authentication Flow', () => {
   });
 
   test('should show validation errors for empty login form', async ({ page }) => {
-    await page.goto('/login');
+    await page.goto('/auth/login');
     await waitForAngular(page);
 
     // Try to submit empty form
@@ -36,7 +36,7 @@ test.describe('Authentication Flow', () => {
   });
 
   test('should show error for invalid credentials', async ({ page }) => {
-    await page.goto('/login');
+    await page.goto('/auth/login');
     await page.waitForSelector('#username', { state: 'visible', timeout: 10000 });
 
     // Fill with invalid credentials

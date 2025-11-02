@@ -1,169 +1,205 @@
 # Page snapshot
 
 ```yaml
-- generic [ref=e4]:
-  - generic [ref=e5]:
-    - generic [ref=e6]:
-      - button "" [ref=e7] [cursor=pointer]:
-        - generic [ref=e8]: 
-      - link "SAKAI" [ref=e9] [cursor=pointer]:
-        - /url: /
-        - img [ref=e10]
-        - generic [ref=e14]: SAKAI
-    - generic [ref=e15]:
-      - generic [ref=e16]:
-        - button "" [ref=e17] [cursor=pointer]:
-          - generic [ref=e18]: 
-        - button "" [ref=e20] [cursor=pointer]:
-          - generic [ref=e21]: 
-      - text: 
-      - generic [ref=e23]:
-        - button "" [ref=e24] [cursor=pointer]:
-          - generic [ref=e25]: 
-        - button "" [ref=e26] [cursor=pointer]:
-          - generic [ref=e27]: 
-        - button "" [ref=e28] [cursor=pointer]:
-          - generic [ref=e29]: 
-  - list [ref=e32]:
-    - listitem [ref=e33]:
-      - generic [ref=e34]: Home
-      - text: 
-      - list [ref=e35]:
-        - listitem [ref=e36]:
-          - link " Dashboard" [ref=e37] [cursor=pointer]:
-            - /url: /
-            - generic [ref=e38]: 
-            - generic [ref=e39]: Dashboard
-    - listitem [ref=e40]:
-      - generic [ref=e41]: Market
-      - text: 
-      - list [ref=e42]:
-        - listitem [ref=e43]:
-          - link " Market Analysis" [ref=e44] [cursor=pointer]:
-            - /url: /market
-            - generic [ref=e45]: 
-            - generic [ref=e46]: Market Analysis
-        - listitem [ref=e47]:
-          - link " Watchlist" [ref=e48] [cursor=pointer]:
-            - /url: /watchlist
-            - generic [ref=e49]: 
-            - generic [ref=e50]: Watchlist
-        - listitem [ref=e51]:
-          - link " Market Screener" [ref=e52] [cursor=pointer]:
-            - /url: /screener
-            - generic [ref=e53]: 
-            - generic [ref=e54]: Market Screener
-    - listitem [ref=e55]:
-      - generic [ref=e56]: Trading
-      - text: 
-      - list [ref=e57]:
-        - listitem [ref=e58]:
-          - link " Strategy Backtesting" [ref=e59] [cursor=pointer]:
-            - /url: /strategy
-            - generic [ref=e60]: 
-            - generic [ref=e61]: Strategy Backtesting
-        - listitem [ref=e62]:
-          - link " Strategy Comparison" [ref=e63] [cursor=pointer]:
-            - /url: /strategy/compare
-            - generic [ref=e64]: 
-            - generic [ref=e65]: Strategy Comparison
-    - listitem [ref=e66]:
-      - generic [ref=e67]: Portfolio
-      - text: 
-      - list [ref=e68]:
-        - listitem [ref=e69]:
-          - link " Portfolio Management" [ref=e70] [cursor=pointer]:
-            - /url: /portfolio
-            - generic [ref=e71]: 
-            - generic [ref=e72]: Portfolio Management
-        - listitem [ref=e73]:
-          - link " Alerts & Notifications" [ref=e74] [cursor=pointer]:
-            - /url: /alerts
-            - generic [ref=e75]: 
-            - generic [ref=e76]: Alerts & Notifications
-  - generic [ref=e77]:
+- generic [ref=e5]:
+  - generic [ref=e6]:
+    - link " SMTPy" [ref=e7] [cursor=pointer]:
+      - /url: "#"
+      - generic [ref=e8]: 
+      - generic [ref=e9]: SMTPy
+    - text: 
+    - generic [ref=e10]:
+      - list [ref=e11] [cursor=pointer]:
+        - listitem [ref=e12]:
+          - generic [ref=e13]: Accueil
+        - listitem [ref=e14]:
+          - generic [ref=e15]: Fonctionnalités
+        - listitem [ref=e16]:
+          - generic [ref=e17]: Avantages
+        - listitem [ref=e18]:
+          - generic [ref=e19]: Tarifs
+      - generic [ref=e20]:
+        - button "Connexion" [ref=e21] [cursor=pointer]:
+          - generic [ref=e22]: Connexion
+        - button "S'inscrire" [ref=e23] [cursor=pointer]:
+          - generic [ref=e24]: S'inscrire
+        - generic [ref=e26]:
+          - button "" [ref=e28] [cursor=pointer]:
+            - generic [ref=e29]: 
+          - button "" [ref=e32] [cursor=pointer]:
+            - generic [ref=e33]: 
+  - generic [ref=e35]:
+    - generic [ref=e36]:
+      - heading "Gestion d'emails professionnels Simple, sécurisée et performante" [level=1] [ref=e37]:
+        - generic [ref=e38]: Gestion d'emails professionnels
+        - text: Simple, sécurisée et performante
+      - paragraph [ref=e39]: Créez des alias email illimités et redirigez-les vers votre boîte existante. Configuration simple en quelques clics avec vérification DNS automatique.
+      - button "Commencer gratuitement" [ref=e40] [cursor=pointer]:
+        - generic [ref=e41]: Commencer gratuitement
+    - generic [ref=e44]:
+      - generic [ref=e45]:
+        - generic [ref=e46]: 10k+
+        - generic [ref=e47]: Utilisateurs actifs
+      - generic [ref=e48]:
+        - generic [ref=e49]: 99.9%
+        - generic [ref=e50]: Uptime garanti
+      - generic [ref=e51]:
+        - generic [ref=e52]: 1M+
+        - generic [ref=e53]: Emails traités
+  - generic [ref=e56]:
+    - generic [ref=e57]:
+      - generic [ref=e58]: Fonctionnalités puissantes
+      - text: Tout ce dont vous avez besoin pour gérer vos emails professionnels
+    - generic [ref=e61]:
+      - generic [ref=e63]: 
+      - heading "Alias illimités" [level=5] [ref=e64]
+      - text: Créez autant d'alias email que nécessaire
+    - generic [ref=e67]:
+      - generic [ref=e69]: 
+      - heading "Multi-domaines" [level=5] [ref=e70]
+      - text: Gérez plusieurs domaines en un seul endroit
+    - generic [ref=e73]:
+      - generic [ref=e75]: 
+      - generic [ref=e76]: Vérification DNS
+      - text: Configuration DNS automatique et sécurisée
     - generic [ref=e79]:
-      - generic [ref=e80]:
-        - generic [ref=e81]: Dashboard
-        - generic [ref=e82]: Welcome to your market analysis dashboard
-      - generic [ref=e83]:
-        - generic [ref=e86]:
-          - generic [ref=e87]: Market Overview
-          - generic [ref=e88]:
-            - generic [ref=e90]:
-              - generic [ref=e91]: S&P 500
-              - generic [ref=e92]: 4,783.45
-              - generic [ref=e93]:
-                - generic [ref=e94]: 
-                - text: +32.18 (+0.68%)
-            - generic [ref=e96]:
-              - generic [ref=e97]: Dow Jones
-              - generic [ref=e98]: 37,305.16
-              - generic [ref=e99]:
-                - generic [ref=e100]: 
-                - text: +156.89 (+0.42%)
-            - generic [ref=e102]:
-              - generic [ref=e103]: NASDAQ
-              - generic [ref=e104]: 14,813.92
-              - generic [ref=e105]:
-                - generic [ref=e106]: 
-                - text: +85.26 (+0.58%)
-          - img [ref=e109]
-        - generic [ref=e112]:
-          - generic [ref=e113]:
-            - generic [ref=e114]: Portfolio Summary
-            - button "View Details" [ref=e116] [cursor=pointer]:
-              - generic [ref=e117]: View Details
-          - generic [ref=e118]:
-            - generic [ref=e119]:
-              - generic [ref=e120]: Total Value
-              - generic [ref=e121]: $50,000.25
-              - generic [ref=e122]: +$1,250.50 (2.56%)
-            - generic [ref=e123]:
-              - generic [ref=e124]: Total Gain/Loss
-              - generic [ref=e125]: +$4,550.25
-              - generic [ref=e126]: 10.01% return
-          - img [ref=e129]
-        - generic [ref=e132]:
-          - generic [ref=e133]:
-            - generic [ref=e134]: Watchlist
-            - button "View All" [ref=e136] [cursor=pointer]:
-              - generic [ref=e137]: View All
-          - table [ref=e140]:
-            - rowgroup [ref=e141]:
-              - row "Symbol Price Change % Change" [ref=e142]:
-                - cell "Symbol" [ref=e143]
-                - cell "Price" [ref=e144]
-                - cell "Change" [ref=e145]
-                - cell "% Change" [ref=e146]
-            - rowgroup [ref=e147]:
-              - row "AAPL $175.50 +$2.35 +1.36%" [ref=e148] [cursor=pointer]:
-                - cell "AAPL" [ref=e149]
-                - cell "$175.50" [ref=e150]
-                - cell "+$2.35" [ref=e151]
-                - cell "+1.36%" [ref=e152]
-              - row "MSFT $310.25 +$4.12 +1.35%" [ref=e153] [cursor=pointer]:
-                - cell "MSFT" [ref=e154]
-                - cell "$310.25" [ref=e155]
-                - cell "+$4.12" [ref=e156]
-                - cell "+1.35%" [ref=e157]
-              - row "GOOGL $115.75 -$1.25 -1.07%" [ref=e158] [cursor=pointer]:
-                - cell "GOOGL" [ref=e159]
-                - cell "$115.75" [ref=e160]
-                - cell "-$1.25" [ref=e161]
-                - cell "-1.07%" [ref=e162]
-              - row "AMZN $112.50 -$0.85 -0.75%" [ref=e163] [cursor=pointer]:
-                - cell "AMZN" [ref=e164]
-                - cell "$112.50" [ref=e165]
-                - cell "-$0.85" [ref=e166]
-                - cell "-0.75%" [ref=e167]
-              - row "TSLA $248.30 +$8.45 +3.52%" [ref=e168] [cursor=pointer]:
-                - cell "TSLA" [ref=e169]
-                - cell "$248.30" [ref=e170]
-                - cell "+$8.45" [ref=e171]
-                - cell "+3.52%" [ref=e172]
-    - generic [ref=e174]:
-      - text: SAKAI by
-      - link "PrimeNG" [ref=e175] [cursor=pointer]:
-        - /url: https://primeng.org
+      - generic [ref=e81]: 
+      - generic [ref=e82]: Redirection intelligente
+      - text: Transférez vos emails vers n'importe quelle boîte
+    - generic [ref=e85]:
+      - generic [ref=e87]: 
+      - generic [ref=e88]: Statistiques détaillées
+      - text: Suivez vos emails en temps réel
+    - generic [ref=e91]:
+      - generic [ref=e93]: 
+      - generic [ref=e94]: Sécurité maximale
+      - text: Protection SPF, DKIM et DMARC
+    - generic [ref=e97]:
+      - generic [ref=e99]: 
+      - generic [ref=e100]: Ultra rapide
+      - text: Livraison instantanée des emails
+    - generic [ref=e103]:
+      - generic [ref=e105]: 
+      - generic [ref=e106]: API complète
+      - text: Intégrez SMTPy dans vos applications
+    - generic [ref=e109]:
+      - generic [ref=e111]: 
+      - generic [ref=e112]: Support réactif
+      - text: Assistance technique disponible 24/7
+  - generic [ref=e114]:
+    - generic [ref=e115]:
+      - generic [ref=e116]: Pourquoi choisir SMTPy ?
+      - text: Des avantages qui font la différence
+    - generic [ref=e117]:
+      - generic [ref=e120]: 
+      - generic [ref=e121]:
+        - generic [ref=e123]: 
+        - generic [ref=e124]: Interface intuitive
+        - generic [ref=e125]: Gérez vos domaines et alias depuis n'importe quel appareil. Notre interface responsive s'adapte parfaitement à votre écran, mobile ou desktop.
+    - generic [ref=e126]:
+      - generic [ref=e127]:
+        - generic [ref=e129]: 
+        - generic [ref=e130]: Configuration en 5 minutes
+        - generic [ref=e131]: Plus besoin d'être un expert DNS. Notre assistant de configuration vous guide pas à pas pour configurer votre domaine en quelques minutes seulement.
+      - generic [ref=e134]: 
+  - generic [ref=e136]:
+    - generic [ref=e137]:
+      - generic [ref=e138]: Tarifs transparents
+      - text: Choisissez le plan qui correspond à vos besoins
+    - generic [ref=e139]:
+      - generic [ref=e141] [cursor=pointer]:
+        - generic [ref=e142]: Gratuit
+        - generic [ref=e144]: 
+        - generic [ref=e145]:
+          - generic [ref=e146]:
+            - generic [ref=e147]: 0€
+            - generic [ref=e148]: par mois
+          - button "Commencer" [ref=e149]:
+            - generic [ref=e150]: Commencer
+        - separator
+        - list [ref=e151]:
+          - listitem [ref=e152]:
+            - generic [ref=e153]: 
+            - text: 1 domaine
+          - listitem [ref=e154]:
+            - generic [ref=e155]: 
+            - text: 5 alias email
+          - listitem [ref=e156]:
+            - generic [ref=e157]: 
+            - text: 100 emails/mois
+          - listitem [ref=e158]:
+            - generic [ref=e159]: 
+            - text: Support email
+      - generic [ref=e161] [cursor=pointer]:
+        - generic [ref=e162]: Pro
+        - generic [ref=e164]: 
+        - generic [ref=e165]:
+          - generic [ref=e166]:
+            - generic [ref=e167]: 9€
+            - generic [ref=e168]: par mois
+          - button "Essayer gratuitement" [ref=e169]:
+            - generic [ref=e170]: Essayer gratuitement
+        - separator
+        - list [ref=e171]:
+          - listitem [ref=e172]:
+            - generic [ref=e173]: 
+            - text: 5 domaines
+          - listitem [ref=e174]:
+            - generic [ref=e175]: 
+            - text: Alias illimités
+          - listitem [ref=e176]:
+            - generic [ref=e177]: 
+            - text: 10 000 emails/mois
+          - listitem [ref=e178]:
+            - generic [ref=e179]: 
+            - text: Support prioritaire
+      - generic [ref=e181] [cursor=pointer]:
+        - generic [ref=e182]: Entreprise
+        - generic [ref=e184]: 
+        - generic [ref=e185]:
+          - generic [ref=e187]: Sur mesure
+          - button "Nous contacter" [ref=e188]:
+            - generic [ref=e189]: Nous contacter
+        - separator
+        - list [ref=e190]:
+          - listitem [ref=e191]:
+            - generic [ref=e192]: 
+            - text: Domaines illimités
+          - listitem [ref=e193]:
+            - generic [ref=e194]: 
+            - text: Alias illimités
+          - listitem [ref=e195]:
+            - generic [ref=e196]: 
+            - text: Volume personnalisé
+          - listitem [ref=e197]:
+            - generic [ref=e198]: 
+            - text: Support dédié 24/7
+  - generic [ref=e201]:
+    - generic [ref=e203] [cursor=pointer]:
+      - generic [ref=e204]: 
+      - heading "SMTPy" [level=4] [ref=e205]
+    - generic [ref=e207]:
+      - generic [ref=e208]:
+        - heading "Produit" [level=4] [ref=e209]
+        - generic [ref=e210] [cursor=pointer]: Fonctionnalités
+        - generic [ref=e211] [cursor=pointer]: Tarifs
+        - generic [ref=e212] [cursor=pointer]: Documentation
+        - generic [ref=e213] [cursor=pointer]: API
+        - generic [ref=e214] [cursor=pointer]: Changelog
+      - generic [ref=e215]:
+        - heading "Ressources" [level=4] [ref=e216]
+        - generic [ref=e217] [cursor=pointer]: Guide de démarrage
+        - generic [ref=e218] [cursor=pointer]: Tutoriels
+        - generic [ref=e219] [cursor=pointer]: Blog
+      - generic [ref=e220]:
+        - heading "Support" [level=4] [ref=e221]
+        - generic [ref=e222] [cursor=pointer]: Centre d'aide
+        - generic [ref=e223] [cursor=pointer]: Nous contacter
+        - generic [ref=e224] [cursor=pointer]: FAQ
+        - generic [ref=e225] [cursor=pointer]: Statut système
+      - generic [ref=e226]:
+        - heading "Légal" [level=4] [ref=e227]
+        - generic [ref=e228] [cursor=pointer]: Mentions légales
+        - generic [ref=e229] [cursor=pointer]: Confidentialité
+        - generic [ref=e230] [cursor=pointer]: CGU
 ```

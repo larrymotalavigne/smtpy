@@ -1,0 +1,170 @@
+# Page snapshot
+
+```yaml
+- generic [ref=e4]:
+  - generic [ref=e5]:
+    - generic [ref=e6]:
+      - button "" [ref=e7] [cursor=pointer]:
+        - generic [ref=e8]: 
+      - link " SMTPy" [ref=e9] [cursor=pointer]:
+        - /url: /dashboard
+        - generic [ref=e10]: 
+        - generic [ref=e11]: SMTPy
+    - generic [ref=e12]:
+      - generic [ref=e13]:
+        - button "" [ref=e14] [cursor=pointer]:
+          - generic [ref=e15]: 
+        - button "" [ref=e17] [cursor=pointer]:
+          - generic [ref=e18]: 
+      - text: 
+      - generic [ref=e20]:
+        - button "" [ref=e21] [cursor=pointer]:
+          - generic [ref=e22]: 
+        - button "" [ref=e23] [cursor=pointer]:
+          - generic [ref=e24]: 
+  - list [ref=e27]:
+    - listitem [ref=e28]:
+      - generic [ref=e29]: Principal
+      - text: 
+      - list [ref=e30]:
+        - listitem [ref=e31]:
+          - link " Tableau de bord" [ref=e32] [cursor=pointer]:
+            - /url: /dashboard
+            - generic [ref=e33]: 
+            - generic [ref=e34]: Tableau de bord
+    - listitem [ref=e35]:
+      - generic [ref=e36]: Gestion
+      - text: 
+      - list [ref=e37]:
+        - listitem [ref=e38]:
+          - link " Domaines" [ref=e39] [cursor=pointer]:
+            - /url: /domains
+            - generic [ref=e40]: 
+            - generic [ref=e41]: Domaines
+        - listitem [ref=e42]:
+          - link " Messages" [ref=e43] [cursor=pointer]:
+            - /url: /messages
+            - generic [ref=e44]: 
+            - generic [ref=e45]: Messages
+        - listitem [ref=e46]:
+          - link " Statistiques" [ref=e47] [cursor=pointer]:
+            - /url: /statistics
+            - generic [ref=e48]: 
+            - generic [ref=e49]: Statistiques
+    - listitem [ref=e50]:
+      - generic [ref=e51]: Compte
+      - text: 
+      - list [ref=e52]:
+        - listitem [ref=e53]:
+          - link " Facturation" [ref=e54] [cursor=pointer]:
+            - /url: /billing
+            - generic [ref=e55]: 
+            - generic [ref=e56]: Facturation
+        - listitem [ref=e57]:
+          - link " Profil" [ref=e58] [cursor=pointer]:
+            - /url: /profile
+            - generic [ref=e59]: 
+            - generic [ref=e60]: Profil
+        - listitem [ref=e61]:
+          - link " Paramètres" [ref=e62] [cursor=pointer]:
+            - /url: /settings
+            - generic [ref=e63]: 
+            - generic [ref=e64]: Paramètres
+  - generic [ref=e65]:
+    - generic [ref=e67]:
+      - generic [ref=e68]:
+        - generic [ref=e69]:
+          - generic [ref=e70]:
+            - heading "Mes Domaines" [level=1] [ref=e71]
+            - paragraph [ref=e72]: Gérez vos domaines et configurez les enregistrements DNS
+          - button " Ajouter un domaine" [ref=e74] [cursor=pointer]:
+            - generic [ref=e75]: 
+            - generic [ref=e76]: Ajouter un domaine
+        - generic [ref=e80]:
+          - table [ref=e82]:
+            - rowgroup [ref=e83]:
+              - row "Domaine Statut Vérification DNS Statistiques Dernière activité Actions" [ref=e84]:
+                - cell "Domaine" [ref=e85]
+                - cell "Statut" [ref=e86]
+                - cell "Vérification DNS" [ref=e87]
+                - cell "Statistiques" [ref=e88]
+                - cell "Dernière activité" [ref=e89]
+                - cell "Actions" [ref=e90]
+            - rowgroup [ref=e91]:
+              - row " totot.com Ajouté le 29 octobre 2025 En attente      0 alias  0 emails Jamais    " [ref=e92]:
+                - cell " totot.com Ajouté le 29 octobre 2025" [ref=e93]:
+                  - generic [ref=e94]:
+                    - generic [ref=e96]: 
+                    - generic [ref=e97]:
+                      - generic [ref=e98]: totot.com
+                      - generic [ref=e99]: Ajouté le 29 octobre 2025
+                - cell "En attente" [ref=e100]:
+                  - generic [ref=e103]: En attente
+                - cell "   " [ref=e104]:
+                  - generic [ref=e106]:
+                    - generic [ref=e107]: 
+                    - generic [ref=e108]: 
+                    - generic [ref=e109]: 
+                    - generic [ref=e110]: 
+                - cell " 0 alias  0 emails" [ref=e112]:
+                  - generic [ref=e113]:
+                    - generic [ref=e114]:
+                      - generic [ref=e115]: 
+                      - generic [ref=e116]: 0 alias
+                    - generic [ref=e117]:
+                      - generic [ref=e118]: 
+                      - generic [ref=e119]: 0 emails
+                - cell "Jamais" [ref=e120]
+                - cell "   " [ref=e121]:
+                  - generic [ref=e122]:
+                    - button "" [ref=e124] [cursor=pointer]:
+                      - generic [ref=e125]: 
+                    - button "" [ref=e127] [cursor=pointer]:
+                      - generic [ref=e128]: 
+                    - button "" [ref=e130] [cursor=pointer]:
+                      - generic [ref=e131]: 
+                    - button "" [ref=e133] [cursor=pointer]:
+                      - generic [ref=e134]: 
+          - generic [ref=e135]:
+            - generic [ref=e136]: Affichage de 1 à 1 sur 1 domaines
+            - button "First Page":
+              - img
+            - button "Previous Page" [disabled]:
+              - img
+            - button "1" [ref=e138] [cursor=pointer]
+            - button "Next Page" [disabled]:
+              - img
+            - button "Last Page" [disabled]:
+              - img
+            - generic [ref=e139] [cursor=pointer]:
+              - combobox "Rows per page" [ref=e140]: "10"
+              - button "dropdown trigger" [ref=e141]:
+                - img [ref=e142]
+      - dialog "Ajouter un domaine" [ref=e145]:
+        - generic [ref=e147]:
+          - generic [ref=e148]: Ajouter un domaine
+          - button [ref=e151] [cursor=pointer]:
+            - img [ref=e152]
+        - generic [ref=e155]:
+          - generic [ref=e156]:
+            - generic [ref=e157]: Nom de domaine
+            - textbox "Nom de domaine" [ref=e158]:
+              - /placeholder: example.com
+          - generic [ref=e159]:
+            - generic [ref=e160]: 
+            - generic [ref=e161]:
+              - strong [ref=e162]: "Prochaines étapes :"
+              - paragraph [ref=e163]: Après avoir ajouté votre domaine, vous devrez configurer les enregistrements DNS (MX, SPF, DKIM, DMARC) chez votre registrar.
+        - generic [ref=e164]:
+          - button "Annuler" [active] [ref=e166] [cursor=pointer]:
+            - generic [ref=e167]: Annuler
+          - button " Ajouter" [disabled] [ref=e169]:
+            - generic [ref=e170]: 
+            - generic [ref=e171]: Ajouter
+      - generic:
+        - alertdialog
+    - generic [ref=e174]:
+      - text: SAKAI by
+      - link "PrimeNG" [ref=e175] [cursor=pointer]:
+        - /url: https://primeng.org
+```

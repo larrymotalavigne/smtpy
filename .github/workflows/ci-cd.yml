@@ -43,7 +43,6 @@ jobs:
       - name: Run tests with coverage
         run: |
           make test
-          # Future: Generate coverage report and upload to codecov
 
       - name: Upload test results
         if: always()

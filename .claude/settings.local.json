@@ -57,7 +57,10 @@
       "Bash(gh auth:*)",
       "Bash(docker build:*)",
       "Bash(git commit:*)",
-      "Bash(npx playwright show-report:*)"
+      "Bash(npx playwright show-report:*)",
+      "Bash(docker system:*)",
+      "Bash(docker ps:*)",
+      "Bash(do sed -i '' \"s|goto(''/login'')|goto(''/auth/login'')|g\" \"$file\")"
     ],
     "deny": [],
     "ask": []
