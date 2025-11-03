@@ -58,7 +58,13 @@ class Domain(Base, TimestampMixin):
 
     # DNS record values (for reference)
     dkim_public_key: Mapped[Optional[str]] = Column(
-        Text, nullable=True, doc="DKIM public key for verification"
+        Text, nullable=True, doc="DKIM public key for DNS TXT record (base64)"
+    )
+    dkim_private_key: Mapped[Optional[str]] = Column(
+        Text, nullable=True, doc="DKIM private key for email signing (PEM format, encrypted)"
+    )
+    dkim_selector: Mapped[Optional[str]] = Column(
+        String(63), nullable=True, default="default", doc="DKIM selector (subdomain)"
     )
     verification_token: Mapped[Optional[str]] = Column(
         String(255), nullable=True, doc="Domain verification token"

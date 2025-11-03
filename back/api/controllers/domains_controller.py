@@ -21,6 +21,7 @@ from ..schemas.domain import (
     DomainStats
 )
 from ..services.dns_service import DNSService
+from ..services.dkim_service import DKIMService
 
 logger = logging.getLogger(__name__)
 
@@ -30,23 +31,41 @@ async def create_domain(
     domain_data: DomainCreate,
     organization_id: int
 ) -> DomainResponse:
-    """Create a new domain."""
+    """Create a new domain with DKIM keys."""
     # Check if domain already exists
     existing_domain = await domains_database.get_domain_by_name(db, domain_data.name)
     if existing_domain:
         raise ValueError(f"Domain {domain_data.name} already exists")
-    
+
     # Generate verification token
     verification_token = secrets.token_urlsafe(32)
-    
-    # Create domain
+
+    # Generate DKIM keypair
+    logger.info(f"Generating DKIM keys for domain: {domain_data.name}")
+    try:
+        dkim_service = DKIMService()
+        private_key_pem, public_key_base64 = dkim_service.generate_dkim_keypair(key_size=2048)
+        dkim_selector = dkim_service.get_dkim_selector()
+
+        logger.info(f"DKIM keys generated successfully for {domain_data.name}")
+    except Exception as e:
+        logger.error(f"Failed to generate DKIM keys for {domain_data.name}: {e}")
+        # Continue without DKIM keys rather than failing domain creation
+        private_key_pem = None
+        public_key_base64 = None
+        dkim_selector = "default"
+
+    # Create domain with DKIM keys
     domain = await domains_database.create_domain(
         db=db,
         name=domain_data.name,
         organization_id=organization_id,
-        verification_token=verification_token
+        verification_token=verification_token,
+        dkim_public_key=public_key_base64,
+        dkim_private_key=private_key_pem,
+        dkim_selector=dkim_selector
     )
-    
+
     return DomainResponse.model_validate(domain)
 
 

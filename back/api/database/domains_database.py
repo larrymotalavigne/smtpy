@@ -10,16 +10,22 @@ from shared.models.domain import Domain, DomainStatus
 
 
 async def create_domain(
-    db: AsyncSession, 
-    name: str, 
+    db: AsyncSession,
+    name: str,
     organization_id: int,
-    verification_token: Optional[str] = None
+    verification_token: Optional[str] = None,
+    dkim_public_key: Optional[str] = None,
+    dkim_private_key: Optional[str] = None,
+    dkim_selector: Optional[str] = "default"
 ) -> Domain:
-    """Create a new domain."""
+    """Create a new domain with optional DKIM keys."""
     domain = Domain(
         name=name.lower().strip(),
         organization_id=organization_id,
         verification_token=verification_token,
+        dkim_public_key=dkim_public_key,
+        dkim_private_key=dkim_private_key,
+        dkim_selector=dkim_selector,
         status=DomainStatus.PENDING
     )
     db.add(domain)
