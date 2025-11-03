@@ -13,6 +13,11 @@ export default [
         canActivate: [authGuard]
     },
     {
+        path: 'aliases',
+        loadComponent: () => import('./aliases/aliases.component').then(m => m.AliasesComponent),
+        canActivate: [authGuard]
+    },
+    {
         path: 'messages',
         loadComponent: () => import('./messages/messages.component').then(m => m.MessagesComponent),
         canActivate: [authGuard]

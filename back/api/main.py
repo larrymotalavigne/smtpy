@@ -4,7 +4,7 @@ from contextlib import asynccontextmanager
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 
-from api.views import auth_view, billing_view, domains_view, messages_view, subscriptions_view, webhooks_view, statistics_view
+from api.views import auth_view, billing_view, domains_view, messages_view, subscriptions_view, webhooks_view, statistics_view, aliases_view
 from api.views import utils_view
 from shared.core.config import SETTINGS
 from shared.core.db import create_tables
@@ -111,6 +111,10 @@ Success responses follow this structure:
                 "description": "Domain registration, verification, and DNS configuration"
             },
             {
+                "name": "aliases",
+                "description": "Email alias creation, management, and forwarding configuration"
+            },
+            {
                 "name": "messages",
                 "description": "Email message viewing, filtering, and management"
             },
@@ -190,6 +194,7 @@ Success responses follow this structure:
     app.include_router(auth_view.router)
     app.include_router(billing_view.router)
     app.include_router(domains_view.router)
+    app.include_router(aliases_view.router)
     app.include_router(messages_view.router)
     app.include_router(statistics_view.router)
     app.include_router(subscriptions_view.router)

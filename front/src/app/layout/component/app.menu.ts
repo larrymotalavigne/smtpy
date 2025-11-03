@@ -30,6 +30,7 @@ export class AppMenu {
                 label: 'Gestion',
                 items: [
                     { label: 'Domaines', icon: 'pi pi-fw pi-globe', routerLink: ['/domains'] },
+                    { label: 'Alias', icon: 'pi pi-fw pi-at', routerLink: ['/aliases'] },
                     { label: 'Messages', icon: 'pi pi-fw pi-envelope', routerLink: ['/messages'] },
                     { label: 'Statistiques', icon: 'pi pi-fw pi-chart-bar', routerLink: ['/statistics'] }
                 ]
