@@ -331,7 +331,10 @@
                   </tr>
                   <tr>
                     <td><strong>Valeur/Cible</strong></td>
-                    <td><code>{{ dnsRecords?.mx_record || 'Chargement...' }}</code></td>
+                    <td>
+                      <code>{{ dnsRecords?.mx_record || 'Chargement...' }}</code>
+                      <span class="field-hint">Le point final (.) est important !</span>
+                    </td>
                     <td>
                       <p-button
                         *ngIf="dnsRecords?.mx_record"
@@ -381,6 +384,10 @@
               <div>
                 <strong>Aide:</strong> Connectez-vous à votre registrar de domaine, trouvez la section "Gestion DNS" ou "Zone DNS",
                 et ajoutez un nouvel enregistrement MX avec les valeurs ci-dessus.
+                <br><br>
+                <strong>⚠️ Important:</strong> Le point final (.) dans <code>smtp.smtpy.fr.</code> est crucial ! Il indique à votre DNS
+                que c'est une adresse complète et empêche l'ajout automatique de votre nom de domaine.
+                Si votre DNS ajoute quand même votre domaine, vérifiez s'il y a une option "Nom de domaine externe" ou "FQDN".
               </div>
             </div>
           </div>
