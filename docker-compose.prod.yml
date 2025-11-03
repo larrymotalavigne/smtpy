@@ -90,8 +90,20 @@ services:
     container_name: smtpy-smtp-prod
     image: ${DOCKER_REGISTRY:-ghcr.io}/${GHCR_OWNER}/smtpy-smtp:${TAG:-latest}
     environment:
+      # SMTP Server Port (internal)
       - SMTP_PORT=1025
+
+      # API connection
       - API_URL=http://api:8000
+
+      # Database connection (needed for email forwarding)
+      - DATABASE_URL=postgresql+psycopg://${POSTGRES_USER:-postgres}:${POSTGRES_PASSWORD}@db:5432/${POSTGRES_DB:-smtpy}
+
+      # Email Forwarding Configuration
+      - SMTP_HOST=${SMTP_HOST:-smtp.gmail.com}
+      - SMTP_PORT_FORWARD=${SMTP_PORT:-587}
+
+      # Logging
       - LOG_LEVEL=${LOG_LEVEL:-INFO}
     # Note: SMTP port can be exposed if you need external SMTP access
     # For internal-only use (via API), comment out the ports section
@@ -140,12 +152,12 @@ services:
       # Stripe
       - STRIPE_API_KEY=${STRIPE_API_KEY:?STRIPE_API_KEY must be set}
       - STRIPE_WEBHOOK_SECRET=${STRIPE_WEBHOOK_SECRET:?STRIPE_WEBHOOK_SECRET must be set}
-      - STRIPE_SUCCESS_URL=${STRIPE_SUCCESS_URL:-https://yourdomain.com/billing/success}
-      - STRIPE_CANCEL_URL=${STRIPE_CANCEL_URL:-https://yourdomain.com/billing/cancel}
-      - STRIPE_PORTAL_RETURN_URL=${STRIPE_PORTAL_RETURN_URL:-https://yourdomain.com/billing}
+      - STRIPE_SUCCESS_URL=${STRIPE_SUCCESS_URL:-https://smtpy.fr/billing/success}
+      - STRIPE_CANCEL_URL=${STRIPE_CANCEL_URL:-https://smtpy.fr/billing/cancel}
+      - STRIPE_PORTAL_RETURN_URL=${STRIPE_PORTAL_RETURN_URL:-https://smtpy.fr/billing}
 
       # CORS
-      - CORS_ORIGINS=${CORS_ORIGINS:-https://yourdomain.com}
+      - CORS_ORIGINS=${CORS_ORIGINS:-https://smtpy.fr}
 
       # Workers
       - API_WORKERS=${API_WORKERS:-4}
