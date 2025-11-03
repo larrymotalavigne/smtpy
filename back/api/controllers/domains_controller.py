@@ -1,6 +1,7 @@
 """Domain controller for SMTPy v2."""
 
 import secrets
+import logging
 from typing import Optional
 
 from sqlalchemy.ext.asyncio import AsyncSession
@@ -19,6 +20,9 @@ from ..schemas.domain import (
     DNSRecords,
     DomainStats
 )
+from ..services.dns_service import DNSService
+
+logger = logging.getLogger(__name__)
 
 
 async def create_domain(
@@ -127,27 +131,40 @@ async def verify_domain(
     db: AsyncSession,
     domain_id: int,
     organization_id: int,
-    dns_service: Optional[object] = None  # DNS service would be injected here
+    dns_service: Optional[DNSService] = None
 ) -> Optional[DomainVerificationResponse]:
-    """Verify domain DNS records."""
+    """Verify domain DNS records using real DNS lookups."""
     # Check if domain exists and belongs to organization
     domain = await domains_database.get_domain_by_id(db, domain_id)
     if not domain or domain.organization_id != organization_id:
         return None
-    
-    # For now, this is a stub implementation
-    # In a real implementation, you would:
-    # 1. Use DNS service to check MX, SPF, DKIM, DMARC records
-    # 2. Validate against expected values
-    # 3. Update verification status in database
-    
-    # Stub DNS verification results
-    mx_verified = True  # Would check MX record points to your mail server
-    spf_verified = True  # Would check SPF record includes your server
-    dkim_verified = False  # Would check DKIM public key matches
-    dmarc_verified = False  # Would check DMARC policy exists
-    
-    # Update verification status
+
+    # Initialize DNS service if not provided
+    if dns_service is None:
+        dns_service = DNSService(timeout=10.0)
+
+    logger.info(f"Starting DNS verification for domain: {domain.name}")
+
+    # Perform real DNS verification
+    verification_results = dns_service.verify_all(
+        domain=domain.name,
+        expected_mx="smtp.smtpy.fr",
+        expected_spf_include="smtpy.fr",
+        dkim_selector="default"
+    )
+
+    mx_verified = verification_results["mx_verified"]
+    spf_verified = verification_results["spf_verified"]
+    dkim_verified = verification_results["dkim_verified"]
+    dmarc_verified = verification_results["dmarc_verified"]
+
+    logger.info(
+        f"DNS verification results for {domain.name}: "
+        f"MX={mx_verified}, SPF={spf_verified}, "
+        f"DKIM={dkim_verified}, DMARC={dmarc_verified}"
+    )
+
+    # Update verification status in database
     updated_domain = await domains_database.update_dns_verification(
         db=db,
         domain_id=domain_id,
@@ -156,10 +173,10 @@ async def verify_domain(
         dkim_verified=dkim_verified,
         dmarc_verified=dmarc_verified
     )
-    
+
     if not updated_domain:
         return None
-    
+
     dns_status = DNSVerificationStatus(
         mx_record_verified=updated_domain.mx_record_verified,
         spf_record_verified=updated_domain.spf_record_verified,
@@ -167,10 +184,25 @@ async def verify_domain(
         dmarc_record_verified=updated_domain.dmarc_record_verified,
         is_fully_verified=updated_domain.is_fully_verified
     )
-    
+
     success = updated_domain.is_fully_verified
-    message = "Domain fully verified" if success else "Some DNS records are not configured correctly"
-    
+
+    # Build detailed message based on verification results
+    if success:
+        message = "Domain fully verified! All DNS records are configured correctly."
+    else:
+        failed_records = []
+        if not mx_verified:
+            failed_records.append("MX record")
+        if not spf_verified:
+            failed_records.append("SPF record")
+        if not dkim_verified:
+            failed_records.append("DKIM record")
+        if not dmarc_verified:
+            failed_records.append("DMARC record")
+
+        message = f"DNS verification incomplete. Missing or incorrect: {', '.join(failed_records)}. Please check your DNS configuration."
+
     return DomainVerificationResponse(
         success=success,
         message=message,

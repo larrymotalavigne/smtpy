@@ -207,13 +207,28 @@ export class DomainsComponent implements OnInit {
                     status.dmarc_record_verified
                 ].filter(Boolean).length;
 
+                // Update the domain object with new verification status
+                domain.mx_record_verified = status.mx_record_verified;
+                domain.spf_record_verified = status.spf_record_verified;
+                domain.dkim_record_verified = status.dkim_record_verified;
+                domain.dmarc_record_verified = status.dmarc_record_verified;
+                domain.is_fully_verified = status.is_fully_verified;
+
+                // If this is the selected domain in the dialog, update it too
+                if (this.selectedDomain && this.selectedDomain.id === domain.id) {
+                    this.selectedDomain.mx_record_verified = status.mx_record_verified;
+                    this.selectedDomain.spf_record_verified = status.spf_record_verified;
+                    this.selectedDomain.dkim_record_verified = status.dkim_record_verified;
+                    this.selectedDomain.dmarc_record_verified = status.dmarc_record_verified;
+                    this.selectedDomain.is_fully_verified = status.is_fully_verified;
+                }
+
                 this.messageService.add({
                     severity: status.is_fully_verified ? 'success' : 'warn',
                     summary: status.is_fully_verified ? 'DNS vérifié' : 'Vérification partielle',
-                    detail: `${verifiedCount}/4 enregistrements DNS vérifiés.`
+                    detail: response.message || `${verifiedCount}/4 enregistrements DNS vérifiés.`
                 });
 
-                this.loadDomains();
                 this.verifying = false;
             },
             error: (error) => {
@@ -221,7 +236,7 @@ export class DomainsComponent implements OnInit {
                 this.messageService.add({
                     severity: 'error',
                     summary: 'Erreur de vérification',
-                    detail: 'Impossible de vérifier les enregistrements DNS. Veuillez réessayer.'
+                    detail: error.error?.detail || 'Impossible de vérifier les enregistrements DNS. Veuillez réessayer.'
                 });
                 this.verifying = false;
             }
