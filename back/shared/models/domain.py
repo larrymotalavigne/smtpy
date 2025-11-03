@@ -64,6 +64,11 @@ class Domain(Base, TimestampMixin):
         String(255), nullable=True, doc="Domain verification token"
     )
 
+    # Catch-all email address for unmatched aliases
+    catch_all: Mapped[Optional[str]] = Column(
+        String(255), nullable=True, doc="Default email address for unmatched aliases"
+    )
+
     # Relationships
     organization: Mapped["Organization"] = relationship(
         "Organization", back_populates="domains", lazy="selectin"

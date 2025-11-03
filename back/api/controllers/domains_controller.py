@@ -190,9 +190,9 @@ async def get_dns_records(
         return None
     
     # Generate required DNS records
-    # In a real implementation, these would be dynamically generated based on your mail server configuration
-    mx_record = f"10 mail.smtpy.example.com"
-    spf_record = f"v=spf1 include:smtpy.example.com ~all"
+    # Production configuration for smtpy.fr
+    mx_record = f"10 smtp.smtpy.fr"
+    spf_record = f"v=spf1 include:smtpy.fr ~all"
     dkim_record = f"v=DKIM1; k=rsa; p={domain.dkim_public_key or 'YOUR_DKIM_PUBLIC_KEY'}"
     dmarc_record = f"v=DMARC1; p=quarantine; rua=mailto:dmarc@{domain.name}"
     verification_record = f"smtpy-verification={domain.verification_token}" if domain.verification_token else None
