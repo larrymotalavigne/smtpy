@@ -264,14 +264,20 @@
   [header]="'Configuration DNS - ' + (selectedDomain?.name || '')"
   [(visible)]="displayDNSDialog"
   [modal]="true"
-  [style]="{width: '700px'}"
+  [style]="{width: '800px', 'max-width': '95vw'}"
   [draggable]="false"
   [resizable]="false">
   <ng-template pTemplate="content">
     <div class="dns-dialog-content" *ngIf="selectedDomain">
-      <p class="dns-intro">
-        Ajoutez ces enregistrements DNS chez votre registrar de domaine pour activer la réception d'emails.
-      </p>
+      <div class="dns-intro-section">
+        <p class="dns-intro">
+          <i class="pi pi-info-circle"></i>
+          Ajoutez ces enregistrements DNS chez votre registrar de domaine (OVH, Gandi, Cloudflare, etc.) pour activer la réception d'emails.
+        </p>
+        <div class="dns-progress-info">
+          <span><strong>Progression:</strong> {{ getDNSVerificationProgress(selectedDomain) }}% configuré</span>
+        </div>
+      </div>
 
       <p-tabs>
         <p-tabpanel header="MX Records">
@@ -289,15 +295,93 @@
                 <span>{{ selectedDomain.mx_record_verified ? 'Vérifié' : 'Non vérifié' }}</span>
               </div>
             </div>
-            <div class="dns-record-value">
-              <code>{{ dnsRecords?.mx_record || 'Chargement...' }}</code>
-              <p-button
-                *ngIf="dnsRecords?.mx_record"
-                icon="pi pi-copy"
-                [text]="true"
-                size="small"
-                (onClick)="copyToClipboard(dnsRecords!.mx_record, 'Enregistrements MX')">
-              </p-button>
+
+            <p class="dns-description">
+              L'enregistrement MX indique à quel serveur les emails doivent être envoyés pour votre domaine.
+            </p>
+
+            <div class="dns-fields-table">
+              <table class="dns-config-table">
+                <thead>
+                  <tr>
+                    <th>Champ</th>
+                    <th>Valeur à saisir</th>
+                    <th></th>
+                  </tr>
+                </thead>
+                <tbody>
+                  <tr>
+                    <td><strong>Type</strong></td>
+                    <td><code>MX</code></td>
+                    <td></td>
+                  </tr>
+                  <tr>
+                    <td><strong>Nom/Host</strong></td>
+                    <td><code>@</code> <span class="field-hint">(ou laissez vide)</span></td>
+                    <td>
+                      <p-button
+                        icon="pi pi-copy"
+                        [text]="true"
+                        size="small"
+                        severity="secondary"
+                        pTooltip="Copier"
+                        (onClick)="copyToClipboard('@', 'Nom MX')">
+                      </p-button>
+                    </td>
+                  </tr>
+                  <tr>
+                    <td><strong>Valeur/Cible</strong></td>
+                    <td><code>{{ dnsRecords?.mx_record || 'Chargement...' }}</code></td>
+                    <td>
+                      <p-button
+                        *ngIf="dnsRecords?.mx_record"
+                        icon="pi pi-copy"
+                        [text]="true"
+                        size="small"
+                        severity="secondary"
+                        pTooltip="Copier"
+                        (onClick)="copyToClipboard(dnsRecords!.mx_record, 'Valeur MX')">
+                      </p-button>
+                    </td>
+                  </tr>
+                  <tr>
+                    <td><strong>Priorité</strong></td>
+                    <td><code>10</code></td>
+                    <td>
+                      <p-button
+                        icon="pi pi-copy"
+                        [text]="true"
+                        size="small"
+                        severity="secondary"
+                        pTooltip="Copier"
+                        (onClick)="copyToClipboard('10', 'Priorité MX')">
+                      </p-button>
+                    </td>
+                  </tr>
+                  <tr>
+                    <td><strong>TTL</strong></td>
+                    <td><code>3600</code> <span class="field-hint">(1 heure - recommandé)</span></td>
+                    <td>
+                      <p-button
+                        icon="pi pi-copy"
+                        [text]="true"
+                        size="small"
+                        severity="secondary"
+                        pTooltip="Copier"
+                        (onClick)="copyToClipboard('3600', 'TTL')">
+                      </p-button>
+                    </td>
+                  </tr>
+                </tbody>
+              </table>
+            </div>
+
+            <div class="dns-help-box">
+              <i class="pi pi-question-circle"></i>
+              <div>
+                <strong>Aide:</strong> Connectez-vous à votre registrar de domaine, trouvez la section "Gestion DNS" ou "Zone DNS",
+                et ajoutez un nouvel enregistrement MX avec les valeurs ci-dessus.
+              </div>
             </div>
           </div>
         </p-tabpanel>
@@ -317,17 +401,80 @@
                 <span>{{ selectedDomain.spf_record_verified ? 'Vérifié' : 'Non vérifié' }}</span>
               </div>
             </div>
-            <div class="dns-record-value">
-              <code>{{ dnsRecords?.spf_record || 'Chargement...' }}</code>
-              <p-button
-                *ngIf="dnsRecords?.spf_record"
-                icon="pi pi-copy"
-                [text]="true"
-                size="small"
-                (onClick)="copyToClipboard(dnsRecords!.spf_record, 'Enregistrement SPF')">
-              </p-button>
+
+            <p class="dns-description">
+              SPF permet d'indiquer quels serveurs sont autorisés à envoyer des emails depuis votre domaine.
+            </p>
+
+            <div class="dns-fields-table">
+              <table class="dns-config-table">
+                <thead>
+                  <tr>
+                    <th>Champ</th>
+                    <th>Valeur à saisir</th>
+                    <th></th>
+                  </tr>
+                </thead>
+                <tbody>
+                  <tr>
+                    <td><strong>Type</strong></td>
+                    <td><code>TXT</code></td>
+                    <td></td>
+                  </tr>
+                  <tr>
+                    <td><strong>Nom/Host</strong></td>
+                    <td><code>@</code> <span class="field-hint">(ou laissez vide)</span></td>
+                    <td>
+                      <p-button
+                        icon="pi pi-copy"
+                        [text]="true"
+                        size="small"
+                        severity="secondary"
+                        pTooltip="Copier"
+                        (onClick)="copyToClipboard('@', 'Nom SPF')">
+                      </p-button>
+                    </td>
+                  </tr>
+                  <tr>
+                    <td><strong>Valeur</strong></td>
+                    <td><code>{{ dnsRecords?.spf_record || 'Chargement...' }}</code></td>
+                    <td>
+                      <p-button
+                        *ngIf="dnsRecords?.spf_record"
+                        icon="pi pi-copy"
+                        [text]="true"
+                        size="small"
+                        severity="secondary"
+                        pTooltip="Copier"
+                        (onClick)="copyToClipboard(dnsRecords!.spf_record, 'Valeur SPF')">
+                      </p-button>
+                    </td>
+                  </tr>
+                  <tr>
+                    <td><strong>TTL</strong></td>
+                    <td><code>3600</code> <span class="field-hint">(1 heure - recommandé)</span></td>
+                    <td>
+                      <p-button
+                        icon="pi pi-copy"
+                        [text]="true"
+                        size="small"
+                        severity="secondary"
+                        pTooltip="Copier"
+                        (onClick)="copyToClipboard('3600', 'TTL')">
+                      </p-button>
+                    </td>
+                  </tr>
+                </tbody>
+              </table>
             </div>
-            <p class="dns-hint">Ajoutez ceci comme enregistrement TXT à votre domaine.</p>
+
+            <div class="dns-help-box">
+              <i class="pi pi-question-circle"></i>
+              <div>
+                <strong>Aide:</strong> Ajoutez un nouvel enregistrement TXT. Si vous avez déjà un enregistrement SPF,
+                fusionnez les valeurs en gardant un seul enregistrement commençant par "v=spf1".
+              </div>
+            </div>
           </div>
         </p-tabpanel>
 
@@ -346,17 +493,80 @@
                 <span>{{ selectedDomain.dkim_record_verified ? 'Vérifié' : 'Non vérifié' }}</span>
               </div>
             </div>
-            <div class="dns-record-value">
-              <code>{{ dnsRecords?.dkim_record || 'Chargement...' }}</code>
-              <p-button
-                *ngIf="dnsRecords?.dkim_record"
-                icon="pi pi-copy"
-                [text]="true"
-                size="small"
-                (onClick)="copyToClipboard(dnsRecords!.dkim_record, 'Enregistrement DKIM')">
-              </p-button>
+
+            <p class="dns-description">
+              DKIM signe cryptographiquement vos emails pour prouver qu'ils proviennent bien de votre domaine.
+            </p>
+
+            <div class="dns-fields-table">
+              <table class="dns-config-table">
+                <thead>
+                  <tr>
+                    <th>Champ</th>
+                    <th>Valeur à saisir</th>
+                    <th></th>
+                  </tr>
+                </thead>
+                <tbody>
+                  <tr>
+                    <td><strong>Type</strong></td>
+                    <td><code>TXT</code></td>
+                    <td></td>
+                  </tr>
+                  <tr>
+                    <td><strong>Nom/Host</strong></td>
+                    <td><code>smtpy._domainkey</code></td>
+                    <td>
+                      <p-button
+                        icon="pi pi-copy"
+                        [text]="true"
+                        size="small"
+                        severity="secondary"
+                        pTooltip="Copier"
+                        (onClick)="copyToClipboard('smtpy._domainkey', 'Nom DKIM')">
+                      </p-button>
+                    </td>
+                  </tr>
+                  <tr>
+                    <td><strong>Valeur</strong></td>
+                    <td><code class="dns-long-value">{{ dnsRecords?.dkim_record || 'Chargement...' }}</code></td>
+                    <td>
+                      <p-button
+                        *ngIf="dnsRecords?.dkim_record"
+                        icon="pi pi-copy"
+                        [text]="true"
+                        size="small"
+                        severity="secondary"
+                        pTooltip="Copier"
+                        (onClick)="copyToClipboard(dnsRecords!.dkim_record, 'Valeur DKIM')">
+                      </p-button>
+                    </td>
+                  </tr>
+                  <tr>
+                    <td><strong>TTL</strong></td>
+                    <td><code>3600</code> <span class="field-hint">(1 heure - recommandé)</span></td>
+                    <td>
+                      <p-button
+                        icon="pi pi-copy"
+                        [text]="true"
+                        size="small"
+                        severity="secondary"
+                        pTooltip="Copier"
+                        (onClick)="copyToClipboard('3600', 'TTL')">
+                      </p-button>
+                    </td>
+                  </tr>
+                </tbody>
+              </table>
             </div>
-            <p class="dns-hint">Nom: smtpy._domainkey | Type: TXT | Valeur: voir ci-dessus</p>
+
+            <div class="dns-help-box">
+              <i class="pi pi-question-circle"></i>
+              <div>
+                <strong>Aide:</strong> L'enregistrement DKIM contient une longue clé publique. Assurez-vous de copier l'intégralité
+                de la valeur, incluant les guillemets et les espaces. Certains registrars nécessitent de séparer la valeur en plusieurs chaînes.
+              </div>
+            </div>
           </div>
         </p-tabpanel>
 
@@ -375,17 +585,80 @@
                 <span>{{ selectedDomain.dmarc_record_verified ? 'Vérifié' : 'Non vérifié' }}</span>
               </div>
             </div>
-            <div class="dns-record-value">
-              <code>{{ dnsRecords?.dmarc_record || 'Chargement...' }}</code>
-              <p-button
-                *ngIf="dnsRecords?.dmarc_record"
-                icon="pi pi-copy"
-                [text]="true"
-                size="small"
-                (onClick)="copyToClipboard(dnsRecords!.dmarc_record, 'Enregistrement DMARC')">
-              </p-button>
+
+            <p class="dns-description">
+              DMARC définit la politique d'authentification des emails et permet de recevoir des rapports sur les tentatives d'usurpation.
+            </p>
+
+            <div class="dns-fields-table">
+              <table class="dns-config-table">
+                <thead>
+                  <tr>
+                    <th>Champ</th>
+                    <th>Valeur à saisir</th>
+                    <th></th>
+                  </tr>
+                </thead>
+                <tbody>
+                  <tr>
+                    <td><strong>Type</strong></td>
+                    <td><code>TXT</code></td>
+                    <td></td>
+                  </tr>
+                  <tr>
+                    <td><strong>Nom/Host</strong></td>
+                    <td><code>_dmarc</code></td>
+                    <td>
+                      <p-button
+                        icon="pi pi-copy"
+                        [text]="true"
+                        size="small"
+                        severity="secondary"
+                        pTooltip="Copier"
+                        (onClick)="copyToClipboard('_dmarc', 'Nom DMARC')">
+                      </p-button>
+                    </td>
+                  </tr>
+                  <tr>
+                    <td><strong>Valeur</strong></td>
+                    <td><code>{{ dnsRecords?.dmarc_record || 'Chargement...' }}</code></td>
+                    <td>
+                      <p-button
+                        *ngIf="dnsRecords?.dmarc_record"
+                        icon="pi pi-copy"
+                        [text]="true"
+                        size="small"
+                        severity="secondary"
+                        pTooltip="Copier"
+                        (onClick)="copyToClipboard(dnsRecords!.dmarc_record, 'Valeur DMARC')">
+                      </p-button>
+                    </td>
+                  </tr>
+                  <tr>
+                    <td><strong>TTL</strong></td>
+                    <td><code>3600</code> <span class="field-hint">(1 heure - recommandé)</span></td>
+                    <td>
+                      <p-button
+                        icon="pi pi-copy"
+                        [text]="true"
+                        size="small"
+                        severity="secondary"
+                        pTooltip="Copier"
+                        (onClick)="copyToClipboard('3600', 'TTL')">
+                      </p-button>
+                    </td>
+                  </tr>
+                </tbody>
+              </table>
             </div>
-            <p class="dns-hint">Nom: _dmarc | Type: TXT | Valeur: voir ci-dessus</p>
+
+            <div class="dns-help-box">
+              <i class="pi pi-question-circle"></i>
+              <div>
+                <strong>Aide:</strong> DMARC s'appuie sur SPF et DKIM. Assurez-vous que ces deux enregistrements sont déjà configurés
+                avant d'ajouter DMARC. L'enregistrement DMARC commence toujours par "v=DMARC1".
+              </div>
+            </div>
           </div>
         </p-tabpanel>
       </p-tabs>
