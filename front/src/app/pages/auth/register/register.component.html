@@ -32,6 +32,7 @@
               <input
                 pInputText
                 id="username"
+                data-testid="register-username-field"
                 formControlName="username"
                 placeholder="Choisissez un nom d'utilisateur"
                 [class.invalid]="isFieldInvalid('username')"
@@ -54,6 +55,7 @@
               <input
                 pInputText
                 id="email"
+                data-testid="register-email-field"
                 type="email"
                 formControlName="email"
                 placeholder="votre@email.com"
@@ -76,6 +78,7 @@
               <i class="pi pi-lock input-icon"></i>
               <p-password
                 id="password"
+                data-testid="register-password-field"
                 formControlName="password"
                 placeholder="Créez un mot de passe fort"
                 [toggleMask]="true"
@@ -108,6 +111,7 @@
               <i class="pi pi-lock input-icon"></i>
               <p-password
                 id="confirmPassword"
+                data-testid="register-confirm-password-field"
                 formControlName="confirmPassword"
                 placeholder="Confirmez votre mot de passe"
                 [toggleMask]="true"
@@ -132,7 +136,8 @@
               <p-checkbox
                 formControlName="acceptTerms"
                 [binary]="true"
-                inputId="acceptTerms">
+                inputId="acceptTerms"
+                data-testid="register-accept-terms">
               </p-checkbox>
               <label for="acceptTerms" class="terms-label">
                 J'accepte les
@@ -150,6 +155,7 @@
           <!-- Submit Button -->
           <p-button
             type="submit"
+            data-testid="register-submit-button"
             label="Créer mon compte"
             icon="pi pi-user-plus"
             [loading]="loading"

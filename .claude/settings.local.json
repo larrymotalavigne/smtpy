@@ -60,7 +60,12 @@
       "Bash(npx playwright show-report:*)",
       "Bash(docker system:*)",
       "Bash(docker ps:*)",
-      "Bash(do sed -i '' \"s|goto(''/login'')|goto(''/auth/login'')|g\" \"$file\")"
+      "Bash(do sed -i '' \"s|goto(''/login'')|goto(''/auth/login'')|g\" \"$file\")",
+      "Bash(xargs ls:*)",
+      "Bash(git restore:*)",
+      "Bash(dig:*)",
+      "Bash(nslookup:*)",
+      "WebFetch(domain:github.com)"
     ],
     "deny": [],
     "ask": []

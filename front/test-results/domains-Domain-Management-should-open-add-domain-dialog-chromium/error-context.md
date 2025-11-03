@@ -7,36 +7,34 @@
     - heading "Connexion" [level=2] [ref=e9]
     - paragraph [ref=e10]: Connectez-vous à votre compte
   - generic [ref=e14]:
-    - alert [ref=e16]:
-      - generic [ref=e18]: Une erreur est survenue lors de la connexion
-    - generic [ref=e19]:
-      - generic [ref=e20]: Nom d'utilisateur ou email *
-      - generic [ref=e21]:
+    - generic [ref=e15]:
+      - generic [ref=e16]: Nom d'utilisateur ou email *
+      - generic [ref=e17]:
         - generic: 
-        - textbox "Nom d'utilisateur ou email *" [ref=e22]:
+        - textbox "Nom d'utilisateur ou email *" [ref=e18]:
           - /placeholder: Entrez votre nom d'utilisateur
           - text: admin
-    - generic [ref=e23]:
-      - generic [ref=e24]: Mot de passe *
-      - generic [ref=e25]:
+    - generic [ref=e19]:
+      - generic [ref=e20]: Mot de passe *
+      - generic [ref=e21]:
         - generic: 
-        - generic [ref=e26]:
-          - textbox "Entrez votre mot de passe" [ref=e27]: password
-          - img [ref=e28]
-    - generic [ref=e30]:
-      - checkbox [ref=e33] [cursor=pointer]
-      - link "Mot de passe oublié?" [ref=e35] [cursor=pointer]:
+        - generic [ref=e22]:
+          - textbox "Entrez votre mot de passe" [ref=e23]: password
+          - img [ref=e24]
+    - generic [ref=e26]:
+      - checkbox [ref=e29] [cursor=pointer]
+      - link "Mot de passe oublié?" [ref=e31] [cursor=pointer]:
         - /url: /auth/forgot-password
-    - button " Se connecter" [ref=e37] [cursor=pointer]:
-      - generic [ref=e38]: 
-      - generic [ref=e39]: Se connecter
-    - generic [ref=e41]: ou
-    - paragraph [ref=e43]:
+    - button "Se connecter" [disabled] [ref=e33]:
+      - img [ref=e34]
+      - generic [ref=e37]: Se connecter
+    - generic [ref=e39]: ou
+    - paragraph [ref=e41]:
       - text: Vous n'avez pas de compte?
-      - link "Créer un compte" [ref=e44] [cursor=pointer]:
+      - link "Créer un compte" [ref=e42] [cursor=pointer]:
         - /url: /auth/register
-  - link " Retour à l'accueil" [ref=e46] [cursor=pointer]:
+  - link " Retour à l'accueil" [ref=e44] [cursor=pointer]:
     - /url: /
-    - generic [ref=e47]: 
+    - generic [ref=e45]: 
     - text: Retour à l'accueil
 ```

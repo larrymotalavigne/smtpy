@@ -32,6 +32,7 @@
               <input
                 pInputText
                 id="username"
+                data-testid="login-username-field"
                 formControlName="username"
                 placeholder="Entrez votre nom d'utilisateur"
                 [class.invalid]="isFieldInvalid('username')"
@@ -53,6 +54,7 @@
               <i class="pi pi-lock input-icon"></i>
               <p-password
                 id="password"
+                data-testid="login-password-field"
                 formControlName="password"
                 placeholder="Entrez votre mot de passe"
                 [toggleMask]="true"
@@ -86,6 +88,7 @@
           <!-- Submit Button -->
           <p-button
             type="submit"
+            data-testid="login-submit-button"
             label="Se connecter"
             icon="pi pi-sign-in"
             [loading]="loading"
