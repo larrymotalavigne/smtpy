@@ -131,13 +131,15 @@ export class AliasesComponent implements OnInit {
         });
     }
 
-    loadAliases(page: number = 1): void {
+    loadAliases(page?: number): void {
         this.loading = true;
-        this.currentPage = page;
+        if (page !== undefined) {
+            this.currentPage = page;
+        }
 
         const domainId = this.selectedDomainFilter?.id;
 
-        this.aliasesApiService.getAliases(page, this.pageSize, domainId).subscribe({
+        this.aliasesApiService.getAliases(this.currentPage, this.pageSize, domainId).subscribe({
             next: (response) => {
                 this.aliases = (response.items || []) as AliasWithDomain[];
                 this.totalRecords = response.total || 0;
@@ -173,7 +175,9 @@ export class AliasesComponent implements OnInit {
     }
 
     onPageChange(event: any): void {
-        this.loadAliases(event.page + 1);
+        this.currentPage = event.first / event.rows + 1;
+        this.pageSize = event.rows;
+        this.loadAliases();
     }
 
     openAddDialog(): void {

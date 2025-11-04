@@ -158,8 +158,11 @@ export class BillingComponent implements OnInit, OnDestroy {
             });
     }
 
-    formatCurrency(amount: number, currency: string = 'usd'): string {
-        return new Intl.NumberFormat('en-US', {
+    formatCurrency(amount: number, currency: string = 'eur'): string {
+        if (amount === 0) {
+            return '0€';
+        }
+        return new Intl.NumberFormat('fr-FR', {
             style: 'currency',
             currency: currency.toUpperCase()
         }).format(amount / 100);

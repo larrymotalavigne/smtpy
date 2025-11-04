@@ -161,16 +161,17 @@
     </div>
 
     <div class="pricing-cards">
-      <div class="pricing-card" *ngFor="let plan of plans" [class.popular]="plan.name === 'Professional'">
-        <div class="popular-badge" *ngIf="plan.name === 'Professional'">
+      <div class="pricing-card" *ngFor="let plan of plans" [class.popular]="plan.name === 'Pro'">
+        <div class="popular-badge" *ngIf="plan.name === 'Pro'">
           <span>Plus populaire</span>
         </div>
 
         <div class="plan-header">
           <h3 class="plan-name">{{ plan.name }}</h3>
           <div class="plan-price">
-            <span class="amount">{{ formatCurrency(plan.amount, plan.currency) }}</span>
-            <span class="interval">/ {{ plan.interval === 'month' ? 'mois' : 'an' }}</span>
+            <span class="amount" *ngIf="plan.name !== 'Entreprise'">{{ formatCurrency(plan.amount, plan.currency) }}</span>
+            <span class="amount" *ngIf="plan.name === 'Entreprise'">Sur mesure</span>
+            <span class="interval" *ngIf="plan.name !== 'Entreprise'">/ {{ plan.interval === 'month' ? 'mois' : 'an' }}</span>
           </div>
           <p class="plan-description" *ngIf="plan.description">{{ plan.description }}</p>
         </div>
@@ -184,8 +185,8 @@
 
         <div class="plan-action">
           <p-button
-            label="Choisir ce plan"
-            [outlined]="plan.name !== 'Professional'"
+            [label]="plan.name === 'Entreprise' ? 'Nous contacter' : (plan.name === 'Gratuit' ? 'Commencer' : 'Choisir ce plan')"
+            [outlined]="plan.name !== 'Pro'"
             styleClass="w-full"
             (onClick)="onUpgradePlan(plan.price_id)"
             [loading]="loading">

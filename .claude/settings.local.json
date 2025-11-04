@@ -67,7 +67,8 @@
       "Bash(nslookup:*)",
       "WebFetch(domain:github.com)",
       "Bash(timeout 5 curl:*)",
-      "Bash(gh run list:*)"
+      "Bash(gh run list:*)",
+      "Bash(npx tsc:*)"
     ],
     "deny": [],
     "ask": []

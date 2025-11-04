@@ -214,58 +214,60 @@ async def get_plans():
         "success": True,
         "data": [
             {
-                "id": "free",
-                "name": "Free",
-                "price": 0,
-                "currency": "usd",
+                "price_id": "free",
+                "name": "Gratuit",
+                "description": "Parfait pour débuter",
+                "amount": 0,
+                "currency": "eur",
                 "interval": "month",
                 "features": [
-                    "1 domain",
-                    "10 aliases",
-                    "100 emails/month",
-                    "Basic support"
+                    "1 domaine",
+                    "5 alias email",
+                    "100 emails/mois",
+                    "Support email"
                 ],
                 "limits": {
                     "domains": 1,
-                    "aliases": 10,
+                    "aliases": 5,
                     "emails_per_month": 100
                 }
             },
             {
-                "id": "starter",
-                "name": "Starter",
-                "price": 999,
-                "currency": "usd",
+                "price_id": "pro",
+                "name": "Pro",
+                "description": "Pour les professionnels et petites équipes",
+                "amount": 900,
+                "currency": "eur",
                 "interval": "month",
                 "features": [
-                    "5 domains",
-                    "100 aliases",
-                    "10,000 emails/month",
-                    "Priority support"
+                    "5 domaines",
+                    "Alias illimités",
+                    "10 000 emails/mois",
+                    "Support prioritaire"
                 ],
                 "limits": {
                     "domains": 5,
-                    "aliases": 100,
+                    "aliases": -1,
                     "emails_per_month": 10000
                 }
             },
             {
-                "id": "professional",
-                "name": "Professional",
-                "price": 2999,
-                "currency": "usd",
+                "price_id": "entreprise",
+                "name": "Entreprise",
+                "description": "Solution sur mesure pour les grandes organisations",
+                "amount": 0,
+                "currency": "eur",
                 "interval": "month",
                 "features": [
-                    "Unlimited domains",
-                    "Unlimited aliases",
-                    "100,000 emails/month",
-                    "Premium support",
-                    "Custom DKIM keys"
+                    "Domaines illimités",
+                    "Alias illimités",
+                    "Volume personnalisé",
+                    "Support dédié 24/7"
                 ],
                 "limits": {
                     "domains": -1,
                     "aliases": -1,
-                    "emails_per_month": 100000
+                    "emails_per_month": -1
                 }
             }
         ]
