@@ -3,7 +3,7 @@ import {HttpClient, HttpParams} from '@angular/common/http';
 import {Observable} from 'rxjs';
 import {environment} from '../../../environments/environment';
 import {AliasCreate, AliasListItem, AliasResponse, AliasUpdate} from '../../core/interfaces/alias.interface';
-import {PaginatedResponse} from '../../core/interfaces/paginated-response.interface';
+import {PaginatedResponse} from '../../core/interfaces/common.interface';
 
 @Injectable({
     providedIn: 'root'
