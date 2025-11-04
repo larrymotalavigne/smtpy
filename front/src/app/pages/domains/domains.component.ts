@@ -337,6 +337,11 @@ export class DomainsComponent implements OnInit {
                 // Load stats for each domain
                 this.domains.forEach(domain => {
                     this.loadDomainStats(domain);
+
+                    // Auto-verify DNS for domains that aren't fully verified
+                    if (!domain.is_fully_verified) {
+                        this.autoVerifyDNS(domain);
+                    }
                 });
                 this.loading = false;
             },
@@ -384,5 +389,45 @@ export class DomainsComponent implements OnInit {
         if (diffDays === 1) return 'Hier';
         if (diffDays < 7) return `Il y a ${diffDays}j`;
         return date.toLocaleDateString('fr-FR');
+    }
+
+    /**
+     * Auto-verify DNS records for a domain silently (no toast notifications)
+     */
+    private autoVerifyDNS(domain: DomainWithStats): void {
+        this.domainsApiService.verifyDomain(domain.id).subscribe({
+            next: (response) => {
+                const status = response.dns_status;
+
+                // Update the domain object with new verification status
+                domain.mx_record_verified = status.mx_record_verified;
+                domain.spf_record_verified = status.spf_record_verified;
+                domain.dkim_record_verified = status.dkim_record_verified;
+                domain.dmarc_record_verified = status.dmarc_record_verified;
+                domain.is_fully_verified = status.is_fully_verified;
+
+                // If this is the selected domain in the dialog, update it too
+                if (this.selectedDomain && this.selectedDomain.id === domain.id) {
+                    this.selectedDomain.mx_record_verified = status.mx_record_verified;
+                    this.selectedDomain.spf_record_verified = status.spf_record_verified;
+                    this.selectedDomain.dkim_record_verified = status.dkim_record_verified;
+                    this.selectedDomain.dmarc_record_verified = status.dmarc_record_verified;
+                    this.selectedDomain.is_fully_verified = status.is_fully_verified;
+                }
+
+                // Only show a notification if the domain became fully verified
+                if (status.is_fully_verified) {
+                    this.messageService.add({
+                        severity: 'success',
+                        summary: 'DNS vérifié automatiquement',
+                        detail: `Le domaine ${domain.name} est maintenant entièrement vérifié !`
+                    });
+                }
+            },
+            error: (error) => {
+                // Silent failure for auto-verification - don't annoy users with errors
+                console.log(`Auto-verification failed for ${domain.name}:`, error);
+            }
+        });
     }
 }
