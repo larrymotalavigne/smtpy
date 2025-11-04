@@ -1,0 +1,188 @@
+# Page snapshot
+
+```yaml
+- generic [ref=e4]:
+  - generic [ref=e5]:
+    - generic [ref=e6]:
+      - button "" [ref=e7] [cursor=pointer]:
+        - generic [ref=e8]: 
+      - link " SMTPy" [ref=e9] [cursor=pointer]:
+        - /url: /dashboard
+        - generic [ref=e10]: 
+        - generic [ref=e11]: SMTPy
+    - generic [ref=e12]:
+      - generic [ref=e13]:
+        - button "" [ref=e14] [cursor=pointer]:
+          - generic [ref=e15]: 
+        - button "" [ref=e17] [cursor=pointer]:
+          - generic [ref=e18]: 
+      - text: 
+      - generic [ref=e20]:
+        - button "" [ref=e21] [cursor=pointer]:
+          - generic [ref=e22]: 
+        - button "" [ref=e23] [cursor=pointer]:
+          - generic [ref=e24]: 
+  - list [ref=e27]:
+    - listitem [ref=e28]:
+      - generic [ref=e29]: Principal
+      - text: 
+      - list [ref=e30]:
+        - listitem [ref=e31]:
+          - link " Tableau de bord" [ref=e32] [cursor=pointer]:
+            - /url: /dashboard
+            - generic [ref=e33]: 
+            - generic [ref=e34]: Tableau de bord
+    - listitem [ref=e35]:
+      - generic [ref=e36]: Gestion
+      - text: 
+      - list [ref=e37]:
+        - listitem [ref=e38]:
+          - link " Domaines" [ref=e39] [cursor=pointer]:
+            - /url: /domains
+            - generic [ref=e40]: 
+            - generic [ref=e41]: Domaines
+        - listitem [ref=e42]:
+          - link " Alias" [ref=e43] [cursor=pointer]:
+            - /url: /aliases
+            - generic [ref=e44]: 
+            - generic [ref=e45]: Alias
+        - listitem [ref=e46]:
+          - link " Messages" [ref=e47] [cursor=pointer]:
+            - /url: /messages
+            - generic [ref=e48]: 
+            - generic [ref=e49]: Messages
+        - listitem [ref=e50]:
+          - link " Statistiques" [ref=e51] [cursor=pointer]:
+            - /url: /statistics
+            - generic [ref=e52]: 
+            - generic [ref=e53]: Statistiques
+    - listitem [ref=e54]:
+      - generic [ref=e55]: Compte
+      - text: 
+      - list [ref=e56]:
+        - listitem [ref=e57]:
+          - link " Facturation" [ref=e58] [cursor=pointer]:
+            - /url: /billing
+            - generic [ref=e59]: 
+            - generic [ref=e60]: Facturation
+        - listitem [ref=e61]:
+          - link " Profil" [ref=e62] [cursor=pointer]:
+            - /url: /profile
+            - generic [ref=e63]: 
+            - generic [ref=e64]: Profil
+        - listitem [ref=e65]:
+          - link " Paramètres" [ref=e66] [cursor=pointer]:
+            - /url: /settings
+            - generic [ref=e67]: 
+            - generic [ref=e68]: Paramètres
+  - generic [ref=e69]:
+    - generic [ref=e72]:
+      - generic [ref=e73]:
+        - generic [ref=e74]:
+          - heading "Aperçu de votre compte" [level=1] [ref=e75]
+          - paragraph [ref=e76]: Vue d'ensemble de votre activité
+        - button " Ajouter un domaine" [ref=e78] [cursor=pointer]:
+          - generic [ref=e79]: 
+          - generic [ref=e80]: Ajouter un domaine
+      - generic [ref=e81]:
+        - generic [ref=e85]:
+          - generic [ref=e86]:
+            - generic [ref=e87]: Domaines actifs
+            - generic [ref=e88]:
+              - generic [ref=e89]: "1"
+              - generic [ref=e90]:
+                - generic [ref=e91]: 
+                - text: 1 domaines
+          - generic [ref=e93]: 
+        - generic [ref=e97]:
+          - generic [ref=e98]:
+            - generic [ref=e99]: Alias créés
+            - generic [ref=e100]:
+              - generic [ref=e101]: "0"
+              - generic [ref=e102]:
+                - generic [ref=e103]: 
+                - text: 0 alias
+          - generic [ref=e105]: 
+        - generic [ref=e109]:
+          - generic [ref=e110]:
+            - generic [ref=e111]: Emails transférés
+            - generic [ref=e112]:
+              - generic [ref=e113]: "0"
+              - generic [ref=e114]:
+                - generic [ref=e115]: 
+                - text: 0 envoyés
+          - generic [ref=e117]: 
+        - generic [ref=e121]:
+          - generic [ref=e122]:
+            - generic [ref=e123]: Taux de livraison
+            - generic [ref=e124]:
+              - generic [ref=e125]: 0.0%
+              - generic [ref=e126]:
+                - generic [ref=e127]: 
+                - text: 0 échecs
+          - generic [ref=e129]: 
+      - generic [ref=e130]:
+        - generic [ref=e131]:
+          - generic [ref=e133]:
+            - heading "Activité des 7 derniers jours" [level=3] [ref=e134]
+            - button "" [ref=e136] [cursor=pointer]:
+              - generic [ref=e137]: 
+          - generic [ref=e141]:
+            - generic [ref=e142]: 
+            - paragraph [ref=e143]: Aucune donnée disponible
+            - paragraph [ref=e144]: Les statistiques apparaîtront ici une fois que vous commencerez à envoyer des emails
+        - generic [ref=e145]:
+          - heading "Actions rapides" [level=3] [ref=e148]
+          - generic [ref=e151]:
+            - button " Gérer les domaines Ajouter ou configurer " [ref=e152] [cursor=pointer]:
+              - generic [ref=e154]: 
+              - generic [ref=e155]:
+                - generic [ref=e156]: Gérer les domaines
+                - generic [ref=e157]: Ajouter ou configurer
+              - generic [ref=e158]: 
+            - button " Messages récents Voir les emails " [ref=e159] [cursor=pointer]:
+              - generic [ref=e161]: 
+              - generic [ref=e162]:
+                - generic [ref=e163]: Messages récents
+                - generic [ref=e164]: Voir les emails
+              - generic [ref=e165]: 
+            - button " Facturation Plan et paiements " [ref=e166] [cursor=pointer]:
+              - generic [ref=e168]: 
+              - generic [ref=e169]:
+                - generic [ref=e170]: Facturation
+                - generic [ref=e171]: Plan et paiements
+              - generic [ref=e172]: 
+      - generic [ref=e173]:
+        - generic [ref=e175]:
+          - heading "Domaines récents" [level=3] [ref=e176]
+          - button " Voir tout" [ref=e178] [cursor=pointer]:
+            - generic [ref=e179]: 
+            - generic [ref=e180]: Voir tout
+        - table [ref=e185]:
+          - rowgroup [ref=e186]:
+            - row "Domaine Statut Alias Dernière activité Emails aujourd'hui Actions" [ref=e187]:
+              - cell "Domaine" [ref=e188]
+              - cell "Statut" [ref=e189]
+              - cell "Alias" [ref=e190]
+              - cell "Dernière activité" [ref=e191]
+              - cell "Emails aujourd'hui" [ref=e192]
+              - cell "Actions" [ref=e193]
+          - rowgroup [ref=e194]:
+            - row " totot.com En attente 0 Il y a 5j 0 " [ref=e195]:
+              - cell " totot.com" [ref=e196]:
+                - generic [ref=e197]:
+                  - generic [ref=e199]: 
+                  - generic [ref=e200]: totot.com
+              - cell "En attente" [ref=e201]:
+                - generic [ref=e203]: En attente
+              - cell "0" [ref=e204]
+              - cell "Il y a 5j" [ref=e205]
+              - cell "0" [ref=e206]
+              - cell "" [ref=e207]:
+                - button "" [ref=e209] [cursor=pointer]:
+                  - generic [ref=e210]: 
+    - generic [ref=e212]:
+      - text: SAKAI by
+      - link "PrimeNG" [ref=e213] [cursor=pointer]:
+        - /url: https://primeng.org
+```

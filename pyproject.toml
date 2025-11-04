@@ -25,6 +25,7 @@ dependencies = [
     "psycopg[binary, pool]",
     "python-json-logger",
     "alembic",
+    "cryptography",
 ]
 
 [project.optional-dependencies]
