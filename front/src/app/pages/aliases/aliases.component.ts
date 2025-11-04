@@ -3,24 +3,21 @@ import {CommonModule} from '@angular/common';
 import {FormBuilder, FormGroup, FormsModule, ReactiveFormsModule, Validators} from '@angular/forms';
 import {ActivatedRoute, Router} from '@angular/router';
 
-// PrimeNG Modules
-import {CardModule} from 'primeng/card';
-import {TableModule} from 'primeng/table';
-import {ButtonModule} from 'primeng/button';
-import {DialogModule} from 'primeng/dialog';
-import {InputTextModule} from 'primeng/inputtext';
-import {ToastModule} from 'primeng/toast';
-import {TagModule} from 'primeng/tag';
-import {ConfirmDialogModule} from 'primeng/confirmdialog';
-import {TooltipModule} from 'primeng/tooltip';
-import {DropdownModule} from 'primeng/dropdown';
-import {ChipsModule} from 'primeng/chips';
-import {ConfirmationService, MessageService} from 'primeng/api';
 
 import {AliasCreate, AliasListItem, AliasResponse, AliasUpdate} from '../../core/interfaces/alias.interface';
 import {DomainResponse} from '../../core/interfaces/domain.interface';
 import {AliasesApiService} from '../service/aliases-api.service';
 import {DomainsApiService} from '../service/domains-api.service';
+import {Select} from 'primeng/select';
+import {Button} from 'primeng/button';
+import {Card} from 'primeng/card';
+import {TableModule} from 'primeng/table';
+import {Tag} from 'primeng/tag';
+import {Dialog} from 'primeng/dialog';
+import {ConfirmationService, MessageService} from 'primeng/api';
+import {InputText} from 'primeng/inputtext';
+import {Toast} from 'primeng/toast';
+import {ConfirmDialog} from 'primeng/confirmdialog';
 
 interface AliasWithDomain extends AliasListItem {
     targetsArray?: string[];
@@ -35,17 +32,15 @@ interface AliasWithDomain extends AliasListItem {
         CommonModule,
         FormsModule,
         ReactiveFormsModule,
-        CardModule,
+        Select,
+        Button,
+        Card,
         TableModule,
-        ButtonModule,
-        DialogModule,
-        InputTextModule,
-        ToastModule,
-        TagModule,
-        ConfirmDialogModule,
-        TooltipModule,
-        DropdownModule,
-        ChipsModule
+        Tag,
+        Dialog,
+        InputText,
+        Toast,
+        ConfirmDialog,
     ],
     providers: [MessageService, ConfirmationService]
 })

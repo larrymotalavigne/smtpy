@@ -16,7 +16,7 @@
   <div class="filters-section" *ngIf="domains.length > 0">
     <div class="filter-group">
       <label for="domainFilter">Filtrer par domaine</label>
-      <p-dropdown
+      <p-select
         id="domainFilter"
         [(ngModel)]="selectedDomainFilter"
         [options]="domains"
@@ -25,14 +25,14 @@
         [showClear]="true"
         (onChange)="onDomainFilterChange()"
         (onClear)="clearDomainFilter()"
-        styleClass="w-full">
-      </p-dropdown>
+        class="w-full">
+      </p-select>
     </div>
   </div>
 
   <!-- Aliases Table -->
   <p-card class="aliases-card">
-    <ng-template pTemplate="content">
+    <ng-template #content>
       <p-table
         [value]="aliases"
         [loading]="loading"
@@ -44,7 +44,7 @@
         [showCurrentPageReport]="true"
         currentPageReportTemplate="Affichage de {first} à {last} sur {totalRecords} alias"
         [rowsPerPageOptions]="[10, 25, 50]"
-        styleClass="p-datatable-sm"
+        class="p-datatable-sm"
         [globalFilterFields]="['full_address', 'local_part', 'domain_name']">
 
         <ng-template pTemplate="header">
@@ -162,7 +162,7 @@
     <form [formGroup]="addAliasForm" class="alias-form">
       <div class="form-field">
         <label for="domain">Domaine *</label>
-        <p-dropdown
+        <p-select
           id="domain"
           formControlName="domain_id"
           [options]="getActiveDomainsForDropdown()"
@@ -170,9 +170,9 @@
           optionValue="id"
           placeholder="Sélectionnez un domaine"
           [loading]="domainsLoading"
-          styleClass="w-full"
+          class="w-full"
           [class.ng-invalid]="addAliasForm.get('domain_id')?.invalid && addAliasForm.get('domain_id')?.touched">
-        </p-dropdown>
+        </p-select>
         <small
           *ngIf="addAliasForm.get('domain_id')?.invalid && addAliasForm.get('domain_id')?.touched"
           class="p-error">
@@ -184,7 +184,7 @@
       </div>
 
       <div class="form-field">
-        <label for="localPart">Partie locale (avant @) *</label>
+        <label for="localPart">Partie locale (avant &#64;) *</label>
         <input
           pInputText
           id="localPart"
