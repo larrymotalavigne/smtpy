@@ -170,7 +170,9 @@
           optionValue="id"
           placeholder="Sélectionnez un domaine"
           [loading]="domainsLoading"
-          class="w-full"
+          [showClear]="false"
+          appendTo="body"
+          styleClass="w-full"
           [class.ng-invalid]="addAliasForm.get('domain_id')?.invalid && addAliasForm.get('domain_id')?.touched">
         </p-select>
         <small
@@ -201,14 +203,14 @@
 
       <div class="form-field">
         <label for="targets">Adresses de destination *</label>
-        <p-chips
+        <p-chip
           id="targets"
           formControlName="targets"
           placeholder="Ajoutez des adresses email"
           styleClass="w-full"
           separator=","
           [class.ng-invalid]="addAliasForm.get('targets')?.invalid && addAliasForm.get('targets')?.touched">
-        </p-chips>
+        </p-chip>
         <small class="p-hint">
           Appuyez sur Entrée ou , après chaque email. Les emails reçus seront transférés vers toutes ces adresses.
         </small>

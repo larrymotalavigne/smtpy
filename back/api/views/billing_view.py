@@ -154,7 +154,6 @@ async def get_organization_billing(
 
 @router.get(
     "/subscription",
-    response_model=SubscriptionResponse,
     summary="Get current subscription",
     responses={
         404: {"model": ErrorResponse, "description": "Organization or subscription not found"},
@@ -179,13 +178,11 @@ async def get_subscription(
             organization_id=organization_id,
         )
 
-        if not subscription:
-            raise HTTPException(
-                status_code=status.HTTP_404_NOT_FOUND,
-                detail="No active subscription found",
-            )
-
-        return subscription
+        # Return success even if no subscription (free tier)
+        return {
+            "success": True,
+            "data": subscription
+        }
     except HTTPException:
         raise
     except ValueError as e:
