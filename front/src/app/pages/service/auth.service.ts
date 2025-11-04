@@ -1,6 +1,6 @@
-import { Injectable } from '@angular/core';
+import { Injectable, OnDestroy } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
-import { Observable, BehaviorSubject, tap, catchError, of } from 'rxjs';
+import { Observable, BehaviorSubject, tap, catchError, of, interval, Subscription } from 'rxjs';
 import { environment } from '../../../environments/environment';
 import { ApiResponse } from '../../core/interfaces/common.interface';
 
@@ -33,15 +33,46 @@ export interface AuthResponse {
 @Injectable({
   providedIn: 'root'
 })
-export class AuthService {
+export class AuthService implements OnDestroy {
   private apiUrl = `${environment.apiUrl}/auth`;
   private currentUserSubject = new BehaviorSubject<User | null>(null);
-  
+  private authCheckSubscription?: Subscription;
+
+  // Check auth status every 5 minutes to detect session expiration
+  private readonly AUTH_CHECK_INTERVAL = 5 * 60 * 1000;
+
   public currentUser$ = this.currentUserSubject.asObservable();
-  
+
   constructor(private http: HttpClient) {
     // Check if user is already logged in on app start
     this.checkAuthStatus().subscribe();
+
+    // Set up periodic auth status checks
+    this.startPeriodicAuthCheck();
+  }
+
+  ngOnDestroy(): void {
+    this.stopPeriodicAuthCheck();
+  }
+
+  private startPeriodicAuthCheck(): void {
+    // Check auth status periodically to detect session expiration
+    this.authCheckSubscription = interval(this.AUTH_CHECK_INTERVAL).subscribe(() => {
+      if (this.isAuthenticated()) {
+        this.checkAuthStatus().subscribe({
+          error: () => {
+            // Session expired or error occurred
+            // The error interceptor will handle the redirect
+          }
+        });
+      }
+    });
+  }
+
+  private stopPeriodicAuthCheck(): void {
+    if (this.authCheckSubscription) {
+      this.authCheckSubscription.unsubscribe();
+    }
   }
 
   login(credentials: LoginRequest): Observable<ApiResponse<AuthResponse>> {

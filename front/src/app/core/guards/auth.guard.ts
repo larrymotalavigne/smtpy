@@ -1,31 +1,48 @@
 import { inject } from '@angular/core';
 import { Router, CanActivateFn } from '@angular/router';
 import { AuthService } from '../../pages/service/auth.service';
-import { map, take } from 'rxjs/operators';
+import { map, take, catchError, switchMap } from 'rxjs/operators';
+import { of } from 'rxjs';
 
 /**
  * Auth guard to protect routes that require authentication
- * Redirects to login page if user is not authenticated
+ * Revalidates session with backend before allowing access
+ * Redirects to login page if user is not authenticated or session expired
  */
 export const authGuard: CanActivateFn = (route, state) => {
   const authService = inject(AuthService);
   const router = inject(Router);
 
-  return authService.currentUser$.pipe(
-    take(1),
-    map(user => {
-      if (user) {
-        // User is authenticated, allow access
-        return true;
-      } else {
-        // User is not authenticated, redirect to login
+  // If user appears authenticated, revalidate session with backend
+  if (authService.isAuthenticated()) {
+    return authService.checkAuthStatus().pipe(
+      map(response => {
+        if (response.success && response.data) {
+          // Session is valid, allow access
+          return true;
+        } else {
+          // Session invalid, redirect to login
+          router.navigate(['/auth/login'], {
+            queryParams: { returnUrl: state.url }
+          });
+          return false;
+        }
+      }),
+      catchError(() => {
+        // Error checking auth status, redirect to login
         router.navigate(['/auth/login'], {
           queryParams: { returnUrl: state.url }
         });
-        return false;
-      }
-    })
-  );
+        return of(false);
+      })
+    );
+  } else {
+    // User is not authenticated, redirect to login immediately
+    router.navigate(['/auth/login'], {
+      queryParams: { returnUrl: state.url }
+    });
+    return of(false);
+  }
 };
 
 /**

@@ -136,9 +136,10 @@ class AuthResponse(BaseModel):
 # Dependency to get current user from session
 async def get_current_user(
         request: Request,
+        response: Response,
         session: AsyncSession = Depends(get_async_session)
 ) -> Optional[dict]:
-    """Get current user from session cookie."""
+    """Get current user from session cookie and refresh it (sliding window)."""
     session_cookie = request.cookies.get(SESSION_COOKIE_NAME)
 
     if not session_cookie:
@@ -153,6 +154,18 @@ async def get_current_user(
 
         if not user or not user.is_active:
             return None
+
+        # Refresh session cookie with new expiration (sliding window)
+        # This keeps the user logged in as long as they're active
+        new_session_token = serializer.dumps(user.id)
+        response.set_cookie(
+            key=SESSION_COOKIE_NAME,
+            value=new_session_token,
+            httponly=True,
+            secure=SETTINGS.is_production,
+            samesite="lax",
+            max_age=SESSION_MAX_AGE
+        )
 
         return user.to_dict()
 

@@ -37,11 +37,15 @@ export const errorInterceptor: HttpInterceptorFn = (req, next) => {
               }
               break;
             case 401:
-              errorMessage = 'Authentication required';
-              errorDetail = 'Please log in to continue';
+              errorMessage = 'Session expirée';
+              errorDetail = 'Votre session a expiré. Veuillez vous reconnecter.';
               // Clear auth state and redirect to login
               authService.logout().subscribe();
-              router.navigate(['/auth/login']);
+              // Save current URL to return after login
+              const currentUrl = router.url;
+              router.navigate(['/auth/login'], {
+                queryParams: currentUrl !== '/auth/login' ? { returnUrl: currentUrl } : {}
+              });
               break;
             case 403:
               errorMessage = 'Access denied';
