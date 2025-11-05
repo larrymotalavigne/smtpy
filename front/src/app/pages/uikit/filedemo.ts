@@ -1,4 +1,4 @@
-import { CommonModule } from '@angular/common';
+
 import { Component } from '@angular/core';
 import { MessageService } from 'primeng/api';
 import { ButtonModule } from 'primeng/button';
@@ -8,7 +8,7 @@ import { ToastModule } from 'primeng/toast';
 @Component({
     selector: 'app-file-demo',
     standalone: true,
-    imports: [CommonModule, FileUploadModule, ToastModule, ButtonModule],
+    imports: [FileUploadModule, ToastModule, ButtonModule],
     template: `<p-toast />
         <div class="grid grid-cols-12 gap-8">
             <div class="col-span-full lg:col-span-6">

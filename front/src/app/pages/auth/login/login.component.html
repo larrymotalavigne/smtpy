@@ -14,12 +14,11 @@
       <ng-template pTemplate="content">
         <form [formGroup]="loginForm" (ngSubmit)="onSubmit()" class="auth-form">
           <!-- Error Message -->
-          <p-message
-            *ngIf="errorMessage"
-            severity="error"
-            [text]="errorMessage"
-            styleClass="w-full mb-4">
-          </p-message>
+          @if (errorMessage) {
+            <p-message severity="error"
+              [text]="errorMessage"
+              styleClass="w-full mb-4" />
+          }
 
           <!-- Username Field -->
           <div class="form-field">
@@ -39,9 +38,11 @@
                 autocomplete="username"
                 class="w-full" />
             </div>
-            <small class="form-error" *ngIf="isFieldInvalid('username')">
-              {{ getFieldError('username') }}
-            </small>
+            @if (isFieldInvalid('username')) {
+              <small class="form-error">
+                {{ getFieldError('username') }}
+              </small>
+            }
           </div>
 
           <!-- Password Field -->
@@ -52,8 +53,7 @@
             </label>
             <div class="input-wrapper">
               <i class="pi pi-lock input-icon"></i>
-              <p-password
-                id="password"
+              <p-password id="password"
                 data-testid="login-password-field"
                 formControlName="password"
                 placeholder="Entrez votre mot de passe"
@@ -62,23 +62,22 @@
                 [class.invalid]="isFieldInvalid('password')"
                 autocomplete="current-password"
                 styleClass="w-full"
-                inputStyleClass="w-full">
-              </p-password>
+                inputStyleClass="w-full" />
             </div>
-            <small class="form-error" *ngIf="isFieldInvalid('password')">
-              {{ getFieldError('password') }}
-            </small>
+            @if (isFieldInvalid('password')) {
+              <small class="form-error">
+                {{ getFieldError('password') }}
+              </small>
+            }
           </div>
 
           <!-- Remember Me & Forgot Password -->
           <div class="form-options">
             <div class="remember-me">
-              <p-checkbox
-                formControlName="rememberMe"
+              <p-checkbox formControlName="rememberMe"
                 [binary]="true"
                 inputId="rememberMe"
-                label="Se souvenir de moi">
-              </p-checkbox>
+                label="Se souvenir de moi" />
             </div>
             <a routerLink="/auth/forgot-password" class="forgot-password-link">
               Mot de passe oublié?
@@ -86,15 +85,13 @@
           </div>
 
           <!-- Submit Button -->
-          <p-button
-            type="submit"
+          <p-button type="submit"
             data-testid="login-submit-button"
             label="Se connecter"
             icon="pi pi-sign-in"
             [loading]="loading"
             [disabled]="loading"
-            styleClass="w-full login-button">
-          </p-button>
+            styleClass="w-full login-button" />
 
           <!-- Divider -->
           <div class="divider">
@@ -125,4 +122,4 @@
 </div>
 
 <!-- Toast for notifications -->
-<p-toast></p-toast>
+<p-toast />

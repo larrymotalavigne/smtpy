@@ -14,12 +14,11 @@
       <ng-template pTemplate="content">
         <form [formGroup]="registerForm" (ngSubmit)="onSubmit()" class="auth-form">
           <!-- Error Message -->
-          <p-message
-            *ngIf="errorMessage"
-            severity="error"
-            [text]="errorMessage"
-            styleClass="w-full mb-4">
-          </p-message>
+          @if (errorMessage) {
+            <p-message severity="error"
+              [text]="errorMessage"
+              styleClass="w-full mb-4" />
+          }
 
           <!-- Username Field -->
           <div class="form-field">
@@ -39,9 +38,11 @@
                 autocomplete="username"
                 class="w-full" />
             </div>
-            <small class="form-error" *ngIf="isFieldInvalid('username')">
-              {{ getFieldError('username') }}
-            </small>
+            @if (isFieldInvalid('username')) {
+              <small class="form-error">
+                {{ getFieldError('username') }}
+              </small>
+            }
           </div>
 
           <!-- Email Field -->
@@ -63,9 +64,11 @@
                 autocomplete="email"
                 class="w-full" />
             </div>
-            <small class="form-error" *ngIf="isFieldInvalid('email')">
-              {{ getFieldError('email') }}
-            </small>
+            @if (isFieldInvalid('email')) {
+              <small class="form-error">
+                {{ getFieldError('email') }}
+              </small>
+            }
           </div>
 
           <!-- Password Field -->
@@ -76,8 +79,7 @@
             </label>
             <div class="input-wrapper">
               <i class="pi pi-lock input-icon"></i>
-              <p-password
-                id="password"
+              <p-password id="password"
                 data-testid="register-password-field"
                 formControlName="password"
                 placeholder="Créez un mot de passe fort"
@@ -90,15 +92,18 @@
                 promptLabel="Entrez un mot de passe"
                 weakLabel="Faible"
                 mediumLabel="Moyen"
-                strongLabel="Fort">
-              </p-password>
+                strongLabel="Fort" />
             </div>
-            <small class="form-error" *ngIf="isFieldInvalid('password')">
-              {{ getFieldError('password') }}
-            </small>
-            <small class="form-hint" *ngIf="!isFieldInvalid('password')">
-              Minimum 8 caractères avec majuscule, minuscule et chiffre
-            </small>
+            @if (isFieldInvalid('password')) {
+              <small class="form-error">
+                {{ getFieldError('password') }}
+              </small>
+            }
+            @if (!isFieldInvalid('password')) {
+              <small class="form-hint">
+                Minimum 8 caractères avec majuscule, minuscule et chiffre
+              </small>
+            }
           </div>
 
           <!-- Confirm Password Field -->
@@ -109,8 +114,7 @@
             </label>
             <div class="input-wrapper">
               <i class="pi pi-lock input-icon"></i>
-              <p-password
-                id="confirmPassword"
+              <p-password id="confirmPassword"
                 data-testid="register-confirm-password-field"
                 formControlName="confirmPassword"
                 placeholder="Confirmez votre mot de passe"
@@ -119,26 +123,27 @@
                 [class.invalid]="isFieldInvalid('confirmPassword') || getPasswordMatchError()"
                 autocomplete="new-password"
                 styleClass="w-full"
-                inputStyleClass="w-full">
-              </p-password>
+                inputStyleClass="w-full" />
             </div>
-            <small class="form-error" *ngIf="isFieldInvalid('confirmPassword')">
-              {{ getFieldError('confirmPassword') }}
-            </small>
-            <small class="form-error" *ngIf="getPasswordMatchError()">
-              {{ getPasswordMatchError() }}
-            </small>
+            @if (isFieldInvalid('confirmPassword')) {
+              <small class="form-error">
+                {{ getFieldError('confirmPassword') }}
+              </small>
+            }
+            @if (getPasswordMatchError()) {
+              <small class="form-error">
+                {{ getPasswordMatchError() }}
+              </small>
+            }
           </div>
 
           <!-- Accept Terms -->
           <div class="form-field">
             <div class="accept-terms">
-              <p-checkbox
-                formControlName="acceptTerms"
+              <p-checkbox formControlName="acceptTerms"
                 [binary]="true"
                 inputId="acceptTerms"
-                data-testid="register-accept-terms">
-              </p-checkbox>
+                data-testid="register-accept-terms" />
               <label for="acceptTerms" class="terms-label">
                 J'accepte les
                 <a href="/terms" target="_blank" class="terms-link">conditions d'utilisation</a>
@@ -147,21 +152,21 @@
                 <span class="required">*</span>
               </label>
             </div>
-            <small class="form-error" *ngIf="isFieldInvalid('acceptTerms')">
-              {{ getFieldError('acceptTerms') }}
-            </small>
+            @if (isFieldInvalid('acceptTerms')) {
+              <small class="form-error">
+                {{ getFieldError('acceptTerms') }}
+              </small>
+            }
           </div>
 
           <!-- Submit Button -->
-          <p-button
-            type="submit"
+          <p-button type="submit"
             data-testid="register-submit-button"
             label="Créer mon compte"
             icon="pi pi-user-plus"
             [loading]="loading"
             [disabled]="loading"
-            styleClass="w-full register-button">
-          </p-button>
+            styleClass="w-full register-button" />
 
           <!-- Divider -->
           <div class="divider">
@@ -192,4 +197,4 @@
 </div>
 
 <!-- Toast for notifications -->
-<p-toast></p-toast>
+<p-toast />

@@ -61,8 +61,8 @@ import { Product, ProductService } from '../service/product.service';
                                     <div class="flex flex-col md:items-end gap-8">
                                         <span class="text-xl font-semibold">$ {{ item.price }}</span>
                                         <div class="flex flex-row-reverse md:flex-row gap-2">
-                                            <p-button icon="pi pi-heart" styleClass="h-full" [outlined]="true"></p-button>
-                                            <p-button icon="pi pi-shopping-cart" label="Buy Now" [disabled]="item.inventoryStatus === 'OUTOFSTOCK'" styleClass="flex-auto md:flex-initial whitespace-nowrap"></p-button>
+                                            <p-button icon="pi pi-heart" class="h-full" [outlined]="true"></p-button>
+                                            <p-button icon="pi pi-shopping-cart" label="Buy Now" [disabled]="item.inventoryStatus === 'OUTOFSTOCK'" class="flex-auto md:flex-initial whitespace-nowrap"></p-button>
                                         </div>
                                     </div>
                                 </div>
@@ -113,8 +113,8 @@ import { Product, ProductService } from '../service/product.service';
                                     <div class="flex flex-col gap-6 mt-6">
                                         <span class="text-2xl font-semibold">$ {{ item.price }}</span>
                                         <div class="flex gap-2">
-                                            <p-button icon="pi pi-shopping-cart" label="Buy Now" [disabled]="item.inventoryStatus === 'OUTOFSTOCK'" class="flex-auto whitespace-nowrap" styleClass="w-full"></p-button>
-                                            <p-button icon="pi pi-heart" styleClass="h-full" [outlined]="true"></p-button>
+                                            <p-button icon="pi pi-shopping-cart" label="Buy Now" [disabled]="item.inventoryStatus === 'OUTOFSTOCK'" class="flex-auto whitespace-nowrap" class="w-full"></p-button>
+                                            <p-button icon="pi pi-heart" class="h-full" [outlined]="true"></p-button>
                                         </div>
                                     </div>
                                 </div>

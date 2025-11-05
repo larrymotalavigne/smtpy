@@ -1,52 +1,50 @@
-  <div class="profile-container">
-    <!-- Page Header -->
-    <div class="page-header">
-      <div>
-        <h1 class="page-title">Mon Profil</h1>
-        <p class="page-subtitle">Gérez vos informations personnelles</p>
-      </div>
+<div class="profile-container">
+  <!-- Page Header -->
+  <div class="page-header">
+    <div>
+      <h1 class="page-title">Mon Profil</h1>
+      <p class="page-subtitle">Gérez vos informations personnelles</p>
     </div>
+  </div>
 
-    <div class="profile-content">
-      <!-- User Info Card -->
-      <p-card class="user-info-card">
-        <div class="user-info-header">
-          <p-avatar
-            [label]="getUserInitials()"
-            size="xlarge"
-            shape="circle"
-            styleClass="avatar-gradient">
-          </p-avatar>
+  <div class="profile-content">
+    <!-- User Info Card -->
+    <p-card class="user-info-card">
+      <div class="user-info-header">
+        <p-avatar [label]="getUserInitials()"
+          size="xlarge"
+          shape="circle"
+          styleClass="avatar-gradient" />
 
-          <div class="user-details" *ngIf="currentUser">
+        @if (currentUser) {
+          <div class="user-details">
             <h2 class="user-name">{{ currentUser.username }}</h2>
             <p class="user-email">{{ currentUser.email }}</p>
-
             <div class="user-badges">
-              <p-tag
-                [value]="getRoleLabel()"
+              <p-tag [value]="getRoleLabel()"
                 [severity]="getRoleSeverity()"
-                [icon]="currentUser.role === 'admin' ? 'pi pi-shield' : 'pi pi-user'">
-              </p-tag>
-              <p-tag
-                [value]="getStatusLabel()"
+                [icon]="currentUser.role === 'admin' ? 'pi pi-shield' : 'pi pi-user'" />
+              <p-tag [value]="getStatusLabel()"
                 [severity]="getStatusSeverity()"
-                icon="pi pi-circle-fill">
-              </p-tag>
+                icon="pi pi-circle-fill" />
             </div>
           </div>
+        }
 
-          <!-- Skeleton loader -->
-          <div class="user-details" *ngIf="!currentUser">
-            <p-skeleton width="200px" height="2rem" styleClass="mb-2"></p-skeleton>
-            <p-skeleton width="250px" height="1.5rem" styleClass="mb-3"></p-skeleton>
-            <p-skeleton width="150px" height="1.5rem"></p-skeleton>
+        <!-- Skeleton loader -->
+        @if (!currentUser) {
+          <div class="user-details">
+            <p-skeleton width="200px" height="2rem" styleClass="mb-2" />
+            <p-skeleton width="250px" height="1.5rem" styleClass="mb-3" />
+            <p-skeleton width="150px" height="1.5rem" />
           </div>
-        </div>
+        }
+      </div>
 
-        <p-divider></p-divider>
+      <p-divider />
 
-        <div class="user-metadata" *ngIf="currentUser">
+      @if (currentUser) {
+        <div class="user-metadata">
           <div class="metadata-item">
             <i class="pi pi-calendar"></i>
             <div>
@@ -54,7 +52,6 @@
               <span class="metadata-value">{{ formatDate(currentUser.created_at) }}</span>
             </div>
           </div>
-
           <div class="metadata-item">
             <i class="pi pi-clock"></i>
             <div>
@@ -62,7 +59,6 @@
               <span class="metadata-value">{{ formatDate(currentUser.updated_at) }}</span>
             </div>
           </div>
-
           <div class="metadata-item">
             <i class="pi pi-id-card"></i>
             <div>
@@ -71,18 +67,20 @@
             </div>
           </div>
         </div>
-      </p-card>
+      }
+    </p-card>
 
-      <!-- Profile Information Form -->
-      <p-card class="form-card">
-        <ng-template pTemplate="header">
-          <div class="card-header">
-            <i class="pi pi-user"></i>
-            <h3>Informations du Profil</h3>
-          </div>
-        </ng-template>
+    <!-- Profile Information Form -->
+    <p-card class="form-card">
+      <ng-template pTemplate="header">
+        <div class="card-header">
+          <i class="pi pi-user"></i>
+          <h3>Informations du Profil</h3>
+        </div>
+      </ng-template>
 
-        <form [formGroup]="profileForm" (ngSubmit)="onSaveProfile()" *ngIf="profileForm">
+      @if (profileForm) {
+        <form [formGroup]="profileForm" (ngSubmit)="onSaveProfile()">
           <div class="form-grid">
             <!-- Username (Read-only) -->
             <div class="form-field">
@@ -98,7 +96,6 @@
                 Le nom d'utilisateur ne peut pas être modifié
               </small>
             </div>
-
             <!-- Email -->
             <div class="form-field">
               <label for="email">Adresse email *</label>
@@ -109,40 +106,39 @@
                 placeholder="votre@email.com"
                 class="w-full"
                 [class.input-error]="isFieldInvalid(profileForm, 'email')" />
-              <small class="error-message" *ngIf="isFieldInvalid(profileForm, 'email')">
-                {{ getFieldError(profileForm, 'email') }}
-              </small>
+              @if (isFieldInvalid(profileForm, 'email')) {
+                <small class="error-message">
+                  {{ getFieldError(profileForm, 'email') }}
+                </small>
+              }
             </div>
           </div>
-
           <div class="form-actions">
-            <p-button
-              label="Enregistrer les modifications"
+            <p-button label="Enregistrer les modifications"
               icon="pi pi-save"
               [loading]="savingProfile"
               [disabled]="profileForm.invalid || profileForm.pristine"
-              type="submit">
-            </p-button>
+              type="submit" />
           </div>
         </form>
-      </p-card>
+      }
+    </p-card>
 
-      <!-- Change Password Form -->
-      <p-card class="form-card">
-        <ng-template pTemplate="header">
-          <div class="card-header">
-            <i class="pi pi-lock"></i>
-            <h3>Changer le Mot de Passe</h3>
-          </div>
-        </ng-template>
+    <!-- Change Password Form -->
+    <p-card class="form-card">
+      <ng-template pTemplate="header">
+        <div class="card-header">
+          <i class="pi pi-lock"></i>
+          <h3>Changer le Mot de Passe</h3>
+        </div>
+      </ng-template>
 
-        <p-message
-          severity="info"
-          text="Pour des raisons de sécurité, votre mot de passe doit contenir au moins 8 caractères avec des majuscules, minuscules et chiffres."
-          styleClass="mb-4">
-        </p-message>
+      <p-message severity="info"
+        text="Pour des raisons de sécurité, votre mot de passe doit contenir au moins 8 caractères avec des majuscules, minuscules et chiffres."
+        styleClass="mb-4" />
 
-        <form [formGroup]="passwordForm" (ngSubmit)="onChangePassword()" *ngIf="passwordForm">
+      @if (passwordForm) {
+        <form [formGroup]="passwordForm" (ngSubmit)="onChangePassword()">
           <div class="form-grid">
             <!-- Current Password -->
             <div class="form-field">
@@ -155,11 +151,12 @@
                 placeholder="Mot de passe actuel"
                 class="w-full"
                 [class.input-error]="isFieldInvalid(passwordForm, 'currentPassword')" />
-              <small class="error-message" *ngIf="isFieldInvalid(passwordForm, 'currentPassword')">
-                {{ getFieldError(passwordForm, 'currentPassword') }}
-              </small>
+              @if (isFieldInvalid(passwordForm, 'currentPassword')) {
+                <small class="error-message">
+                  {{ getFieldError(passwordForm, 'currentPassword') }}
+                </small>
+              }
             </div>
-
             <!-- New Password -->
             <div class="form-field">
               <label for="newPassword">Nouveau mot de passe *</label>
@@ -171,11 +168,12 @@
                 placeholder="Nouveau mot de passe"
                 class="w-full"
                 [class.input-error]="isFieldInvalid(passwordForm, 'newPassword')" />
-              <small class="error-message" *ngIf="isFieldInvalid(passwordForm, 'newPassword')">
-                {{ getFieldError(passwordForm, 'newPassword') }}
-              </small>
+              @if (isFieldInvalid(passwordForm, 'newPassword')) {
+                <small class="error-message">
+                  {{ getFieldError(passwordForm, 'newPassword') }}
+                </small>
+              }
             </div>
-
             <!-- Confirm Password -->
             <div class="form-field">
               <label for="confirmPassword">Confirmer le nouveau mot de passe *</label>
@@ -187,26 +185,26 @@
                 placeholder="Confirmer le mot de passe"
                 class="w-full"
                 [class.input-error]="isFieldInvalid(passwordForm, 'confirmPassword')" />
-              <small class="error-message" *ngIf="isFieldInvalid(passwordForm, 'confirmPassword')">
-                {{ getFieldError(passwordForm, 'confirmPassword') }}
-              </small>
+              @if (isFieldInvalid(passwordForm, 'confirmPassword')) {
+                <small class="error-message">
+                  {{ getFieldError(passwordForm, 'confirmPassword') }}
+                </small>
+              }
             </div>
           </div>
-
           <div class="form-actions">
-            <p-button
-              label="Changer le mot de passe"
+            <p-button label="Changer le mot de passe"
               icon="pi pi-key"
               severity="warn"
               [loading]="changingPassword"
               [disabled]="passwordForm.invalid"
-              type="submit">
-            </p-button>
+              type="submit" />
           </div>
         </form>
-      </p-card>
-    </div>
-
-    <!-- Toast for notifications -->
-    <p-toast position="top-right"></p-toast>
+      }
+    </p-card>
   </div>
+
+  <!-- Toast for notifications -->
+  <p-toast position="top-right" />
+</div>

@@ -276,7 +276,7 @@ import { TableModule } from 'primeng/table';
   [rows]="10"
   [showCurrentPageReport]="true"
   [loading]="loading"
-  styleClass="p-datatable-sm">
+  class="p-datatable-sm">
   <ng-template pTemplate="header">
     <tr>
       <th>Domain</th>

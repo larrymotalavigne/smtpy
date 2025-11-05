@@ -169,7 +169,7 @@ import { SplitButtonModule } from 'primeng/splitbutton';
                 <div class="flex flex-wrap gap-2">
                     <p-button type="button" label="Search" icon="pi pi-search" [loading]="loading[0]" (click)="load(0)" />
                     <p-button type="button" label="Search" icon="pi pi-search" iconPos="right" [loading]="loading[1]" (click)="load(1)" />
-                    <p-button type="button" styleClass="h-full" icon="pi pi-search" [loading]="loading[2]" (click)="load(2)" />
+                    <p-button type="button" class="h-full" icon="pi pi-search" [loading]="loading[2]" (click)="load(2)" />
                     <p-button type="button" label="Search" [loading]="loading[3]" (click)="load(3)" />
                 </div>
             </div>

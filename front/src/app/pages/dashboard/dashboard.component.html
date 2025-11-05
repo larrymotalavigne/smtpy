@@ -5,44 +5,46 @@
       <h1 class="dashboard-title">Aperçu de votre compte</h1>
       <p class="dashboard-subtitle">Vue d'ensemble de votre activité</p>
     </div>
-    <p-button
-      label="Ajouter un domaine"
+    <p-button label="Ajouter un domaine"
       icon="pi pi-plus"
-      (onClick)="navigateTo('/domains')">
-    </p-button>
+      (onClick)="navigateTo('/domains')" />
   </div>
 
   <!-- Stats Cards -->
   <div class="stats-grid">
     <!-- Loading State -->
-    <ng-container *ngIf="loadingStats">
-      <div class="stat-card-skeleton" *ngFor="let i of [1,2,3,4]">
-        <p-card>
-          <p-skeleton width="100%" height="120px"></p-skeleton>
-        </p-card>
-      </div>
-    </ng-container>
+    @if (loadingStats) {
+      @for (i of [1,2,3,4]; track i) {
+        <div class="stat-card-skeleton">
+          <p-card>
+            <p-skeleton width="100%" height="120px" />
+          </p-card>
+        </div>
+      }
+    }
 
     <!-- Stats Data -->
-    <ng-container *ngIf="!loadingStats">
-      <p-card *ngFor="let stat of stats" class="stat-card" [ngClass]="'stat-card-' + stat.icon.split(' ')[1].split('-')[1]">
-        <div class="stat-content">
-          <div class="stat-info">
-            <span class="stat-title">{{ stat.title }}</span>
-            <div class="stat-value-row">
-              <span class="stat-value">{{ stat.value }}</span>
-              <span class="stat-change" [ngClass]="stat.change > 0 ? 'positive' : stat.change < 0 ? 'negative' : 'neutral'">
-                <i [class]="stat.change > 0 ? 'pi pi-arrow-up' : stat.change < 0 ? 'pi pi-arrow-down' : 'pi pi-minus'"></i>
-                {{ stat.changeLabel }}
-              </span>
+    @if (!loadingStats) {
+      @for (stat of stats; track stat) {
+        <p-card class="stat-card" [ngClass]="'stat-card-' + stat.icon.split(' ')[1].split('-')[1]">
+          <div class="stat-content">
+            <div class="stat-info">
+              <span class="stat-title">{{ stat.title }}</span>
+              <div class="stat-value-row">
+                <span class="stat-value">{{ stat.value }}</span>
+                <span class="stat-change" [ngClass]="stat.change > 0 ? 'positive' : stat.change < 0 ? 'negative' : 'neutral'">
+                  <i [class]="stat.change > 0 ? 'pi pi-arrow-up' : stat.change < 0 ? 'pi pi-arrow-down' : 'pi pi-minus'"></i>
+                  {{ stat.changeLabel }}
+                </span>
+              </div>
+            </div>
+            <div class="stat-icon-wrapper" [ngClass]="stat.iconColor">
+              <i [class]="stat.icon"></i>
             </div>
           </div>
-          <div class="stat-icon-wrapper" [ngClass]="stat.iconColor">
-            <i [class]="stat.icon"></i>
-          </div>
-        </div>
-      </p-card>
-    </ng-container>
+        </p-card>
+      }
+    }
   </div>
 
   <!-- Chart and Quick Actions -->
@@ -52,30 +54,34 @@
       <ng-template pTemplate="header">
         <div class="card-header">
           <h3>Activité des 7 derniers jours</h3>
-          <p-button
-            icon="pi pi-ellipsis-v"
+          <p-button icon="pi pi-ellipsis-v"
             [text]="true"
             [rounded]="true"
-            size="small">
-          </p-button>
+            size="small" />
         </div>
       </ng-template>
       <ng-template pTemplate="content">
         <div class="chart-wrapper">
           <!-- Loading State -->
-          <div *ngIf="loadingChart" class="chart-loading">
-            <p-skeleton width="100%" height="300px"></p-skeleton>
-          </div>
+          @if (loadingChart) {
+            <div class="chart-loading">
+              <p-skeleton width="100%" height="300px" />
+            </div>
+          }
 
           <!-- Chart -->
-          <p-chart *ngIf="!loadingChart && hasChartData" type="line" [data]="chartData" [options]="chartOptions"></p-chart>
+          @if (!loadingChart && hasChartData) {
+            <p-chart type="line" [data]="chartData" [options]="chartOptions" />
+          }
 
           <!-- Empty State -->
-          <div *ngIf="!loadingChart && !hasChartData" class="empty-state">
-            <i class="pi pi-chart-line empty-icon"></i>
-            <p class="empty-title">Aucune donnée disponible</p>
-            <p class="empty-subtitle">Les statistiques apparaîtront ici une fois que vous commencerez à envoyer des emails</p>
-          </div>
+          @if (!loadingChart && !hasChartData) {
+            <div class="empty-state">
+              <i class="pi pi-chart-line empty-icon"></i>
+              <p class="empty-title">Aucune donnée disponible</p>
+              <p class="empty-subtitle">Les statistiques apparaîtront ici une fois que vous commencerez à envoyer des emails</p>
+            </div>
+          }
         </div>
       </ng-template>
     </p-card>
@@ -131,13 +137,11 @@
     <ng-template pTemplate="header">
       <div class="card-header">
         <h3>Domaines récents</h3>
-        <p-button
-          label="Voir tout"
+        <p-button label="Voir tout"
           icon="pi pi-arrow-right"
           iconPos="right"
           [text]="true"
-          (onClick)="navigateTo('/domains')">
-        </p-button>
+          (onClick)="navigateTo('/domains')" />
       </div>
     </ng-template>
     <ng-template pTemplate="content">
@@ -156,17 +160,15 @@
           <tr>
             <td>
               <div class="domain-cell">
-                <p-avatar
-                  icon="pi pi-globe"
+                <p-avatar icon="pi pi-globe"
                   size="normal"
                   shape="circle"
-                  [style]="{'background-color': '#667eea', 'color': '#ffffff'}">
-                </p-avatar>
+                  [style]="{'background-color': '#667eea', 'color': '#ffffff'}" />
                 <span class="domain-name">{{ domain.name }}</span>
               </div>
             </td>
             <td>
-              <p-tag [value]="getStatusLabel(domain.status)" [severity]="getStatusSeverity(domain.status)"></p-tag>
+              <p-tag [value]="getStatusLabel(domain.status)" [severity]="getStatusSeverity(domain.status)" />
             </td>
             <td>
               <span class="alias-count">{{ domain.aliasCount }}</span>
@@ -178,13 +180,11 @@
               <span class="email-count">{{ domain.emailsToday }}</span>
             </td>
             <td>
-              <p-button
-                icon="pi pi-cog"
+              <p-button icon="pi pi-cog"
                 [text]="true"
                 [rounded]="true"
                 size="small"
-                (onClick)="navigateTo('/domains')">
-              </p-button>
+                (onClick)="navigateTo('/domains')" />
             </td>
           </tr>
         </ng-template>
@@ -195,12 +195,10 @@
                 <i class="pi pi-globe empty-icon"></i>
                 <p class="empty-title">Aucun domaine configuré</p>
                 <p class="empty-subtitle">Commencez par ajouter votre premier domaine pour recevoir des emails</p>
-                <p-button
-                  label="Ajouter un domaine"
+                <p-button label="Ajouter un domaine"
                   icon="pi pi-plus"
                   size="small"
-                  (onClick)="navigateTo('/domains')">
-                </p-button>
+                  (onClick)="navigateTo('/domains')" />
               </div>
             </td>
           </tr>
@@ -211,4 +209,4 @@
 </div>
 
 <!-- Toast Notifications -->
-<p-toast position="top-right"></p-toast>
+<p-toast position="top-right" />

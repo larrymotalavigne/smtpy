@@ -26,53 +26,43 @@
 
           <div class="filter-field">
             <label for="status">Statut</label>
-            <p-select
-              id="status"
+            <p-select id="status"
               formControlName="status"
               [options]="statusOptions"
               placeholder="Tous les statuts"
-              styleClass="w-full">
-            </p-select>
+              styleClass="w-full" />
           </div>
 
           <div class="filter-field">
             <label for="domain">Domaine</label>
-            <p-select
-              id="domain"
+            <p-select id="domain"
               formControlName="domain"
               [options]="domainOptions"
               placeholder="Tous les domaines"
-              styleClass="w-full">
-            </p-select>
+              styleClass="w-full" />
           </div>
 
           <div class="filter-field">
             <label for="dateRange">Période</label>
-            <p-datepicker
-              id="dateRange"
+            <p-datepicker id="dateRange"
               formControlName="dateRange"
               selectionMode="range"
               [showIcon]="true"
               dateFormat="dd/mm/yy"
               placeholder="Sélectionner une période"
-              styleClass="w-full">
-            </p-datepicker>
+              styleClass="w-full" />
           </div>
         </div>
 
         <div class="filter-actions">
-          <p-button
-            label="Appliquer"
+          <p-button label="Appliquer"
             icon="pi pi-check"
-            (onClick)="applyFilters()">
-          </p-button>
-          <p-button
-            label="Réinitialiser"
+            (onClick)="applyFilters()" />
+          <p-button label="Réinitialiser"
             icon="pi pi-times"
             severity="secondary"
             [text]="true"
-            (onClick)="clearFilters()">
-          </p-button>
+            (onClick)="clearFilters()" />
         </div>
       </form>
     </ng-template>
@@ -111,12 +101,10 @@
           <tr [class.message-row-clickable]="true" (click)="viewMessageDetails(message)">
             <!-- Avatar -->
             <td>
-              <p-avatar
-                [label]="message.senderInitials"
+              <p-avatar [label]="message.senderInitials"
                 size="normal"
                 shape="circle"
-                [style]="{'background-color': getAvatarColor(message.status), 'color': '#ffffff'}">
-              </p-avatar>
+                [style]="{'background-color': getAvatarColor(message.status), 'color': '#ffffff'}" />
             </td>
 
             <!-- From / To -->
@@ -130,10 +118,12 @@
                   <span class="email-label">À:</span>
                   <span class="email-value">{{ message.recipient_email }}</span>
                 </div>
-                <div class="email-line forwarded" *ngIf="message.forwarded_to">
-                  <i class="pi pi-arrow-right"></i>
-                  <span class="email-value">{{ truncateText(message.forwarded_to, 30) }}</span>
-                </div>
+                @if (message.forwarded_to) {
+                  <div class="email-line forwarded">
+                    <i class="pi pi-arrow-right"></i>
+                    <span class="email-value">{{ truncateText(message.forwarded_to, 30) }}</span>
+                  </div>
+                }
               </div>
             </td>
 
@@ -142,12 +132,13 @@
               <div class="subject-cell">
                 <div class="subject-title">
                   <span class="subject-text">{{ truncateText(message.subject, 40) }}</span>
-                  <i
-                    *ngIf="message.has_attachments"
-                    class="pi pi-paperclip attachment-icon"
-                    pTooltip="Contient des pièces jointes"
-                    tooltipPosition="top">
-                  </i>
+                  @if (message.has_attachments) {
+                    <i
+                      class="pi pi-paperclip attachment-icon"
+                      pTooltip="Contient des pièces jointes"
+                      tooltipPosition="top">
+                    </i>
+                  }
                 </div>
                 <div class="subject-preview">{{ truncateText(message.body_preview, 60) }}</div>
               </div>
@@ -156,14 +147,14 @@
             <!-- Status -->
             <td>
               <div class="status-cell">
-                <p-tag
-                  [value]="getStatusLabel(message.status)"
-                  [severity]="getStatusSeverity(message.status)">
-                </p-tag>
-                <div *ngIf="message.error_message" class="error-hint">
-                  <i class="pi pi-exclamation-circle"></i>
-                  <span>{{ message.error_message }}</span>
-                </div>
+                <p-tag [value]="getStatusLabel(message.status)"
+                  [severity]="getStatusSeverity(message.status)" />
+                @if (message.error_message) {
+                  <div class="error-hint">
+                    <i class="pi pi-exclamation-circle"></i>
+                    <span>{{ message.error_message }}</span>
+                  </div>
+                }
               </div>
             </td>
 
@@ -182,37 +173,32 @@
             <!-- Actions -->
             <td (click)="$event.stopPropagation()">
               <div class="action-buttons">
-                <p-button
-                  icon="pi pi-eye"
+                <p-button icon="pi pi-eye"
                   [text]="true"
                   [rounded]="true"
                   severity="secondary"
                   size="small"
                   pTooltip="Voir les détails"
                   tooltipPosition="top"
-                  (onClick)="viewMessageDetails(message)">
-                </p-button>
-                <p-button
-                  *ngIf="message.status === 'failed' || message.status === 'bounced'"
-                  icon="pi pi-refresh"
-                  [text]="true"
-                  [rounded]="true"
-                  severity="info"
-                  size="small"
-                  pTooltip="Réessayer"
-                  tooltipPosition="top"
-                  (onClick)="retryMessage(message)">
-                </p-button>
-                <p-button
-                  icon="pi pi-trash"
+                  (onClick)="viewMessageDetails(message)" />
+                @if (message.status === 'failed' || message.status === 'bounced') {
+                  <p-button icon="pi pi-refresh"
+                    [text]="true"
+                    [rounded]="true"
+                    severity="info"
+                    size="small"
+                    pTooltip="Réessayer"
+                    tooltipPosition="top"
+                    (onClick)="retryMessage(message)" />
+                }
+                <p-button icon="pi pi-trash"
                   [text]="true"
                   [rounded]="true"
                   severity="danger"
                   size="small"
                   pTooltip="Supprimer"
                   tooltipPosition="top"
-                  (onClick)="deleteMessage(message)">
-                </p-button>
+                  (onClick)="deleteMessage(message)" />
               </div>
             </td>
           </tr>
@@ -243,91 +229,91 @@
   [draggable]="false"
   [resizable]="false">
   <ng-template pTemplate="content">
-    <div class="message-detail" *ngIf="selectedMessage">
-      <!-- Status Banner -->
-      <div class="detail-status-banner" [class]="'status-' + selectedMessage.status">
-        <div class="status-info">
-          <i class="pi" [class]="selectedMessage.status === 'delivered' ? 'pi-check-circle' : selectedMessage.status === 'pending' ? 'pi-clock' : 'pi-exclamation-triangle'"></i>
-          <div>
-            <h4>{{ getStatusLabel(selectedMessage.status) }}</h4>
-            <p *ngIf="selectedMessage.error_message">{{ selectedMessage.error_message }}</p>
+    @if (selectedMessage) {
+      <div class="message-detail">
+        <!-- Status Banner -->
+        <div class="detail-status-banner" [class]="'status-' + selectedMessage.status">
+          <div class="status-info">
+            <i class="pi" [class]="selectedMessage.status === 'delivered' ? 'pi-check-circle' : selectedMessage.status === 'pending' ? 'pi-clock' : 'pi-exclamation-triangle'"></i>
+            <div>
+              <h4>{{ getStatusLabel(selectedMessage.status) }}</h4>
+              @if (selectedMessage.error_message) {
+                <p>{{ selectedMessage.error_message }}</p>
+              }
+            </div>
+          </div>
+          <p-tag [value]="getStatusLabel(selectedMessage.status)"
+            [severity]="getStatusSeverity(selectedMessage.status)" />
+        </div>
+        <!-- Message Info -->
+        <div class="detail-section">
+          <h4>Informations générales</h4>
+          <div class="detail-grid">
+            <div class="detail-item">
+              <span class="detail-label">ID du message:</span>
+              <span class="detail-value">{{ selectedMessage.message_id }}</span>
+            </div>
+            <div class="detail-item">
+              <span class="detail-label">Date de réception:</span>
+              <span class="detail-value">{{ formatDate(selectedMessage.created_at) }}</span>
+            </div>
+            <div class="detail-item">
+              <span class="detail-label">Taille:</span>
+              <span class="detail-value">{{ formatSize(selectedMessage.size_bytes) }}</span>
+            </div>
+            <div class="detail-item">
+              <span class="detail-label">Pièces jointes:</span>
+              <span class="detail-value">{{ selectedMessage.has_attachments ? 'Oui' : 'Non' }}</span>
+            </div>
           </div>
         </div>
-        <p-tag
-          [value]="getStatusLabel(selectedMessage.status)"
-          [severity]="getStatusSeverity(selectedMessage.status)">
-        </p-tag>
-      </div>
-
-      <!-- Message Info -->
-      <div class="detail-section">
-        <h4>Informations générales</h4>
-        <div class="detail-grid">
-          <div class="detail-item">
-            <span class="detail-label">ID du message:</span>
-            <span class="detail-value">{{ selectedMessage.message_id }}</span>
-          </div>
-          <div class="detail-item">
-            <span class="detail-label">Date de réception:</span>
-            <span class="detail-value">{{ formatDate(selectedMessage.created_at) }}</span>
-          </div>
-          <div class="detail-item">
-            <span class="detail-label">Taille:</span>
-            <span class="detail-value">{{ formatSize(selectedMessage.size_bytes) }}</span>
-          </div>
-          <div class="detail-item">
-            <span class="detail-label">Pièces jointes:</span>
-            <span class="detail-value">{{ selectedMessage.has_attachments ? 'Oui' : 'Non' }}</span>
+        <!-- Email Details -->
+        <div class="detail-section">
+          <h4>Détails de l'email</h4>
+          <div class="detail-grid">
+            <div class="detail-item full-width">
+              <span class="detail-label">De:</span>
+              <span class="detail-value email">{{ selectedMessage.sender_email }}</span>
+            </div>
+            <div class="detail-item full-width">
+              <span class="detail-label">À:</span>
+              <span class="detail-value email">{{ selectedMessage.recipient_email }}</span>
+            </div>
+            @if (selectedMessage.forwarded_to) {
+              <div class="detail-item full-width">
+                <span class="detail-label">Transféré à:</span>
+                <span class="detail-value email">{{ selectedMessage.forwarded_to }}</span>
+              </div>
+            }
+            <div class="detail-item full-width">
+              <span class="detail-label">Sujet:</span>
+              <span class="detail-value">{{ selectedMessage.subject }}</span>
+            </div>
           </div>
         </div>
+        <!-- Message Preview -->
+        @if (selectedMessage.body_preview) {
+          <div class="detail-section">
+            <h4>Aperçu du message</h4>
+            <div class="message-preview">
+              {{ selectedMessage.body_preview }}
+            </div>
+          </div>
+        }
       </div>
-
-      <!-- Email Details -->
-      <div class="detail-section">
-        <h4>Détails de l'email</h4>
-        <div class="detail-grid">
-          <div class="detail-item full-width">
-            <span class="detail-label">De:</span>
-            <span class="detail-value email">{{ selectedMessage.sender_email }}</span>
-          </div>
-          <div class="detail-item full-width">
-            <span class="detail-label">À:</span>
-            <span class="detail-value email">{{ selectedMessage.recipient_email }}</span>
-          </div>
-          <div class="detail-item full-width" *ngIf="selectedMessage.forwarded_to">
-            <span class="detail-label">Transféré à:</span>
-            <span class="detail-value email">{{ selectedMessage.forwarded_to }}</span>
-          </div>
-          <div class="detail-item full-width">
-            <span class="detail-label">Sujet:</span>
-            <span class="detail-value">{{ selectedMessage.subject }}</span>
-          </div>
-        </div>
-      </div>
-
-      <!-- Message Preview -->
-      <div class="detail-section" *ngIf="selectedMessage.body_preview">
-        <h4>Aperçu du message</h4>
-        <div class="message-preview">
-          {{ selectedMessage.body_preview }}
-        </div>
-      </div>
-    </div>
+    }
   </ng-template>
   <ng-template pTemplate="footer">
-    <p-button
-      label="Fermer"
+    <p-button label="Fermer"
       severity="secondary"
-      (onClick)="displayDetailDialog = false">
-    </p-button>
-    <p-button
-      *ngIf="selectedMessage && (selectedMessage.status === 'failed' || selectedMessage.status === 'bounced')"
-      label="Réessayer"
-      icon="pi pi-refresh"
-      (onClick)="retryMessage(selectedMessage!); displayDetailDialog = false">
-    </p-button>
+      (onClick)="displayDetailDialog = false" />
+    @if (selectedMessage && (selectedMessage.status === 'failed' || selectedMessage.status === 'bounced')) {
+      <p-button label="Réessayer"
+        icon="pi pi-refresh"
+        (onClick)="retryMessage(selectedMessage!); displayDetailDialog = false" />
+    }
   </ng-template>
 </p-dialog>
 
 <!-- Toast Notifications -->
-<p-toast position="top-right"></p-toast>
+<p-toast position="top-right" />

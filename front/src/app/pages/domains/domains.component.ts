@@ -1,5 +1,5 @@
 import {Component, OnInit} from '@angular/core';
-import {CommonModule} from '@angular/common';
+
 import {FormBuilder, FormGroup, ReactiveFormsModule, Validators} from '@angular/forms';
 import {Router} from '@angular/router';
 
@@ -33,22 +33,21 @@ interface DomainWithStats extends DomainResponse {
     styleUrls: ['./domains.component.scss'],
     standalone: true,
     imports: [
-        CommonModule,
-        ReactiveFormsModule,
-        CardModule,
-        TableModule,
-        ButtonModule,
-        DialogModule,
-        InputTextModule,
-        ToastModule,
-        TagModule,
-        ConfirmDialogModule,
-        TooltipModule,
-        Tabs,
-        TabPanel,
-        AvatarModule,
-        ProgressBarModule
-    ],
+    ReactiveFormsModule,
+    CardModule,
+    TableModule,
+    ButtonModule,
+    DialogModule,
+    InputTextModule,
+    ToastModule,
+    TagModule,
+    ConfirmDialogModule,
+    TooltipModule,
+    Tabs,
+    TabPanel,
+    AvatarModule,
+    ProgressBarModule
+],
     providers: [MessageService, ConfirmationService]
 })
 export class DomainsComponent implements OnInit {

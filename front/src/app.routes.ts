@@ -1,5 +1,5 @@
 import { Routes } from '@angular/router';
-import { AppLayout } from './app/layout/component/app.layout';
+
 
 export const appRoutes: Routes = [
     {
@@ -8,7 +8,7 @@ export const appRoutes: Routes = [
     },
     {
         path: '',
-        component: AppLayout,
+        loadComponent: () => import('./app/layout/component/app.layout').then(m => m.AppLayout),
         children: [
             { path: 'dashboard', loadComponent: () => import('./app/pages/dashboard/dashboard.component').then(m => m.DashboardComponent) },
             { path: 'domains', loadComponent: () => import('./app/pages/domains/domains.component').then(m => m.DomainsComponent) },

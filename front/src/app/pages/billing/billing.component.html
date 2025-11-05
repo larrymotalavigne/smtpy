@@ -5,13 +5,12 @@
       <h1 class="page-title">Facturation & Abonnement</h1>
       <p class="page-subtitle">Gérez votre abonnement et vos informations de facturation</p>
     </div>
-    <p-button
-      *ngIf="subscription?.is_active"
-      label="Gérer la facturation"
-      icon="pi pi-cog"
-      (onClick)="onManageBilling()"
-      [loading]="loading">
-    </p-button>
+    @if (subscription?.is_active) {
+      <p-button label="Gérer la facturation"
+        icon="pi pi-cog"
+        (onClick)="onManageBilling()"
+        [loading]="loading" />
+    }
   </div>
 
   <!-- Current Subscription & Usage Cards -->
@@ -24,208 +23,225 @@
         </div>
       </ng-template>
       <ng-template pTemplate="content">
-        <div *ngIf="!loading; else loadingSkeleton">
-          <div *ngIf="subscription?.is_active; else noSubscription">
-            <div class="subscription-active">
-              <div class="subscription-status">
-                <i class="pi pi-check-circle"></i>
-                <span class="status-text">Abonnement actif</span>
+        @if (!loading) {
+          <div>
+            @if (subscription?.is_active) {
+              <div>
+                <div class="subscription-active">
+                  <div class="subscription-status">
+                    <i class="pi pi-check-circle"></i>
+                    <span class="status-text">Abonnement actif</span>
+                  </div>
+                  <p-tag [value]="subscription?.status || 'active'"
+                    [severity]="subscription?.status === 'active' ? 'success' : 'warn'" />
+                </div>
+                <div class="subscription-details">
+                  @if (subscription?.current_period_end) {
+                    <div class="detail-item">
+                      <span class="detail-label">Prochaine facturation:</span>
+                      <span class="detail-value">{{ subscription?.current_period_end | date:'d MMMM y' }}</span>
+                    </div>
+                  }
+                  @if (subscription?.cancel_at_period_end) {
+                    <div class="warning-message">
+                      <i class="pi pi-exclamation-triangle"></i>
+                      <span>Votre abonnement sera annulé à la fin de la période de facturation actuelle.</span>
+                    </div>
+                  }
+                </div>
+                <div class="subscription-actions">
+                  @if (!subscription?.cancel_at_period_end) {
+                    <p-button label="Annuler l'abonnement"
+                      icon="pi pi-times"
+                      severity="danger"
+                      [outlined]="true"
+                      (onClick)="onCancelSubscription()"
+                      [loading]="loading" />
+                  }
+                  @if (subscription?.cancel_at_period_end) {
+                    <p-button label="Réactiver l'abonnement"
+                      icon="pi pi-refresh"
+                      severity="success"
+                      (onClick)="onReactivateSubscription()"
+                      [loading]="loading" />
+                  }
+                </div>
               </div>
-              <p-tag
-                [value]="subscription?.status || 'active'"
-                [severity]="subscription?.status === 'active' ? 'success' : 'warn'">
-              </p-tag>
-            </div>
-
-            <div class="subscription-details">
-              <div class="detail-item" *ngIf="subscription?.current_period_end">
-                <span class="detail-label">Prochaine facturation:</span>
-                <span class="detail-value">{{ subscription?.current_period_end | date:'d MMMM y' }}</span>
+            } @else {
+              <div class="no-subscription">
+                <i class="pi pi-info-circle"></i>
+                <h3>Aucun abonnement actif</h3>
+                <p>Choisissez un plan ci-dessous pour commencer</p>
               </div>
-
-              <div class="warning-message" *ngIf="subscription?.cancel_at_period_end">
-                <i class="pi pi-exclamation-triangle"></i>
-                <span>Votre abonnement sera annulé à la fin de la période de facturation actuelle.</span>
-              </div>
-            </div>
-
-            <div class="subscription-actions">
-              <p-button
-                *ngIf="!subscription?.cancel_at_period_end"
-                label="Annuler l'abonnement"
-                icon="pi pi-times"
-                severity="danger"
-                [outlined]="true"
-                (onClick)="onCancelSubscription()"
-                [loading]="loading">
-              </p-button>
-              <p-button
-                *ngIf="subscription?.cancel_at_period_end"
-                label="Réactiver l'abonnement"
-                icon="pi pi-refresh"
-                severity="success"
-                (onClick)="onReactivateSubscription()"
-                [loading]="loading">
-              </p-button>
-            </div>
+            }
           </div>
+        } @else {
+          <p-skeleton height="2rem" class="mb-3" />
+          <p-skeleton height="1rem" class="mb-2" />
+          <p-skeleton height="1rem" />
+        }
 
-          <ng-template #noSubscription>
-            <div class="no-subscription">
-              <i class="pi pi-info-circle"></i>
-              <h3>Aucun abonnement actif</h3>
-              <p>Choisissez un plan ci-dessous pour commencer</p>
-            </div>
-          </ng-template>
-        </div>
-
-        <ng-template #loadingSkeleton>
-          <p-skeleton height="2rem" class="mb-3"></p-skeleton>
-          <p-skeleton height="1rem" class="mb-2"></p-skeleton>
-          <p-skeleton height="1rem"></p-skeleton>
-        </ng-template>
       </ng-template>
     </p-card>
 
     <!-- Usage & Limits Card -->
-    <p-card class="usage-card" *ngIf="usageLimits">
-      <ng-template pTemplate="header">
-        <div class="card-header">
-          <h3>Utilisation & Limites</h3>
-        </div>
-      </ng-template>
-      <ng-template pTemplate="content">
-        <div *ngIf="!loading; else usageLoadingSkeleton">
-          <!-- Domains Usage -->
-          <div class="usage-item" *ngIf="usageLimits.domains_usage">
-            <div class="usage-header">
-              <span class="usage-label">
-                <i class="pi pi-globe"></i>
-                Domaines
-              </span>
-              <span class="usage-count">
-                {{ usageLimits.domains_usage.current }} / {{ usageLimits.domains_usage.limit || '∞' }}
-              </span>
-            </div>
-            <p-progressBar
-              [value]="getUsagePercentage(usageLimits.domains_usage.current, usageLimits.domains_usage.limit)"
-              [styleClass]="isUsageHigh(usageLimits.domains_usage.current, usageLimits.domains_usage.limit) ? 'usage-high' : 'usage-normal'">
-            </p-progressBar>
+    @if (usageLimits) {
+      <p-card class="usage-card">
+        <ng-template pTemplate="header">
+          <div class="card-header">
+            <h3>Utilisation & Limites</h3>
           </div>
-
-          <!-- Messages Usage -->
-          <div class="usage-item" *ngIf="usageLimits.messages_usage">
-            <div class="usage-header">
-              <span class="usage-label">
-                <i class="pi pi-envelope"></i>
-                Messages ce mois
-              </span>
-              <span class="usage-count">
-                {{ usageLimits.messages_usage.current }} / {{ usageLimits.messages_usage.limit || '∞' }}
-              </span>
-            </div>
-            <p-progressBar
-              [value]="getUsagePercentage(usageLimits.messages_usage.current, usageLimits.messages_usage.limit)"
-              [styleClass]="isUsageHigh(usageLimits.messages_usage.current, usageLimits.messages_usage.limit) ? 'usage-high' : 'usage-normal'">
-            </p-progressBar>
-          </div>
-
-          <!-- Warning Messages -->
-          <div class="usage-warnings">
-            <div class="usage-warning warning" *ngIf="usageLimits.approaching_limits">
-              <i class="pi pi-exclamation-triangle"></i>
-              <span>Vous approchez des limites de votre plan. Envisagez une mise à niveau.</span>
-            </div>
-
-            <div class="usage-warning error" *ngIf="usageLimits.needs_upgrade">
-              <i class="pi pi-times-circle"></i>
-              <span>Vous avez dépassé les limites de votre plan. Veuillez mettre à niveau.</span>
-            </div>
-          </div>
-        </div>
-
-        <ng-template #usageLoadingSkeleton>
-          <p-skeleton height="2rem" class="mb-3"></p-skeleton>
-          <p-skeleton height="1rem" class="mb-2"></p-skeleton>
-          <p-skeleton height="1rem"></p-skeleton>
         </ng-template>
-      </ng-template>
-    </p-card>
+        <ng-template pTemplate="content">
+          @if (!loading) {
+            <div>
+              <!-- Domains Usage -->
+              @if (usageLimits.domains_usage) {
+                <div class="usage-item">
+                  <div class="usage-header">
+                    <span class="usage-label">
+                      <i class="pi pi-globe"></i>
+                      Domaines
+                    </span>
+                    <span class="usage-count">
+                      {{ usageLimits.domains_usage.current }} / {{ usageLimits.domains_usage.limit || '∞' }}
+                    </span>
+                  </div>
+                  <p-progressBar [value]="getUsagePercentage(usageLimits.domains_usage.current, usageLimits.domains_usage.limit)"
+                    [styleClass]="isUsageHigh(usageLimits.domains_usage.current, usageLimits.domains_usage.limit) ? 'usage-high' : 'usage-normal'" />
+                </div>
+              }
+              <!-- Messages Usage -->
+              @if (usageLimits.messages_usage) {
+                <div class="usage-item">
+                  <div class="usage-header">
+                    <span class="usage-label">
+                      <i class="pi pi-envelope"></i>
+                      Messages ce mois
+                    </span>
+                    <span class="usage-count">
+                      {{ usageLimits.messages_usage.current }} / {{ usageLimits.messages_usage.limit || '∞' }}
+                    </span>
+                  </div>
+                  <p-progressBar [value]="getUsagePercentage(usageLimits.messages_usage.current, usageLimits.messages_usage.limit)"
+                    [styleClass]="isUsageHigh(usageLimits.messages_usage.current, usageLimits.messages_usage.limit) ? 'usage-high' : 'usage-normal'" />
+                </div>
+              }
+              <!-- Warning Messages -->
+              <div class="usage-warnings">
+                @if (usageLimits.approaching_limits) {
+                  <div class="usage-warning warning">
+                    <i class="pi pi-exclamation-triangle"></i>
+                    <span>Vous approchez des limites de votre plan. Envisagez une mise à niveau.</span>
+                  </div>
+                }
+                @if (usageLimits.needs_upgrade) {
+                  <div class="usage-warning error">
+                    <i class="pi pi-times-circle"></i>
+                    <span>Vous avez dépassé les limites de votre plan. Veuillez mettre à niveau.</span>
+                  </div>
+                }
+              </div>
+            </div>
+          } @else {
+            <p-skeleton height="2rem" class="mb-3" />
+            <p-skeleton height="1rem" class="mb-2" />
+            <p-skeleton height="1rem" />
+          }
+        </ng-template>
+      </p-card>
+    }
   </div>
 
   <!-- Pricing Plans -->
-  <div class="pricing-section" *ngIf="!loading && plans.length > 0">
-    <div class="section-header">
-      <h2>Plans disponibles</h2>
-      <p>Choisissez le plan qui correspond le mieux à vos besoins</p>
-    </div>
-
-    <div class="pricing-cards">
-      <div class="pricing-card" *ngFor="let plan of plans" [class.popular]="plan.name === 'Pro'">
-        <div class="popular-badge" *ngIf="plan.name === 'Pro'">
-          <span>Plus populaire</span>
-        </div>
-
-        <div class="plan-header">
-          <h3 class="plan-name">{{ plan.name }}</h3>
-          <div class="plan-price">
-            <span class="amount" *ngIf="plan.name !== 'Entreprise'">{{ formatCurrency(plan.amount, plan.currency) }}</span>
-            <span class="amount" *ngIf="plan.name === 'Entreprise'">Sur mesure</span>
-            <span class="interval" *ngIf="plan.name !== 'Entreprise'">/ {{ plan.interval === 'month' ? 'mois' : 'an' }}</span>
+  @if (!loading && plans.length > 0) {
+    <div class="pricing-section">
+      <div class="section-header">
+        <h2>Plans disponibles</h2>
+        <p>Choisissez le plan qui correspond le mieux à vos besoins</p>
+      </div>
+      <div class="pricing-cards">
+        @for (plan of plans; track plan) {
+          <div class="pricing-card" [class.popular]="plan.name === 'Pro'">
+            @if (plan.name === 'Pro') {
+              <div class="popular-badge">
+                <span>Plus populaire</span>
+              </div>
+            }
+            <div class="plan-header">
+              <h3 class="plan-name">{{ plan.name }}</h3>
+              <div class="plan-price">
+                @if (plan.name !== 'Entreprise') {
+                  <span class="amount">{{ formatCurrency(plan.amount, plan.currency) }}</span>
+                }
+                @if (plan.name === 'Entreprise') {
+                  <span class="amount">Sur mesure</span>
+                }
+                @if (plan.name !== 'Entreprise') {
+                  <span class="interval">/ {{ plan.interval === 'month' ? 'mois' : 'an' }}</span>
+                }
+              </div>
+              @if (plan.description) {
+                <p class="plan-description">{{ plan.description }}</p>
+              }
+            </div>
+            <div class="plan-features">
+              @for (feature of plan.features; track feature) {
+                <div class="feature-item">
+                  <i class="pi pi-check"></i>
+                  <span>{{ feature }}</span>
+                </div>
+              }
+            </div>
+            <div class="plan-action">
+              <p-button [label]="plan.name === 'Entreprise' ? 'Nous contacter' : (plan.name === 'Gratuit' ? 'Commencer' : 'Choisir ce plan')"
+                [outlined]="plan.name !== 'Pro'"
+                styleClass="w-full"
+                (onClick)="onUpgradePlan(plan.price_id)"
+                [loading]="loading" />
+            </div>
           </div>
-          <p class="plan-description" *ngIf="plan.description">{{ plan.description }}</p>
-        </div>
-
-        <div class="plan-features">
-          <div class="feature-item" *ngFor="let feature of plan.features">
-            <i class="pi pi-check"></i>
-            <span>{{ feature }}</span>
-          </div>
-        </div>
-
-        <div class="plan-action">
-          <p-button
-            [label]="plan.name === 'Entreprise' ? 'Nous contacter' : (plan.name === 'Gratuit' ? 'Commencer' : 'Choisir ce plan')"
-            [outlined]="plan.name !== 'Pro'"
-            styleClass="w-full"
-            (onClick)="onUpgradePlan(plan.price_id)"
-            [loading]="loading">
-          </p-button>
-        </div>
+        }
       </div>
     </div>
-  </div>
+  }
 
   <!-- Organization Info -->
-  <p-card class="organization-card" *ngIf="!loading && organizationBilling">
-    <ng-template pTemplate="header">
-      <div class="card-header">
-        <h3>Informations de l'organisation</h3>
-      </div>
-    </ng-template>
-    <ng-template pTemplate="content">
-      <div class="organization-grid">
-        <div class="org-info-item">
-          <span class="org-label">Email de facturation:</span>
-          <span class="org-value">{{ organizationBilling.billing_email }}</span>
+  @if (!loading && organizationBilling) {
+    <p-card class="organization-card">
+      <ng-template pTemplate="header">
+        <div class="card-header">
+          <h3>Informations de l'organisation</h3>
         </div>
-        <div class="org-info-item">
-          <span class="org-label">Domaines:</span>
-          <span class="org-value">{{ organizationBilling.domains_count }}</span>
+      </ng-template>
+      <ng-template pTemplate="content">
+        <div class="organization-grid">
+          <div class="org-info-item">
+            <span class="org-label">Email de facturation:</span>
+            <span class="org-value">{{ organizationBilling.billing_email }}</span>
+          </div>
+          <div class="org-info-item">
+            <span class="org-label">Domaines:</span>
+            <span class="org-value">{{ organizationBilling.domains_count }}</span>
+          </div>
+          <div class="org-info-item">
+            <span class="org-label">Messages ce mois:</span>
+            <span class="org-value">{{ organizationBilling.messages_count }}</span>
+          </div>
+          @if (organizationBilling.plan_domain_limit) {
+            <div class="org-info-item">
+              <span class="org-label">Limite de domaines:</span>
+              <span class="org-value">{{ organizationBilling.plan_domain_limit }}</span>
+            </div>
+          }
+          @if (organizationBilling.plan_message_limit) {
+            <div class="org-info-item">
+              <span class="org-label">Limite de messages:</span>
+              <span class="org-value">{{ organizationBilling.plan_message_limit }}</span>
+            </div>
+          }
         </div>
-        <div class="org-info-item">
-          <span class="org-label">Messages ce mois:</span>
-          <span class="org-value">{{ organizationBilling.messages_count }}</span>
-        </div>
-        <div class="org-info-item" *ngIf="organizationBilling.plan_domain_limit">
-          <span class="org-label">Limite de domaines:</span>
-          <span class="org-value">{{ organizationBilling.plan_domain_limit }}</span>
-        </div>
-        <div class="org-info-item" *ngIf="organizationBilling.plan_message_limit">
-          <span class="org-label">Limite de messages:</span>
-          <span class="org-value">{{ organizationBilling.plan_message_limit }}</span>
-        </div>
-      </div>
-    </ng-template>
-  </p-card>
+      </ng-template>
+    </p-card>
+  }
 </div>

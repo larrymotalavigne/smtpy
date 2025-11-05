@@ -1,5 +1,5 @@
 import {Component, OnDestroy, OnInit} from '@angular/core';
-import {CommonModule} from '@angular/common';
+
 import {FormBuilder, FormGroup, FormsModule, ReactiveFormsModule} from '@angular/forms';
 import {Subject, takeUntil} from 'rxjs';
 import {Router} from '@angular/router';
@@ -44,19 +44,18 @@ interface Session {
     styleUrls: ['./settings.component.scss'],
     standalone: true,
     imports: [
-        CommonModule,
-        ReactiveFormsModule,
-        FormsModule,
-        CardModule,
-        ButtonModule,
-        MessageModule,
-        ToastModule,
-        DividerModule,
-        ConfirmDialogModule,
-        InputTextModule,
-        DialogModule,
-        TableModule
-    ],
+    ReactiveFormsModule,
+    FormsModule,
+    CardModule,
+    ButtonModule,
+    MessageModule,
+    ToastModule,
+    DividerModule,
+    ConfirmDialogModule,
+    InputTextModule,
+    DialogModule,
+    TableModule
+],
     providers: [MessageService, ConfirmationService]
 })
 export class SettingsComponent implements OnInit, OnDestroy {

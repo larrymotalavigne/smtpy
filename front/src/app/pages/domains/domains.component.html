@@ -5,11 +5,9 @@
       <h1 class="page-title">Mes Domaines</h1>
       <p class="page-subtitle">Gérez vos domaines et configurez les enregistrements DNS</p>
     </div>
-    <p-button
-      label="Ajouter un domaine"
+    <p-button label="Ajouter un domaine"
       icon="pi pi-plus"
-      (onClick)="openAddDialog()">
-    </p-button>
+      (onClick)="openAddDialog()" />
   </div>
 
   <!-- Domains Table -->
@@ -42,12 +40,10 @@
             <!-- Domain Name -->
             <td>
               <div class="domain-name-cell">
-                <p-avatar
-                  icon="pi pi-globe"
+                <p-avatar icon="pi pi-globe"
                   size="normal"
                   shape="circle"
-                  [style]="{'background-color': domain.is_active ? '#667eea' : '#94a3b8', 'color': '#ffffff'}">
-                </p-avatar>
+                  [style]="{'background-color': domain.is_active ? '#667eea' : '#94a3b8', 'color': '#ffffff'}" />
                 <div class="domain-info">
                   <span class="domain-name">{{ domain.name }}</span>
                   <span class="domain-date">Ajouté le {{ formatDate(domain.created_at) }}</span>
@@ -58,16 +54,13 @@
             <!-- Status -->
             <td>
               <div class="status-cell">
-                <p-tag
-                  [value]="getStatusLabel(domain.status)"
-                  [severity]="getStatusSeverity(domain.status)">
-                </p-tag>
-                <p-tag
-                  *ngIf="!domain.is_active"
-                  value="Inactif"
-                  severity="secondary"
-                  class="ml-2">
-                </p-tag>
+                <p-tag [value]="getStatusLabel(domain.status)"
+                  [severity]="getStatusSeverity(domain.status)" />
+                @if (!domain.is_active) {
+                  <p-tag value="Inactif"
+                    severity="secondary"
+                    class="ml-2" />
+                }
               </div>
             </td>
 
@@ -112,11 +105,9 @@
                     tooltipPosition="top">
                   </i>
                 </div>
-                <p-progressBar
-                  [value]="getDNSVerificationProgress(domain)"
+                <p-progressBar [value]="getDNSVerificationProgress(domain)"
                   [showValue]="false"
-                  styleClass="dns-progress">
-                </p-progressBar>
+                  styleClass="dns-progress" />
               </div>
             </td>
 
@@ -142,46 +133,38 @@
             <!-- Actions -->
             <td>
               <div class="action-buttons">
-                <p-button
-                  icon="pi pi-cog"
+                <p-button icon="pi pi-cog"
                   [text]="true"
                   [rounded]="true"
                   severity="secondary"
                   size="small"
                   pTooltip="Voir les DNS"
                   tooltipPosition="top"
-                  (onClick)="viewDNSRecords(domain)">
-                </p-button>
-                <p-button
-                  icon="pi pi-refresh"
+                  (onClick)="viewDNSRecords(domain)" />
+                <p-button icon="pi pi-refresh"
                   [text]="true"
                   [rounded]="true"
                   severity="info"
                   size="small"
                   pTooltip="Vérifier DNS"
                   tooltipPosition="top"
-                  (onClick)="verifyDNS(domain)">
-                </p-button>
-                <p-button
-                  icon="pi pi-users"
+                  (onClick)="verifyDNS(domain)" />
+                <p-button icon="pi pi-users"
                   [text]="true"
                   [rounded]="true"
                   severity="secondary"
                   size="small"
                   pTooltip="Gérer les alias"
                   tooltipPosition="top"
-                  (onClick)="manageAliases(domain)">
-                </p-button>
-                <p-button
-                  icon="pi pi-trash"
+                  (onClick)="manageAliases(domain)" />
+                <p-button icon="pi pi-trash"
                   [text]="true"
                   [rounded]="true"
                   severity="danger"
                   size="small"
                   pTooltip="Supprimer"
                   tooltipPosition="top"
-                  (onClick)="deleteDomain(domain)">
-                </p-button>
+                  (onClick)="deleteDomain(domain)" />
               </div>
             </td>
           </tr>
@@ -194,11 +177,9 @@
                 <i class="pi pi-globe"></i>
                 <h3>Aucun domaine configuré</h3>
                 <p>Commencez par ajouter votre premier domaine pour recevoir des emails.</p>
-                <p-button
-                  label="Ajouter un domaine"
+                <p-button label="Ajouter un domaine"
                   icon="pi pi-plus"
-                  (onClick)="openAddDialog()">
-                </p-button>
+                  (onClick)="openAddDialog()" />
               </div>
             </td>
           </tr>
@@ -227,11 +208,12 @@
           placeholder="example.com"
           class="w-full"
           [class.ng-invalid]="addDomainForm.get('name')?.invalid && addDomainForm.get('name')?.touched" />
-        <small
-          *ngIf="addDomainForm.get('name')?.invalid && addDomainForm.get('name')?.touched"
-          class="p-error">
-          Veuillez entrer un nom de domaine valide (ex: example.com)
-        </small>
+        @if (addDomainForm.get('name')?.invalid && addDomainForm.get('name')?.touched) {
+          <small
+            class="p-error">
+            Veuillez entrer un nom de domaine valide (ex: example.com)
+          </small>
+        }
       </div>
       <div class="info-message">
         <i class="pi pi-info-circle"></i>
@@ -243,19 +225,15 @@
     </form>
   </ng-template>
   <ng-template pTemplate="footer">
-    <p-button
-      label="Annuler"
+    <p-button label="Annuler"
       severity="secondary"
       [text]="true"
-      (onClick)="displayAddDialog = false">
-    </p-button>
-    <p-button
-      label="Ajouter"
+      (onClick)="displayAddDialog = false" />
+    <p-button label="Ajouter"
       icon="pi pi-plus"
       [disabled]="!addDomainForm.valid"
       [loading]="savingDomain"
-      (onClick)="submitAddDomain()">
-    </p-button>
+      (onClick)="submitAddDomain()" />
   </ng-template>
 </p-dialog>
 
@@ -268,426 +246,386 @@
   [draggable]="false"
   [resizable]="false">
   <ng-template pTemplate="content">
-    <div class="dns-dialog-content" *ngIf="selectedDomain">
-      <div class="dns-intro-section">
-        <p class="dns-intro">
-          <i class="pi pi-info-circle"></i>
-          Ajoutez ces enregistrements DNS chez votre registrar de domaine (OVH, Gandi, Cloudflare, etc.) pour activer la réception d'emails.
-        </p>
-        <div class="dns-progress-info">
-          <span><strong>Progression:</strong> {{ getDNSVerificationProgress(selectedDomain) }}% configuré</span>
+    @if (selectedDomain) {
+      <div class="dns-dialog-content">
+        <div class="dns-intro-section">
+          <p class="dns-intro">
+            <i class="pi pi-info-circle"></i>
+            Ajoutez ces enregistrements DNS chez votre registrar de domaine (OVH, Gandi, Cloudflare, etc.) pour activer la réception d'emails.
+          </p>
+          <div class="dns-progress-info">
+            <span><strong>Progression:</strong> {{ getDNSVerificationProgress(selectedDomain) }}% configuré</span>
+          </div>
         </div>
+        <p-tabs>
+          <p-tabpanel header="MX Records">
+            <div class="dns-record-section">
+              <div class="dns-record-header">
+                <h4>Enregistrements MX (Mail Exchange)</h4>
+                <div class="verification-status">
+                  <i
+                    class="pi"
+                    [class.pi-check-circle]="selectedDomain.mx_record_verified"
+                    [class.pi-times-circle]="!selectedDomain.mx_record_verified"
+                    [class.text-green-600]="selectedDomain.mx_record_verified"
+                    [class.text-red-600]="!selectedDomain.mx_record_verified">
+                  </i>
+                  <span>{{ selectedDomain.mx_record_verified ? 'Vérifié' : 'Non vérifié' }}</span>
+                </div>
+              </div>
+              <p class="dns-description">
+                L'enregistrement MX indique à quel serveur les emails doivent être envoyés pour votre domaine.
+              </p>
+              <div class="dns-fields-table">
+                <table class="dns-config-table">
+                  <thead>
+                    <tr>
+                      <th>Champ</th>
+                      <th>Valeur à saisir</th>
+                      <th></th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    <tr>
+                      <td><strong>Type</strong></td>
+                      <td><code>MX</code></td>
+                      <td></td>
+                    </tr>
+                    <tr>
+                      <td><strong>Nom/Host</strong></td>
+                      <td><code>@</code> <span class="field-hint">(ou laissez vide)</span></td>
+                      <td>
+                        <p-button icon="pi pi-copy"
+                          [text]="true"
+                          size="small"
+                          severity="secondary"
+                          pTooltip="Copier"
+                          (onClick)="copyToClipboard('@', 'Nom MX')" />
+                      </td>
+                    </tr>
+                    <tr>
+                      <td><strong>Valeur/Cible</strong></td>
+                      <td>
+                        <code>{{ dnsRecords?.mx_record || 'Chargement...' }}</code>
+                        <span class="field-hint">Le point final (.) est important !</span>
+                      </td>
+                      <td>
+                        @if (dnsRecords?.mx_record) {
+                          <p-button icon="pi pi-copy"
+                            [text]="true"
+                            size="small"
+                            severity="secondary"
+                            pTooltip="Copier"
+                            (onClick)="copyToClipboard(dnsRecords!.mx_record, 'Valeur MX')" />
+                        }
+                      </td>
+                    </tr>
+                    <tr>
+                      <td><strong>Priorité</strong></td>
+                      <td><code>10</code></td>
+                      <td>
+                        <p-button icon="pi pi-copy"
+                          [text]="true"
+                          size="small"
+                          severity="secondary"
+                          pTooltip="Copier"
+                          (onClick)="copyToClipboard('10', 'Priorité MX')" />
+                      </td>
+                    </tr>
+                    <tr>
+                      <td><strong>TTL</strong></td>
+                      <td><code>3600</code> <span class="field-hint">(1 heure - recommandé)</span></td>
+                      <td>
+                        <p-button icon="pi pi-copy"
+                          [text]="true"
+                          size="small"
+                          severity="secondary"
+                          pTooltip="Copier"
+                          (onClick)="copyToClipboard('3600', 'TTL')" />
+                      </td>
+                    </tr>
+                  </tbody>
+                </table>
+              </div>
+              <div class="dns-help-box">
+                <i class="pi pi-question-circle"></i>
+                <div>
+                  <strong>Aide:</strong> Connectez-vous à votre registrar de domaine, trouvez la section "Gestion DNS" ou "Zone DNS",
+                  et ajoutez un nouvel enregistrement MX avec les valeurs ci-dessus.
+                  <br><br>
+                  <strong>⚠️ Important:</strong> Le point final (.) dans <code>smtp.smtpy.fr.</code> est crucial ! Il indique à votre DNS
+                  que c'est une adresse complète et empêche l'ajout automatique de votre nom de domaine.
+                  Si votre DNS ajoute quand même votre domaine, vérifiez s'il y a une option "Nom de domaine externe" ou "FQDN".
+                </div>
+              </div>
+            </div>
+          </p-tabpanel>
+          <p-tabpanel header="SPF Record">
+            <div class="dns-record-section">
+              <div class="dns-record-header">
+                <h4>Enregistrement SPF (Sender Policy Framework)</h4>
+                <div class="verification-status">
+                  <i
+                    class="pi"
+                    [class.pi-check-circle]="selectedDomain.spf_record_verified"
+                    [class.pi-times-circle]="!selectedDomain.spf_record_verified"
+                    [class.text-green-600]="selectedDomain.spf_record_verified"
+                    [class.text-red-600]="!selectedDomain.spf_record_verified">
+                  </i>
+                  <span>{{ selectedDomain.spf_record_verified ? 'Vérifié' : 'Non vérifié' }}</span>
+                </div>
+              </div>
+              <p class="dns-description">
+                SPF permet d'indiquer quels serveurs sont autorisés à envoyer des emails depuis votre domaine.
+              </p>
+              <div class="dns-fields-table">
+                <table class="dns-config-table">
+                  <thead>
+                    <tr>
+                      <th>Champ</th>
+                      <th>Valeur à saisir</th>
+                      <th></th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    <tr>
+                      <td><strong>Type</strong></td>
+                      <td><code>TXT</code></td>
+                      <td></td>
+                    </tr>
+                    <tr>
+                      <td><strong>Nom/Host</strong></td>
+                      <td><code>@</code> <span class="field-hint">(ou laissez vide)</span></td>
+                      <td>
+                        <p-button icon="pi pi-copy"
+                          [text]="true"
+                          size="small"
+                          severity="secondary"
+                          pTooltip="Copier"
+                          (onClick)="copyToClipboard('@', 'Nom SPF')" />
+                      </td>
+                    </tr>
+                    <tr>
+                      <td><strong>Valeur</strong></td>
+                      <td><code>{{ dnsRecords?.spf_record || 'Chargement...' }}</code></td>
+                      <td>
+                        @if (dnsRecords?.spf_record) {
+                          <p-button icon="pi pi-copy"
+                            [text]="true"
+                            size="small"
+                            severity="secondary"
+                            pTooltip="Copier"
+                            (onClick)="copyToClipboard(dnsRecords!.spf_record, 'Valeur SPF')" />
+                        }
+                      </td>
+                    </tr>
+                    <tr>
+                      <td><strong>TTL</strong></td>
+                      <td><code>3600</code> <span class="field-hint">(1 heure - recommandé)</span></td>
+                      <td>
+                        <p-button icon="pi pi-copy"
+                          [text]="true"
+                          size="small"
+                          severity="secondary"
+                          pTooltip="Copier"
+                          (onClick)="copyToClipboard('3600', 'TTL')" />
+                      </td>
+                    </tr>
+                  </tbody>
+                </table>
+              </div>
+              <div class="dns-help-box">
+                <i class="pi pi-question-circle"></i>
+                <div>
+                  <strong>Aide:</strong> Ajoutez un nouvel enregistrement TXT. Si vous avez déjà un enregistrement SPF,
+                  fusionnez les valeurs en gardant un seul enregistrement commençant par "v=spf1".
+                </div>
+              </div>
+            </div>
+          </p-tabpanel>
+          <p-tabpanel header="DKIM Record">
+            <div class="dns-record-section">
+              <div class="dns-record-header">
+                <h4>Enregistrement DKIM (DomainKeys Identified Mail)</h4>
+                <div class="verification-status">
+                  <i
+                    class="pi"
+                    [class.pi-check-circle]="selectedDomain.dkim_record_verified"
+                    [class.pi-times-circle]="!selectedDomain.dkim_record_verified"
+                    [class.text-green-600]="selectedDomain.dkim_record_verified"
+                    [class.text-red-600]="!selectedDomain.dkim_record_verified">
+                  </i>
+                  <span>{{ selectedDomain.dkim_record_verified ? 'Vérifié' : 'Non vérifié' }}</span>
+                </div>
+              </div>
+              <p class="dns-description">
+                DKIM signe cryptographiquement vos emails pour prouver qu'ils proviennent bien de votre domaine.
+              </p>
+              <div class="dns-fields-table">
+                <table class="dns-config-table">
+                  <thead>
+                    <tr>
+                      <th>Champ</th>
+                      <th>Valeur à saisir</th>
+                      <th></th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    <tr>
+                      <td><strong>Type</strong></td>
+                      <td><code>TXT</code></td>
+                      <td></td>
+                    </tr>
+                    <tr>
+                      <td><strong>Nom/Host</strong></td>
+                      <td><code>smtpy._domainkey</code></td>
+                      <td>
+                        <p-button icon="pi pi-copy"
+                          [text]="true"
+                          size="small"
+                          severity="secondary"
+                          pTooltip="Copier"
+                          (onClick)="copyToClipboard('smtpy._domainkey', 'Nom DKIM')" />
+                      </td>
+                    </tr>
+                    <tr>
+                      <td><strong>Valeur</strong></td>
+                      <td><code class="dns-long-value">{{ dnsRecords?.dkim_record || 'Chargement...' }}</code></td>
+                      <td>
+                        @if (dnsRecords?.dkim_record) {
+                          <p-button icon="pi pi-copy"
+                            [text]="true"
+                            size="small"
+                            severity="secondary"
+                            pTooltip="Copier"
+                            (onClick)="copyToClipboard(dnsRecords!.dkim_record, 'Valeur DKIM')" />
+                        }
+                      </td>
+                    </tr>
+                    <tr>
+                      <td><strong>TTL</strong></td>
+                      <td><code>3600</code> <span class="field-hint">(1 heure - recommandé)</span></td>
+                      <td>
+                        <p-button icon="pi pi-copy"
+                          [text]="true"
+                          size="small"
+                          severity="secondary"
+                          pTooltip="Copier"
+                          (onClick)="copyToClipboard('3600', 'TTL')" />
+                      </td>
+                    </tr>
+                  </tbody>
+                </table>
+              </div>
+              <div class="dns-help-box">
+                <i class="pi pi-question-circle"></i>
+                <div>
+                  <strong>Aide:</strong> L'enregistrement DKIM contient une longue clé publique. Assurez-vous de copier l'intégralité
+                  de la valeur, incluant les guillemets et les espaces. Certains registrars nécessitent de séparer la valeur en plusieurs chaînes.
+                </div>
+              </div>
+            </div>
+          </p-tabpanel>
+          <p-tabpanel header="DMARC Record">
+            <div class="dns-record-section">
+              <div class="dns-record-header">
+                <h4>Enregistrement DMARC</h4>
+                <div class="verification-status">
+                  <i
+                    class="pi"
+                    [class.pi-check-circle]="selectedDomain.dmarc_record_verified"
+                    [class.pi-times-circle]="!selectedDomain.dmarc_record_verified"
+                    [class.text-green-600]="selectedDomain.dmarc_record_verified"
+                    [class.text-red-600]="!selectedDomain.dmarc_record_verified">
+                  </i>
+                  <span>{{ selectedDomain.dmarc_record_verified ? 'Vérifié' : 'Non vérifié' }}</span>
+                </div>
+              </div>
+              <p class="dns-description">
+                DMARC définit la politique d'authentification des emails et permet de recevoir des rapports sur les tentatives d'usurpation.
+              </p>
+              <div class="dns-fields-table">
+                <table class="dns-config-table">
+                  <thead>
+                    <tr>
+                      <th>Champ</th>
+                      <th>Valeur à saisir</th>
+                      <th></th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    <tr>
+                      <td><strong>Type</strong></td>
+                      <td><code>TXT</code></td>
+                      <td></td>
+                    </tr>
+                    <tr>
+                      <td><strong>Nom/Host</strong></td>
+                      <td><code>_dmarc</code></td>
+                      <td>
+                        <p-button icon="pi pi-copy"
+                          [text]="true"
+                          size="small"
+                          severity="secondary"
+                          pTooltip="Copier"
+                          (onClick)="copyToClipboard('_dmarc', 'Nom DMARC')" />
+                      </td>
+                    </tr>
+                    <tr>
+                      <td><strong>Valeur</strong></td>
+                      <td><code>{{ dnsRecords?.dmarc_record || 'Chargement...' }}</code></td>
+                      <td>
+                        @if (dnsRecords?.dmarc_record) {
+                          <p-button icon="pi pi-copy"
+                            [text]="true"
+                            size="small"
+                            severity="secondary"
+                            pTooltip="Copier"
+                            (onClick)="copyToClipboard(dnsRecords!.dmarc_record, 'Valeur DMARC')" />
+                        }
+                      </td>
+                    </tr>
+                    <tr>
+                      <td><strong>TTL</strong></td>
+                      <td><code>3600</code> <span class="field-hint">(1 heure - recommandé)</span></td>
+                      <td>
+                        <p-button icon="pi pi-copy"
+                          [text]="true"
+                          size="small"
+                          severity="secondary"
+                          pTooltip="Copier"
+                          (onClick)="copyToClipboard('3600', 'TTL')" />
+                      </td>
+                    </tr>
+                  </tbody>
+                </table>
+              </div>
+              <div class="dns-help-box">
+                <i class="pi pi-question-circle"></i>
+                <div>
+                  <strong>Aide:</strong> DMARC s'appuie sur SPF et DKIM. Assurez-vous que ces deux enregistrements sont déjà configurés
+                  avant d'ajouter DMARC. L'enregistrement DMARC commence toujours par "v=DMARC1".
+                </div>
+              </div>
+            </div>
+          </p-tabpanel>
+        </p-tabs>
       </div>
-
-      <p-tabs>
-        <p-tabpanel header="MX Records">
-          <div class="dns-record-section">
-            <div class="dns-record-header">
-              <h4>Enregistrements MX (Mail Exchange)</h4>
-              <div class="verification-status">
-                <i
-                  class="pi"
-                  [class.pi-check-circle]="selectedDomain.mx_record_verified"
-                  [class.pi-times-circle]="!selectedDomain.mx_record_verified"
-                  [class.text-green-600]="selectedDomain.mx_record_verified"
-                  [class.text-red-600]="!selectedDomain.mx_record_verified">
-                </i>
-                <span>{{ selectedDomain.mx_record_verified ? 'Vérifié' : 'Non vérifié' }}</span>
-              </div>
-            </div>
-
-            <p class="dns-description">
-              L'enregistrement MX indique à quel serveur les emails doivent être envoyés pour votre domaine.
-            </p>
-
-            <div class="dns-fields-table">
-              <table class="dns-config-table">
-                <thead>
-                  <tr>
-                    <th>Champ</th>
-                    <th>Valeur à saisir</th>
-                    <th></th>
-                  </tr>
-                </thead>
-                <tbody>
-                  <tr>
-                    <td><strong>Type</strong></td>
-                    <td><code>MX</code></td>
-                    <td></td>
-                  </tr>
-                  <tr>
-                    <td><strong>Nom/Host</strong></td>
-                    <td><code>@</code> <span class="field-hint">(ou laissez vide)</span></td>
-                    <td>
-                      <p-button
-                        icon="pi pi-copy"
-                        [text]="true"
-                        size="small"
-                        severity="secondary"
-                        pTooltip="Copier"
-                        (onClick)="copyToClipboard('@', 'Nom MX')">
-                      </p-button>
-                    </td>
-                  </tr>
-                  <tr>
-                    <td><strong>Valeur/Cible</strong></td>
-                    <td>
-                      <code>{{ dnsRecords?.mx_record || 'Chargement...' }}</code>
-                      <span class="field-hint">Le point final (.) est important !</span>
-                    </td>
-                    <td>
-                      <p-button
-                        *ngIf="dnsRecords?.mx_record"
-                        icon="pi pi-copy"
-                        [text]="true"
-                        size="small"
-                        severity="secondary"
-                        pTooltip="Copier"
-                        (onClick)="copyToClipboard(dnsRecords!.mx_record, 'Valeur MX')">
-                      </p-button>
-                    </td>
-                  </tr>
-                  <tr>
-                    <td><strong>Priorité</strong></td>
-                    <td><code>10</code></td>
-                    <td>
-                      <p-button
-                        icon="pi pi-copy"
-                        [text]="true"
-                        size="small"
-                        severity="secondary"
-                        pTooltip="Copier"
-                        (onClick)="copyToClipboard('10', 'Priorité MX')">
-                      </p-button>
-                    </td>
-                  </tr>
-                  <tr>
-                    <td><strong>TTL</strong></td>
-                    <td><code>3600</code> <span class="field-hint">(1 heure - recommandé)</span></td>
-                    <td>
-                      <p-button
-                        icon="pi pi-copy"
-                        [text]="true"
-                        size="small"
-                        severity="secondary"
-                        pTooltip="Copier"
-                        (onClick)="copyToClipboard('3600', 'TTL')">
-                      </p-button>
-                    </td>
-                  </tr>
-                </tbody>
-              </table>
-            </div>
-
-            <div class="dns-help-box">
-              <i class="pi pi-question-circle"></i>
-              <div>
-                <strong>Aide:</strong> Connectez-vous à votre registrar de domaine, trouvez la section "Gestion DNS" ou "Zone DNS",
-                et ajoutez un nouvel enregistrement MX avec les valeurs ci-dessus.
-                <br><br>
-                <strong>⚠️ Important:</strong> Le point final (.) dans <code>smtp.smtpy.fr.</code> est crucial ! Il indique à votre DNS
-                que c'est une adresse complète et empêche l'ajout automatique de votre nom de domaine.
-                Si votre DNS ajoute quand même votre domaine, vérifiez s'il y a une option "Nom de domaine externe" ou "FQDN".
-              </div>
-            </div>
-          </div>
-        </p-tabpanel>
-
-        <p-tabpanel header="SPF Record">
-          <div class="dns-record-section">
-            <div class="dns-record-header">
-              <h4>Enregistrement SPF (Sender Policy Framework)</h4>
-              <div class="verification-status">
-                <i
-                  class="pi"
-                  [class.pi-check-circle]="selectedDomain.spf_record_verified"
-                  [class.pi-times-circle]="!selectedDomain.spf_record_verified"
-                  [class.text-green-600]="selectedDomain.spf_record_verified"
-                  [class.text-red-600]="!selectedDomain.spf_record_verified">
-                </i>
-                <span>{{ selectedDomain.spf_record_verified ? 'Vérifié' : 'Non vérifié' }}</span>
-              </div>
-            </div>
-
-            <p class="dns-description">
-              SPF permet d'indiquer quels serveurs sont autorisés à envoyer des emails depuis votre domaine.
-            </p>
-
-            <div class="dns-fields-table">
-              <table class="dns-config-table">
-                <thead>
-                  <tr>
-                    <th>Champ</th>
-                    <th>Valeur à saisir</th>
-                    <th></th>
-                  </tr>
-                </thead>
-                <tbody>
-                  <tr>
-                    <td><strong>Type</strong></td>
-                    <td><code>TXT</code></td>
-                    <td></td>
-                  </tr>
-                  <tr>
-                    <td><strong>Nom/Host</strong></td>
-                    <td><code>@</code> <span class="field-hint">(ou laissez vide)</span></td>
-                    <td>
-                      <p-button
-                        icon="pi pi-copy"
-                        [text]="true"
-                        size="small"
-                        severity="secondary"
-                        pTooltip="Copier"
-                        (onClick)="copyToClipboard('@', 'Nom SPF')">
-                      </p-button>
-                    </td>
-                  </tr>
-                  <tr>
-                    <td><strong>Valeur</strong></td>
-                    <td><code>{{ dnsRecords?.spf_record || 'Chargement...' }}</code></td>
-                    <td>
-                      <p-button
-                        *ngIf="dnsRecords?.spf_record"
-                        icon="pi pi-copy"
-                        [text]="true"
-                        size="small"
-                        severity="secondary"
-                        pTooltip="Copier"
-                        (onClick)="copyToClipboard(dnsRecords!.spf_record, 'Valeur SPF')">
-                      </p-button>
-                    </td>
-                  </tr>
-                  <tr>
-                    <td><strong>TTL</strong></td>
-                    <td><code>3600</code> <span class="field-hint">(1 heure - recommandé)</span></td>
-                    <td>
-                      <p-button
-                        icon="pi pi-copy"
-                        [text]="true"
-                        size="small"
-                        severity="secondary"
-                        pTooltip="Copier"
-                        (onClick)="copyToClipboard('3600', 'TTL')">
-                      </p-button>
-                    </td>
-                  </tr>
-                </tbody>
-              </table>
-            </div>
-
-            <div class="dns-help-box">
-              <i class="pi pi-question-circle"></i>
-              <div>
-                <strong>Aide:</strong> Ajoutez un nouvel enregistrement TXT. Si vous avez déjà un enregistrement SPF,
-                fusionnez les valeurs en gardant un seul enregistrement commençant par "v=spf1".
-              </div>
-            </div>
-          </div>
-        </p-tabpanel>
-
-        <p-tabpanel header="DKIM Record">
-          <div class="dns-record-section">
-            <div class="dns-record-header">
-              <h4>Enregistrement DKIM (DomainKeys Identified Mail)</h4>
-              <div class="verification-status">
-                <i
-                  class="pi"
-                  [class.pi-check-circle]="selectedDomain.dkim_record_verified"
-                  [class.pi-times-circle]="!selectedDomain.dkim_record_verified"
-                  [class.text-green-600]="selectedDomain.dkim_record_verified"
-                  [class.text-red-600]="!selectedDomain.dkim_record_verified">
-                </i>
-                <span>{{ selectedDomain.dkim_record_verified ? 'Vérifié' : 'Non vérifié' }}</span>
-              </div>
-            </div>
-
-            <p class="dns-description">
-              DKIM signe cryptographiquement vos emails pour prouver qu'ils proviennent bien de votre domaine.
-            </p>
-
-            <div class="dns-fields-table">
-              <table class="dns-config-table">
-                <thead>
-                  <tr>
-                    <th>Champ</th>
-                    <th>Valeur à saisir</th>
-                    <th></th>
-                  </tr>
-                </thead>
-                <tbody>
-                  <tr>
-                    <td><strong>Type</strong></td>
-                    <td><code>TXT</code></td>
-                    <td></td>
-                  </tr>
-                  <tr>
-                    <td><strong>Nom/Host</strong></td>
-                    <td><code>smtpy._domainkey</code></td>
-                    <td>
-                      <p-button
-                        icon="pi pi-copy"
-                        [text]="true"
-                        size="small"
-                        severity="secondary"
-                        pTooltip="Copier"
-                        (onClick)="copyToClipboard('smtpy._domainkey', 'Nom DKIM')">
-                      </p-button>
-                    </td>
-                  </tr>
-                  <tr>
-                    <td><strong>Valeur</strong></td>
-                    <td><code class="dns-long-value">{{ dnsRecords?.dkim_record || 'Chargement...' }}</code></td>
-                    <td>
-                      <p-button
-                        *ngIf="dnsRecords?.dkim_record"
-                        icon="pi pi-copy"
-                        [text]="true"
-                        size="small"
-                        severity="secondary"
-                        pTooltip="Copier"
-                        (onClick)="copyToClipboard(dnsRecords!.dkim_record, 'Valeur DKIM')">
-                      </p-button>
-                    </td>
-                  </tr>
-                  <tr>
-                    <td><strong>TTL</strong></td>
-                    <td><code>3600</code> <span class="field-hint">(1 heure - recommandé)</span></td>
-                    <td>
-                      <p-button
-                        icon="pi pi-copy"
-                        [text]="true"
-                        size="small"
-                        severity="secondary"
-                        pTooltip="Copier"
-                        (onClick)="copyToClipboard('3600', 'TTL')">
-                      </p-button>
-                    </td>
-                  </tr>
-                </tbody>
-              </table>
-            </div>
-
-            <div class="dns-help-box">
-              <i class="pi pi-question-circle"></i>
-              <div>
-                <strong>Aide:</strong> L'enregistrement DKIM contient une longue clé publique. Assurez-vous de copier l'intégralité
-                de la valeur, incluant les guillemets et les espaces. Certains registrars nécessitent de séparer la valeur en plusieurs chaînes.
-              </div>
-            </div>
-          </div>
-        </p-tabpanel>
-
-        <p-tabpanel header="DMARC Record">
-          <div class="dns-record-section">
-            <div class="dns-record-header">
-              <h4>Enregistrement DMARC</h4>
-              <div class="verification-status">
-                <i
-                  class="pi"
-                  [class.pi-check-circle]="selectedDomain.dmarc_record_verified"
-                  [class.pi-times-circle]="!selectedDomain.dmarc_record_verified"
-                  [class.text-green-600]="selectedDomain.dmarc_record_verified"
-                  [class.text-red-600]="!selectedDomain.dmarc_record_verified">
-                </i>
-                <span>{{ selectedDomain.dmarc_record_verified ? 'Vérifié' : 'Non vérifié' }}</span>
-              </div>
-            </div>
-
-            <p class="dns-description">
-              DMARC définit la politique d'authentification des emails et permet de recevoir des rapports sur les tentatives d'usurpation.
-            </p>
-
-            <div class="dns-fields-table">
-              <table class="dns-config-table">
-                <thead>
-                  <tr>
-                    <th>Champ</th>
-                    <th>Valeur à saisir</th>
-                    <th></th>
-                  </tr>
-                </thead>
-                <tbody>
-                  <tr>
-                    <td><strong>Type</strong></td>
-                    <td><code>TXT</code></td>
-                    <td></td>
-                  </tr>
-                  <tr>
-                    <td><strong>Nom/Host</strong></td>
-                    <td><code>_dmarc</code></td>
-                    <td>
-                      <p-button
-                        icon="pi pi-copy"
-                        [text]="true"
-                        size="small"
-                        severity="secondary"
-                        pTooltip="Copier"
-                        (onClick)="copyToClipboard('_dmarc', 'Nom DMARC')">
-                      </p-button>
-                    </td>
-                  </tr>
-                  <tr>
-                    <td><strong>Valeur</strong></td>
-                    <td><code>{{ dnsRecords?.dmarc_record || 'Chargement...' }}</code></td>
-                    <td>
-                      <p-button
-                        *ngIf="dnsRecords?.dmarc_record"
-                        icon="pi pi-copy"
-                        [text]="true"
-                        size="small"
-                        severity="secondary"
-                        pTooltip="Copier"
-                        (onClick)="copyToClipboard(dnsRecords!.dmarc_record, 'Valeur DMARC')">
-                      </p-button>
-                    </td>
-                  </tr>
-                  <tr>
-                    <td><strong>TTL</strong></td>
-                    <td><code>3600</code> <span class="field-hint">(1 heure - recommandé)</span></td>
-                    <td>
-                      <p-button
-                        icon="pi pi-copy"
-                        [text]="true"
-                        size="small"
-                        severity="secondary"
-                        pTooltip="Copier"
-                        (onClick)="copyToClipboard('3600', 'TTL')">
-                      </p-button>
-                    </td>
-                  </tr>
-                </tbody>
-              </table>
-            </div>
-
-            <div class="dns-help-box">
-              <i class="pi pi-question-circle"></i>
-              <div>
-                <strong>Aide:</strong> DMARC s'appuie sur SPF et DKIM. Assurez-vous que ces deux enregistrements sont déjà configurés
-                avant d'ajouter DMARC. L'enregistrement DMARC commence toujours par "v=DMARC1".
-              </div>
-            </div>
-          </div>
-        </p-tabpanel>
-      </p-tabs>
-    </div>
+    }
   </ng-template>
   <ng-template pTemplate="footer">
-    <p-button
-      label="Fermer"
+    <p-button label="Fermer"
       severity="secondary"
-      (onClick)="displayDNSDialog = false">
-    </p-button>
-    <p-button
-      label="Vérifier maintenant"
+      (onClick)="displayDNSDialog = false" />
+    <p-button label="Vérifier maintenant"
       icon="pi pi-refresh"
       [loading]="verifying"
-      (onClick)="verifyDNS(selectedDomain!)">
-    </p-button>
+      (onClick)="verifyDNS(selectedDomain!)" />
   </ng-template>
 </p-dialog>
 
 <!-- Toast Notifications -->
-<p-toast position="top-right"></p-toast>
+<p-toast position="top-right" />
 
 <!-- Confirmation Dialog -->
-<p-confirmDialog></p-confirmDialog>
+<p-confirmDialog />

@@ -5,30 +5,28 @@
       <h1 class="page-title">Mes Alias</h1>
       <p class="page-subtitle">Gérez vos adresses email alias et leur redirection</p>
     </div>
-    <p-button
-      label="Ajouter un alias"
+    <p-button label="Ajouter un alias"
       icon="pi pi-plus"
-      (onClick)="openAddDialog()">
-    </p-button>
+      (onClick)="openAddDialog()" />
   </div>
 
   <!-- Filters -->
-  <div class="filters-section" *ngIf="domains.length > 0">
-    <div class="filter-group">
-      <label for="domainFilter">Filtrer par domaine</label>
-      <p-select
-        id="domainFilter"
-        [(ngModel)]="selectedDomainFilter"
-        [options]="domains"
-        optionLabel="name"
-        placeholder="Tous les domaines"
-        [showClear]="true"
-        (onChange)="onDomainFilterChange()"
-        (onClear)="clearDomainFilter()"
-        class="w-full">
-      </p-select>
+  @if (domains.length > 0) {
+    <div class="filters-section">
+      <div class="filter-group">
+        <label for="domainFilter">Filtrer par domaine</label>
+        <p-select id="domainFilter"
+          [(ngModel)]="selectedDomainFilter"
+          [options]="domains"
+          optionLabel="name"
+          placeholder="Tous les domaines"
+          [showClear]="true"
+          (onChange)="onDomainFilterChange()"
+          (onClear)="clearDomainFilter()"
+          class="w-full" />
+      </div>
     </div>
-  </div>
+  }
 
   <!-- Aliases Table -->
   <p-card class="aliases-card">
@@ -73,11 +71,9 @@
             <!-- Targets -->
             <td>
               <div class="targets-cell">
-                <p-tag
-                  [value]="alias.target_count + ' destination' + (alias.target_count > 1 ? 's' : '')"
+                <p-tag [value]="alias.target_count + ' destination' + (alias.target_count > 1 ? 's' : '')"
                   severity="info"
-                  icon="pi pi-arrow-right">
-                </p-tag>
+                  icon="pi pi-arrow-right" />
               </div>
             </td>
 
@@ -94,36 +90,30 @@
             <!-- Actions -->
             <td>
               <div class="action-buttons">
-                <p-button
-                  icon="pi pi-copy"
+                <p-button icon="pi pi-copy"
                   [text]="true"
                   [rounded]="true"
                   severity="secondary"
                   size="small"
                   pTooltip="Copier l'adresse"
                   tooltipPosition="top"
-                  (onClick)="copyToClipboard(alias.full_address, 'Adresse')">
-                </p-button>
-                <p-button
-                  icon="pi pi-pencil"
+                  (onClick)="copyToClipboard(alias.full_address, 'Adresse')" />
+                <p-button icon="pi pi-pencil"
                   [text]="true"
                   [rounded]="true"
                   severity="info"
                   size="small"
                   pTooltip="Modifier"
                   tooltipPosition="top"
-                  (onClick)="openEditDialog(alias)">
-                </p-button>
-                <p-button
-                  icon="pi pi-trash"
+                  (onClick)="openEditDialog(alias)" />
+                <p-button icon="pi pi-trash"
                   [text]="true"
                   [rounded]="true"
                   severity="danger"
                   size="small"
                   pTooltip="Supprimer"
                   tooltipPosition="top"
-                  (onClick)="deleteAlias(alias)">
-                </p-button>
+                  (onClick)="deleteAlias(alias)" />
               </div>
             </td>
           </tr>
@@ -136,11 +126,9 @@
                 <i class="pi pi-at"></i>
                 <h3>Aucun alias configuré</h3>
                 <p>Créez votre premier alias pour commencer à recevoir des emails.</p>
-                <p-button
-                  label="Ajouter un alias"
+                <p-button label="Ajouter un alias"
                   icon="pi pi-plus"
-                  (onClick)="openAddDialog()">
-                </p-button>
+                  (onClick)="openAddDialog()" />
               </div>
             </td>
           </tr>
@@ -162,8 +150,7 @@
     <form [formGroup]="addAliasForm" class="alias-form">
       <div class="form-field">
         <label for="domain">Domaine *</label>
-        <p-select
-          id="domain"
+        <p-select id="domain"
           formControlName="domain_id"
           [options]="getActiveDomainsForDropdown()"
           optionLabel="name"
@@ -173,16 +160,18 @@
           [showClear]="false"
           appendTo="body"
           styleClass="w-full"
-          [class.ng-invalid]="addAliasForm.get('domain_id')?.invalid && addAliasForm.get('domain_id')?.touched">
-        </p-select>
-        <small
-          *ngIf="addAliasForm.get('domain_id')?.invalid && addAliasForm.get('domain_id')?.touched"
-          class="p-error">
-          Veuillez sélectionner un domaine
-        </small>
-        <small *ngIf="getActiveDomainsForDropdown().length === 0" class="p-hint">
-          Aucun domaine vérifié disponible. Ajoutez et vérifiez un domaine d'abord.
-        </small>
+          [class.ng-invalid]="addAliasForm.get('domain_id')?.invalid && addAliasForm.get('domain_id')?.touched" />
+        @if (addAliasForm.get('domain_id')?.invalid && addAliasForm.get('domain_id')?.touched) {
+          <small
+            class="p-error">
+            Veuillez sélectionner un domaine
+          </small>
+        }
+        @if (getActiveDomainsForDropdown().length === 0) {
+          <small class="p-hint">
+            Aucun domaine vérifié disponible. Ajoutez et vérifiez un domaine d'abord.
+          </small>
+        }
       </div>
 
       <div class="form-field">
@@ -194,31 +183,31 @@
           placeholder="exemple: contact, hello, support"
           class="w-full"
           [class.ng-invalid]="addAliasForm.get('local_part')?.invalid && addAliasForm.get('local_part')?.touched" />
-        <small
-          *ngIf="addAliasForm.get('local_part')?.invalid && addAliasForm.get('local_part')?.touched"
-          class="p-error">
-          Veuillez entrer une partie locale valide (lettres minuscules, chiffres, . _ - uniquement)
-        </small>
+        @if (addAliasForm.get('local_part')?.invalid && addAliasForm.get('local_part')?.touched) {
+          <small
+            class="p-error">
+            Veuillez entrer une partie locale valide (lettres minuscules, chiffres, . _ - uniquement)
+          </small>
+        }
       </div>
 
       <div class="form-field">
         <label for="targets">Adresses de destination *</label>
-        <p-chips
-          id="targets"
+        <p-chip id="targets"
           formControlName="targets"
           placeholder="Ajoutez des adresses email"
           styleClass="w-full"
           separator=","
-          [class.ng-invalid]="addAliasForm.get('targets')?.invalid && addAliasForm.get('targets')?.touched">
-        </p-chips>
+          [class.ng-invalid]="addAliasForm.get('targets')?.invalid && addAliasForm.get('targets')?.touched" />
         <small class="p-hint">
           Appuyez sur Entrée ou , après chaque email. Les emails reçus seront transférés vers toutes ces adresses.
         </small>
-        <small
-          *ngIf="addAliasForm.get('targets')?.invalid && addAliasForm.get('targets')?.touched"
-          class="p-error">
-          Ajoutez au moins une adresse email de destination
-        </small>
+        @if (addAliasForm.get('targets')?.invalid && addAliasForm.get('targets')?.touched) {
+          <small
+            class="p-error">
+            Ajoutez au moins une adresse email de destination
+          </small>
+        }
       </div>
 
       <div class="info-message">
@@ -231,19 +220,15 @@
     </form>
   </ng-template>
   <ng-template pTemplate="footer">
-    <p-button
-      label="Annuler"
+    <p-button label="Annuler"
       severity="secondary"
       [text]="true"
-      (onClick)="displayAddDialog = false">
-    </p-button>
-    <p-button
-      label="Créer"
+      (onClick)="displayAddDialog = false" />
+    <p-button label="Créer"
       icon="pi pi-plus"
       [disabled]="!addAliasForm.valid"
       [loading]="savingAlias"
-      (onClick)="submitAddAlias()">
-    </p-button>
+      (onClick)="submitAddAlias()" />
   </ng-template>
 </p-dialog>
 
@@ -259,22 +244,21 @@
     <form [formGroup]="editAliasForm" class="alias-form">
       <div class="form-field">
         <label for="editTargets">Adresses de destination *</label>
-        <p-chips
-          id="editTargets"
+        <p-chips id="editTargets"
           formControlName="targets"
           placeholder="Ajoutez des adresses email"
           styleClass="w-full"
           separator=","
-          [class.ng-invalid]="editAliasForm.get('targets')?.invalid && editAliasForm.get('targets')?.touched">
-        </p-chips>
+          [class.ng-invalid]="editAliasForm.get('targets')?.invalid && editAliasForm.get('targets')?.touched" />
         <small class="p-hint">
           Appuyez sur Entrée ou , après chaque email. Les emails reçus seront transférés vers toutes ces adresses.
         </small>
-        <small
-          *ngIf="editAliasForm.get('targets')?.invalid && editAliasForm.get('targets')?.touched"
-          class="p-error">
-          Ajoutez au moins une adresse email de destination
-        </small>
+        @if (editAliasForm.get('targets')?.invalid && editAliasForm.get('targets')?.touched) {
+          <small
+            class="p-error">
+            Ajoutez au moins une adresse email de destination
+          </small>
+        }
       </div>
 
       <div class="info-message warning">
@@ -287,24 +271,20 @@
     </form>
   </ng-template>
   <ng-template pTemplate="footer">
-    <p-button
-      label="Annuler"
+    <p-button label="Annuler"
       severity="secondary"
       [text]="true"
-      (onClick)="displayEditDialog = false">
-    </p-button>
-    <p-button
-      label="Enregistrer"
+      (onClick)="displayEditDialog = false" />
+    <p-button label="Enregistrer"
       icon="pi pi-save"
       [disabled]="!editAliasForm.valid"
       [loading]="savingAlias"
-      (onClick)="submitEditAlias()">
-    </p-button>
+      (onClick)="submitEditAlias()" />
   </ng-template>
 </p-dialog>
 
 <!-- Toast Notifications -->
-<p-toast position="top-right"></p-toast>
+<p-toast position="top-right" />
 
 <!-- Confirmation Dialog -->
-<p-confirmDialog></p-confirmDialog>
+<p-confirmDialog />

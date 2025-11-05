@@ -1,5 +1,5 @@
 import { Component, OnInit, OnDestroy } from '@angular/core';
-import { CommonModule } from '@angular/common';
+
 import { FormBuilder, FormGroup, Validators, ReactiveFormsModule } from '@angular/forms';
 import { Router, RouterModule } from '@angular/router';
 import { Subject, takeUntil } from 'rxjs';
@@ -21,7 +21,6 @@ import { AuthService } from '../../service/auth.service';
   styleUrls: ['./forgot-password.component.scss'],
   standalone: true,
   imports: [
-    CommonModule,
     ReactiveFormsModule,
     RouterModule,
     CardModule,
@@ -29,7 +28,7 @@ import { AuthService } from '../../service/auth.service';
     ButtonModule,
     MessageModule,
     ToastModule
-  ],
+],
   providers: [MessageService]
 })
 export class ForgotPasswordComponent implements OnInit, OnDestroy {

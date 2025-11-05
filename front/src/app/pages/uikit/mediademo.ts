@@ -30,7 +30,7 @@ import { Product, ProductService } from '../service/product.service';
                             <div class="mt-0 font-semibold text-xl">{{ '$' + product.price }}</div>
                             <span>
                                 <p-button icon="pi pi-heart" severity="secondary" [outlined]="true" />
-                                <p-button icon="pi pi-shopping-cart" styleClass="ml-2" />
+                                <p-button icon="pi pi-shopping-cart" class="ml-2" />
                             </span>
                         </div>
                     </div>

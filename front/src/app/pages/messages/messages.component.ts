@@ -1,5 +1,5 @@
 import { Component, OnInit } from '@angular/core';
-import { CommonModule } from '@angular/common';
+
 import { ReactiveFormsModule, FormBuilder, FormGroup } from '@angular/forms';
 import { MessageResponse, MessageStatus, MessageFilter } from '../../core/interfaces/message.interface';
 import { MessagesApiService } from '../service/messages-api.service';
@@ -30,7 +30,6 @@ interface MessageWithDetails extends MessageResponse {
   styleUrls: ['./messages.component.scss'],
   standalone: true,
   imports: [
-    CommonModule,
     ReactiveFormsModule,
     CardModule,
     TableModule,
@@ -44,7 +43,7 @@ interface MessageWithDetails extends MessageResponse {
     TooltipModule,
     BadgeModule,
     AvatarModule
-  ],
+],
   providers: [MessageService]
 })
 export class MessagesComponent implements OnInit {

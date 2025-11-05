@@ -1,5 +1,5 @@
 import { Component, OnInit, OnDestroy } from '@angular/core';
-import { CommonModule } from '@angular/common';
+
 import { FormBuilder, FormGroup, Validators, ReactiveFormsModule } from '@angular/forms';
 import { Subject, takeUntil } from 'rxjs';
 
@@ -26,7 +26,6 @@ import { AuthService, User } from '../service/auth.service';
   styleUrls: ['./profile.component.scss'],
   standalone: true,
   imports: [
-    CommonModule,
     ReactiveFormsModule,
     CardModule,
     InputTextModule,
@@ -37,7 +36,7 @@ import { AuthService, User } from '../service/auth.service';
     DividerModule,
     TagModule,
     SkeletonModule
-  ],
+],
   providers: [MessageService]
 })
 export class ProfileComponent implements OnInit, OnDestroy {

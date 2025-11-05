@@ -1,5 +1,5 @@
 import {Component, OnInit} from '@angular/core';
-import {CommonModule} from '@angular/common';
+
 import {FormBuilder, FormGroup, FormsModule, ReactiveFormsModule, Validators} from '@angular/forms';
 import {ActivatedRoute, Router} from '@angular/router';
 
@@ -30,20 +30,19 @@ interface AliasWithDomain extends AliasListItem {
     styleUrls: ['./aliases.component.scss'],
     standalone: true,
     imports: [
-        CommonModule,
-        FormsModule,
-        ReactiveFormsModule,
-        Select,
-        Button,
-        Card,
-        TableModule,
-        Tag,
-        Dialog,
-        InputText,
-        Toast,
-        ConfirmDialog,
-        Chip,
-    ],
+    FormsModule,
+    ReactiveFormsModule,
+    Select,
+    Button,
+    Card,
+    TableModule,
+    Tag,
+    Dialog,
+    InputText,
+    Toast,
+    ConfirmDialog,
+    Chip
+],
     providers: [MessageService, ConfirmationService]
 })
 export class AliasesComponent implements OnInit {

@@ -27,7 +27,7 @@ import { RippleModule } from 'primeng/ripple';
                             </div>
                             <button pButton pRipple label="Commencer" class="p-button-rounded border-0 ml-4 font-light leading-tight" style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white;"></button>
                         </div>
-                        <p-divider class="w-full bg-surface-200"></p-divider>
+                        <p-divider class="w-full bg-surface-200" />
                         <ul class="my-8 list-none p-0 flex text-surface-900 dark:text-surface-0 flex-col px-8">
                             <li class="py-2">
                                 <i class="pi pi-fw pi-check text-xl text-purple-500 mr-2"></i>
@@ -62,7 +62,7 @@ import { RippleModule } from 'primeng/ripple';
                             </div>
                             <button pButton pRipple label="Essayer gratuitement" class="p-button-rounded border-0 ml-4 font-light leading-tight" style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white;"></button>
                         </div>
-                        <p-divider class="w-full bg-surface-200"></p-divider>
+                        <p-divider class="w-full bg-surface-200" />
                         <ul class="my-8 list-none p-0 flex text-surface-900 dark:text-surface-0 flex-col px-8">
                             <li class="py-2">
                                 <i class="pi pi-fw pi-check text-xl text-purple-500 mr-2"></i>
@@ -96,7 +96,7 @@ import { RippleModule } from 'primeng/ripple';
                             </div>
                             <button pButton pRipple label="Nous contacter" class="p-button-rounded border-0 ml-4 font-light leading-tight" style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white;"></button>
                         </div>
-                        <p-divider class="w-full bg-surface-200"></p-divider>
+                        <p-divider class="w-full bg-surface-200" />
                         <ul class="my-8 list-none p-0 flex text-surface-900 dark:text-surface-0 flex-col px-8">
                             <li class="py-2">
                                 <i class="pi pi-fw pi-check text-xl text-purple-500 mr-2"></i>
