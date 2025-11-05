@@ -1,0 +1,338 @@
+<div class="admin-container">
+  <!-- Header -->
+  <div class="admin-header">
+    <div>
+      <h1 class="page-title">
+        <i class="pi pi-shield"></i>
+        Administration
+      </h1>
+      <p class="page-subtitle">Vue d'ensemble du système et statistiques globales</p>
+    </div>
+    <p-button
+      label="Actualiser"
+      icon="pi pi-refresh"
+      (onClick)="refreshData()"
+      [loading]="loading" />
+  </div>
+
+  <!-- System Health Cards -->
+  @if (systemHealth) {
+    <div class="health-cards">
+      <p-card class="health-card">
+        <ng-template pTemplate="header">
+          <div class="card-header">
+            <i class="pi pi-database"></i>
+            <h3>Base de données</h3>
+          </div>
+        </ng-template>
+        <ng-template pTemplate="content">
+          <div class="health-content">
+            <p-tag
+              [value]="systemHealth.database.status"
+              [severity]="getHealthStatusSeverity(systemHealth.database.status)" />
+            <div class="health-details">
+              <span>Connexions: {{ systemHealth.database.connections }}</span>
+              <span>Taille: {{ systemHealth.database.size }}</span>
+            </div>
+          </div>
+        </ng-template>
+      </p-card>
+
+      @if (systemHealth.redis) {
+        <p-card class="health-card">
+          <ng-template pTemplate="header">
+            <div class="card-header">
+              <i class="pi pi-server"></i>
+              <h3>Redis</h3>
+            </div>
+          </ng-template>
+          <ng-template pTemplate="content">
+            <div class="health-content">
+              <p-tag
+                [value]="systemHealth.redis.status"
+                [severity]="getHealthStatusSeverity(systemHealth.redis.status)" />
+              <div class="health-details">
+                <span>Mémoire: {{ systemHealth.redis.memory_used }}</span>
+              </div>
+            </div>
+          </ng-template>
+        </p-card>
+      }
+
+      <p-card class="health-card">
+        <ng-template pTemplate="header">
+          <div class="card-header">
+            <i class="pi pi-send"></i>
+            <h3>SMTP</h3>
+          </div>
+        </ng-template>
+        <ng-template pTemplate="content">
+          <div class="health-content">
+            <p-tag
+              [value]="systemHealth.smtp.status"
+              [severity]="getHealthStatusSeverity(systemHealth.smtp.status)" />
+            <div class="health-details">
+              <span>File d'attente: {{ systemHealth.smtp.queue_size }}</span>
+            </div>
+          </div>
+        </ng-template>
+      </p-card>
+    </div>
+  }
+
+  <!-- Statistics Overview -->
+  @if (!loading && stats) {
+    <div class="stats-grid">
+      <!-- Users Card -->
+      <p-card class="stat-card">
+        <ng-template pTemplate="header">
+          <div class="card-header">
+            <i class="pi pi-users"></i>
+            <h3>Utilisateurs</h3>
+          </div>
+        </ng-template>
+        <ng-template pTemplate="content">
+          <div class="stat-content">
+            <div class="stat-main">
+              <span class="stat-number">{{ stats.users.total }}</span>
+              <span class="stat-label">Total</span>
+            </div>
+            <div class="stat-details">
+              <div class="stat-item">
+                <span class="label">Actifs:</span>
+                <span class="value">{{ stats.users.active }}</span>
+              </div>
+              <div class="stat-item">
+                <span class="label">Admins:</span>
+                <span class="value">{{ stats.users.admins }}</span>
+              </div>
+              <div class="stat-item success">
+                <span class="label">Nouveaux (30j):</span>
+                <span class="value">{{ stats.users.recent_signups }}</span>
+              </div>
+            </div>
+          </div>
+        </ng-template>
+      </p-card>
+
+      <!-- Organizations Card -->
+      <p-card class="stat-card">
+        <ng-template pTemplate="header">
+          <div class="card-header">
+            <i class="pi pi-building"></i>
+            <h3>Organisations</h3>
+          </div>
+        </ng-template>
+        <ng-template pTemplate="content">
+          <div class="stat-content">
+            <div class="stat-main">
+              <span class="stat-number">{{ stats.organizations.total }}</span>
+              <span class="stat-label">Total</span>
+            </div>
+            <div class="stat-details">
+              <div class="stat-item">
+                <span class="label">Actives:</span>
+                <span class="value">{{ stats.organizations.active }}</span>
+              </div>
+              <div class="stat-item success">
+                <span class="label">Avec abonnement:</span>
+                <span class="value">{{ stats.organizations.with_subscription }}</span>
+              </div>
+            </div>
+          </div>
+        </ng-template>
+      </p-card>
+
+      <!-- Domains Card -->
+      <p-card class="stat-card">
+        <ng-template pTemplate="header">
+          <div class="card-header">
+            <i class="pi pi-globe"></i>
+            <h3>Domaines</h3>
+          </div>
+        </ng-template>
+        <ng-template pTemplate="content">
+          <div class="stat-content">
+            <div class="stat-main">
+              <span class="stat-number">{{ stats.domains.total }}</span>
+              <span class="stat-label">Total</span>
+            </div>
+            <div class="stat-details">
+              <div class="stat-item success">
+                <span class="label">Vérifiés:</span>
+                <span class="value">{{ stats.domains.verified }}</span>
+              </div>
+              <div class="stat-item warning">
+                <span class="label">Non vérifiés:</span>
+                <span class="value">{{ stats.domains.unverified }}</span>
+              </div>
+              <div class="stat-item">
+                <span class="label">Actifs:</span>
+                <span class="value">{{ stats.domains.active }}</span>
+              </div>
+            </div>
+          </div>
+        </ng-template>
+      </p-card>
+
+      <!-- Aliases Card -->
+      <p-card class="stat-card">
+        <ng-template pTemplate="header">
+          <div class="card-header">
+            <i class="pi pi-at"></i>
+            <h3>Alias</h3>
+          </div>
+        </ng-template>
+        <ng-template pTemplate="content">
+          <div class="stat-content">
+            <div class="stat-main">
+              <span class="stat-number">{{ stats.aliases.total }}</span>
+              <span class="stat-label">Total</span>
+            </div>
+            <div class="stat-details">
+              <div class="stat-item success">
+                <span class="label">Actifs:</span>
+                <span class="value">{{ stats.aliases.active }}</span>
+              </div>
+              <div class="stat-item">
+                <span class="label">Inactifs:</span>
+                <span class="value">{{ stats.aliases.inactive }}</span>
+              </div>
+            </div>
+          </div>
+        </ng-template>
+      </p-card>
+
+      <!-- Messages Card -->
+      <p-card class="stat-card messages">
+        <ng-template pTemplate="header">
+          <div class="card-header">
+            <i class="pi pi-envelope"></i>
+            <h3>Messages</h3>
+          </div>
+        </ng-template>
+        <ng-template pTemplate="content">
+          <div class="stat-content">
+            <div class="stat-main">
+              <span class="stat-number">{{ stats.messages.total }}</span>
+              <span class="stat-label">Total</span>
+            </div>
+            <div class="stat-details">
+              <div class="stat-item success">
+                <span class="label">Aujourd'hui:</span>
+                <span class="value">{{ stats.messages.today }}</span>
+              </div>
+              <div class="stat-item">
+                <span class="label">Cette semaine:</span>
+                <span class="value">{{ stats.messages.this_week }}</span>
+              </div>
+              <div class="stat-item">
+                <span class="label">Ce mois:</span>
+                <span class="value">{{ stats.messages.this_month }}</span>
+              </div>
+              @if (stats.messages.failed > 0) {
+                <div class="stat-item error">
+                  <span class="label">Échecs:</span>
+                  <span class="value">{{ stats.messages.failed }}</span>
+                </div>
+              }
+            </div>
+          </div>
+        </ng-template>
+      </p-card>
+    </div>
+
+    <!-- Charts Section -->
+    <div class="charts-grid">
+      <p-card class="chart-card">
+        <ng-template pTemplate="header">
+          <h3>Statut des domaines</h3>
+        </ng-template>
+        <ng-template pTemplate="content">
+          <p-chart type="pie" [data]="domainStatusData" [options]="chartOptions" />
+        </ng-template>
+      </p-card>
+
+      <p-card class="chart-card">
+        <ng-template pTemplate="header">
+          <h3>Répartition des abonnements</h3>
+        </ng-template>
+        <ng-template pTemplate="content">
+          <p-chart type="pie" [data]="subscriptionData" [options]="chartOptions" />
+        </ng-template>
+      </p-card>
+
+      <p-card class="chart-card wide">
+        <ng-template pTemplate="header">
+          <h3>Volume de messages</h3>
+        </ng-template>
+        <ng-template pTemplate="content">
+          <p-chart type="bar" [data]="messageVolumeData" [options]="chartOptions" />
+        </ng-template>
+      </p-card>
+
+      <p-card class="chart-card wide">
+        <ng-template pTemplate="header">
+          <h3>Statistiques utilisateurs</h3>
+        </ng-template>
+        <ng-template pTemplate="content">
+          <p-chart type="line" [data]="userGrowthData" [options]="chartOptions" />
+        </ng-template>
+      </p-card>
+    </div>
+  }
+
+  <!-- Loading State -->
+  @if (loading) {
+    <div class="loading-state">
+      <p-skeleton height="200px" styleClass="mb-4" />
+      <div class="stats-grid">
+        <p-skeleton height="150px" />
+        <p-skeleton height="150px" />
+        <p-skeleton height="150px" />
+        <p-skeleton height="150px" />
+      </div>
+    </div>
+  }
+
+  <!-- Recent Activity -->
+  @if (!loading && recentActivity.length > 0) {
+    <p-card class="activity-card">
+      <ng-template pTemplate="header">
+        <div class="card-header">
+          <h3>Activité récente</h3>
+        </div>
+      </ng-template>
+      <ng-template pTemplate="content">
+        <p-table [value]="recentActivity" [rows]="10" [paginator]="true">
+          <ng-template pTemplate="header">
+            <tr>
+              <th style="width: 3rem"></th>
+              <th>Type</th>
+              <th>Description</th>
+              <th>Utilisateur</th>
+              <th>Date</th>
+            </tr>
+          </ng-template>
+          <ng-template pTemplate="body" let-activity>
+            <tr>
+              <td>
+                <i [class]="'pi ' + getActivityIcon(activity.type)"></i>
+              </td>
+              <td>
+                <p-tag
+                  [value]="activity.type"
+                  [severity]="getActivitySeverity(activity.type)" />
+              </td>
+              <td>{{ activity.description }}</td>
+              <td>{{ activity.user || '-' }}</td>
+              <td>{{ activity.timestamp | date:'short':'':'fr' }}</td>
+            </tr>
+          </ng-template>
+        </p-table>
+      </ng-template>
+    </p-card>
+  }
+</div>
+
+<p-toast />

@@ -1,11 +1,16 @@
 import { Routes } from '@angular/router';
-import { authGuard } from '../core/guards/auth.guard';
+import { authGuard, adminGuard } from '../core/guards/auth.guard';
 
 export default [
     {
         path: 'dashboard',
         loadComponent: () => import('./dashboard/dashboard.component').then(m => m.DashboardComponent),
         canActivate: [authGuard]
+    },
+    {
+        path: 'admin',
+        loadComponent: () => import('./admin/admin.component').then(m => m.AdminComponent),
+        canActivate: [authGuard, adminGuard]
     },
     {
         path: 'domains',
