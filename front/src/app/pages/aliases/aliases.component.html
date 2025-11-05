@@ -203,14 +203,14 @@
 
       <div class="form-field">
         <label for="targets">Adresses de destination *</label>
-        <p-chip
+        <p-chips
           id="targets"
           formControlName="targets"
           placeholder="Ajoutez des adresses email"
           styleClass="w-full"
           separator=","
           [class.ng-invalid]="addAliasForm.get('targets')?.invalid && addAliasForm.get('targets')?.touched">
-        </p-chip>
+        </p-chips>
         <small class="p-hint">
           Appuyez sur Entrée ou , après chaque email. Les emails reçus seront transférés vers toutes ces adresses.
         </small>
