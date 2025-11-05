@@ -4,7 +4,7 @@ from contextlib import asynccontextmanager
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 
-from api.views import auth_view, billing_view, domains_view, messages_view, subscriptions_view, webhooks_view, statistics_view, aliases_view, admin_view
+from api.views import auth_view, billing_view, domains_view, messages_view, subscriptions_view, webhooks_view, statistics_view, aliases_view, admin_view, users_view
 from api.views import utils_view
 from shared.core.config import SETTINGS
 from shared.core.db import create_tables
@@ -137,6 +137,10 @@ Success responses follow this structure:
             {
                 "name": "utilities",
                 "description": "Utility endpoints for DNS checks and system status"
+            },
+            {
+                "name": "users",
+                "description": "User profile management, preferences, API keys, and sessions"
             }
         ],
         contact={
@@ -192,6 +196,7 @@ Success responses follow this structure:
 
     # Include routers
     app.include_router(auth_view.router)
+    app.include_router(users_view.router)
     app.include_router(billing_view.router)
     app.include_router(domains_view.router)
     app.include_router(aliases_view.router)

@@ -17,6 +17,7 @@ import { SkeletonModule } from 'primeng/skeleton';
 
 // Services
 import { AuthService, User } from '../service/auth.service';
+import { UsersApiService } from '../service/users-api.service';
 
 // Layout
 
@@ -52,6 +53,7 @@ export class ProfileComponent implements OnInit, OnDestroy {
   constructor(
     private fb: FormBuilder,
     private authService: AuthService,
+    private usersApi: UsersApiService,
     private messageService: MessageService
   ) {}
 
@@ -109,16 +111,34 @@ export class ProfileComponent implements OnInit, OnDestroy {
 
     this.savingProfile = true;
 
-    // TODO: Implement API call to update profile
-    // For now, just show success message
-    setTimeout(() => {
-      this.savingProfile = false;
-      this.messageService.add({
-        severity: 'success',
-        summary: 'Profil mis à jour',
-        detail: 'Vos informations ont été enregistrées avec succès'
-      });
-    }, 1000);
+    const profileData = {
+      email: this.profileForm.value.email
+    };
+
+    this.usersApi.updateProfile(profileData).subscribe({
+      next: (response) => {
+        this.savingProfile = false;
+        if (response.success) {
+          // Update current user in auth service
+          if (response.data) {
+            this.authService.refreshCurrentUser();
+          }
+          this.messageService.add({
+            severity: 'success',
+            summary: 'Profil mis à jour',
+            detail: 'Vos informations ont été enregistrées avec succès'
+          });
+        }
+      },
+      error: (error) => {
+        this.savingProfile = false;
+        this.messageService.add({
+          severity: 'error',
+          summary: 'Erreur',
+          detail: error.error?.message || 'Impossible de mettre à jour le profil'
+        });
+      }
+    });
   }
 
   onChangePassword(): void {
@@ -129,19 +149,32 @@ export class ProfileComponent implements OnInit, OnDestroy {
 
     this.changingPassword = true;
 
-    const { currentPassword, newPassword } = this.passwordForm.value;
+    const passwordData = {
+      current_password: this.passwordForm.value.currentPassword,
+      new_password: this.passwordForm.value.newPassword
+    };
 
-    // TODO: Implement API call to change password
-    // For now, just show success message and reset form
-    setTimeout(() => {
-      this.changingPassword = false;
-      this.passwordForm.reset();
-      this.messageService.add({
-        severity: 'success',
-        summary: 'Mot de passe modifié',
-        detail: 'Votre mot de passe a été changé avec succès'
-      });
-    }, 1000);
+    this.usersApi.changePassword(passwordData).subscribe({
+      next: (response) => {
+        this.changingPassword = false;
+        if (response.success) {
+          this.passwordForm.reset();
+          this.messageService.add({
+            severity: 'success',
+            summary: 'Mot de passe modifié',
+            detail: 'Votre mot de passe a été changé avec succès'
+          });
+        }
+      },
+      error: (error) => {
+        this.changingPassword = false;
+        this.messageService.add({
+          severity: 'error',
+          summary: 'Erreur',
+          detail: error.error?.message || 'Impossible de changer le mot de passe'
+        });
+      }
+    });
   }
 
   getUserInitials(): string {

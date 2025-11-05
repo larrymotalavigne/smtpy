@@ -18,6 +18,7 @@ import {TableModule} from 'primeng/table';
 
 // Services
 import {AuthService, User} from '../service/auth.service';
+import {UsersApiService} from '../service/users-api.service';
 
 // Layout
 
@@ -106,6 +107,7 @@ export class SettingsComponent implements OnInit, OnDestroy {
     constructor(
         private fb: FormBuilder,
         private authService: AuthService,
+        private usersApi: UsersApiService,
         private messageService: MessageService,
         private confirmationService: ConfirmationService,
         private router: Router
@@ -130,11 +132,32 @@ export class SettingsComponent implements OnInit, OnDestroy {
     }
 
     saveNotificationPreferences(): void {
-        // TODO: Implement API call to save preferences
-        this.messageService.add({
-            severity: 'success',
-            summary: 'Préférences enregistrées',
-            detail: 'Vos préférences de notification ont été mises à jour'
+        if (!this.notificationsForm) return;
+
+        const preferences = {
+            email_on_new_message: this.notificationsForm.value.emailOnNewMessage,
+            email_on_domain_verified: this.notificationsForm.value.emailOnDomainVerified,
+            email_on_quota_warning: this.notificationsForm.value.emailOnQuotaWarning,
+            email_weekly_summary: this.notificationsForm.value.emailWeeklySummary
+        };
+
+        this.usersApi.updatePreferences(preferences).subscribe({
+            next: (response) => {
+                if (response.success) {
+                    this.messageService.add({
+                        severity: 'success',
+                        summary: 'Préférences enregistrées',
+                        detail: 'Vos préférences de notification ont été mises à jour'
+                    });
+                }
+            },
+            error: (error) => {
+                this.messageService.add({
+                    severity: 'error',
+                    summary: 'Erreur',
+                    detail: 'Impossible d\'enregistrer les préférences'
+                });
+            }
         });
     }
 
@@ -149,13 +172,24 @@ export class SettingsComponent implements OnInit, OnDestroy {
             return;
         }
 
-        // TODO: Implement API call to generate key
-        this.generatedApiKey = `sk_live_${Math.random().toString(36).substring(2, 15)}${Math.random().toString(36).substring(2, 15)}`;
-
-        this.messageService.add({
-            severity: 'success',
-            summary: 'Clé API générée',
-            detail: 'Copiez cette clé maintenant, elle ne sera plus affichée'
+        this.usersApi.generateApiKey(this.newApiKeyName).subscribe({
+            next: (response) => {
+                if (response.success && response.data) {
+                    this.generatedApiKey = response.data.key;
+                    this.messageService.add({
+                        severity: 'success',
+                        summary: 'Clé API générée',
+                        detail: 'Copiez cette clé maintenant, elle ne sera plus affichée'
+                    });
+                }
+            },
+            error: (error) => {
+                this.messageService.add({
+                    severity: 'error',
+                    summary: 'Erreur',
+                    detail: 'Impossible de générer la clé API'
+                });
+            }
         });
     }
 
@@ -177,12 +211,24 @@ export class SettingsComponent implements OnInit, OnDestroy {
             rejectLabel: 'Annuler',
             acceptButtonStyleClass: 'p-button-danger',
             accept: () => {
-                // TODO: Implement API call to revoke key
-                this.apiKeys = this.apiKeys.filter(k => k.id !== apiKey.id);
-                this.messageService.add({
-                    severity: 'success',
-                    summary: 'Clé révoquée',
-                    detail: 'La clé API a été révoquée avec succès'
+                this.usersApi.revokeApiKey(apiKey.id).subscribe({
+                    next: (response) => {
+                        if (response.success) {
+                            this.apiKeys = this.apiKeys.filter(k => k.id !== apiKey.id);
+                            this.messageService.add({
+                                severity: 'success',
+                                summary: 'Clé révoquée',
+                                detail: 'La clé API a été révoquée avec succès'
+                            });
+                        }
+                    },
+                    error: (error) => {
+                        this.messageService.add({
+                            severity: 'error',
+                            summary: 'Erreur',
+                            detail: 'Impossible de révoquer la clé API'
+                        });
+                    }
                 });
             }
         });
@@ -213,12 +259,24 @@ export class SettingsComponent implements OnInit, OnDestroy {
             rejectLabel: 'Annuler',
             acceptButtonStyleClass: 'p-button-danger',
             accept: () => {
-                // TODO: Implement API call to revoke session
-                this.sessions = this.sessions.filter(s => s.id !== session.id);
-                this.messageService.add({
-                    severity: 'success',
-                    summary: 'Session révoquée',
-                    detail: 'La session a été révoquée avec succès'
+                this.usersApi.revokeSession(session.id).subscribe({
+                    next: (response) => {
+                        if (response.success) {
+                            this.sessions = this.sessions.filter(s => s.id !== session.id);
+                            this.messageService.add({
+                                severity: 'success',
+                                summary: 'Session révoquée',
+                                detail: 'La session a été révoquée avec succès'
+                            });
+                        }
+                    },
+                    error: (error) => {
+                        this.messageService.add({
+                            severity: 'error',
+                            summary: 'Erreur',
+                            detail: 'Impossible de révoquer la session'
+                        });
+                    }
                 });
             }
         });
@@ -233,12 +291,24 @@ export class SettingsComponent implements OnInit, OnDestroy {
             rejectLabel: 'Annuler',
             acceptButtonStyleClass: 'p-button-danger',
             accept: () => {
-                // TODO: Implement API call to revoke all sessions
-                this.sessions = this.sessions.filter(s => s.is_current);
-                this.messageService.add({
-                    severity: 'success',
-                    summary: 'Sessions révoquées',
-                    detail: 'Toutes les autres sessions ont été révoquées'
+                this.usersApi.revokeAllSessions().subscribe({
+                    next: (response) => {
+                        if (response.success) {
+                            this.sessions = this.sessions.filter(s => s.is_current);
+                            this.messageService.add({
+                                severity: 'success',
+                                summary: 'Sessions révoquées',
+                                detail: 'Toutes les autres sessions ont été révoquées'
+                            });
+                        }
+                    },
+                    error: (error) => {
+                        this.messageService.add({
+                            severity: 'error',
+                            summary: 'Erreur',
+                            detail: 'Impossible de révoquer les sessions'
+                        });
+                    }
                 });
             }
         });
@@ -254,19 +324,31 @@ export class SettingsComponent implements OnInit, OnDestroy {
             rejectLabel: 'Annuler',
             acceptButtonStyleClass: 'p-button-danger',
             accept: () => {
-                // TODO: Implement API call to delete account
-                this.messageService.add({
-                    severity: 'info',
-                    summary: 'Compte supprimé',
-                    detail: 'Votre compte a été supprimé. Au revoir !'
-                });
+                this.usersApi.deleteAccount().subscribe({
+                    next: (response) => {
+                        if (response.success) {
+                            this.messageService.add({
+                                severity: 'info',
+                                summary: 'Compte supprimé',
+                                detail: 'Votre compte a été supprimé. Au revoir !'
+                            });
 
-                // Logout and redirect
-                setTimeout(() => {
-                    this.authService.logout().subscribe(() => {
-                        this.router.navigate(['/']);
-                    });
-                }, 2000);
+                            // Logout and redirect
+                            setTimeout(() => {
+                                this.authService.logout().subscribe(() => {
+                                    this.router.navigate(['/']);
+                                });
+                            }, 2000);
+                        }
+                    },
+                    error: (error) => {
+                        this.messageService.add({
+                            severity: 'error',
+                            summary: 'Erreur',
+                            detail: 'Impossible de supprimer le compte'
+                        });
+                    }
+                });
             }
         });
     }
