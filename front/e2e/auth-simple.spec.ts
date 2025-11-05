@@ -1,4 +1,4 @@
-import { test, expect } from '@playwright/test';
+import { test, expect } from './global-hooks';
 
 test.describe('Authentication - Critical Path', () => {
   // Generate unique username for test isolation

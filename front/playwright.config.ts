@@ -13,6 +13,7 @@ export default defineConfig({
   reporter: process.env.CI ? [['html'], ['github']] : 'html',
   timeout: 30000, // 30 seconds per test
   globalTimeout: process.env.CI ? 600000 : 0, // 10 minutes total in CI, no limit locally
+  globalSetup: './e2e/global-setup.ts',
 
   use: {
     baseURL: 'http://localhost:4200',

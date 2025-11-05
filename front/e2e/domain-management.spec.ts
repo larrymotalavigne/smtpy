@@ -1,4 +1,4 @@
-import { test, expect } from '@playwright/test';
+import { test, expect } from './global-hooks';
 
 /**
  * E2E Tests for Complete Domain Management Flow

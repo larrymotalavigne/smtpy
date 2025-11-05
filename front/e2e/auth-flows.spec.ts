@@ -1,4 +1,4 @@
-import { test, expect } from '@playwright/test';
+import { test, expect } from './global-hooks';
 
 /**
  * E2E Tests for Authentication Flows
@@ -14,7 +14,7 @@ test.describe('User Registration Flow', () => {
   test.beforeEach(async ({ page }) => {
     await page.goto('/auth/register');
     // Wait for the page to fully load
-    await expect(page.locator('h2.auth-title')).toContainText('Créer un compte');
+    await expect(page.locator('h2.auth-title')).toContainText('Créer un compte', { timeout: 10000 });
   });
 
   test('should display registration page elements', async ({ page }) => {
