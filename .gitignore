@@ -54,3 +54,6 @@ dist/
 
 # Stripe
 stripe.log 
+# Security reports
+security-reports/*.json
+security-reports/*.html

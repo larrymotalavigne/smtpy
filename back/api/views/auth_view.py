@@ -116,6 +116,16 @@ class ResetPasswordRequest(BaseModel):
         return v
 
 
+class VerifyEmailRequest(BaseModel):
+    """Verify email with token."""
+    token: str
+
+
+class ResendVerificationRequest(BaseModel):
+    """Resend email verification."""
+    email: EmailStr
+
+
 class UserResponse(BaseModel):
     """User response model."""
     id: int
@@ -291,6 +301,30 @@ async def register(
 
         await session.commit()
 
+        # Send verification email (async, don't wait for it)
+        from ..services.email_service import EmailService
+        import logging
+        logger = logging.getLogger(__name__)
+
+        try:
+            # Create email verification token
+            verification_token = await UsersDatabase.create_email_verification_token(
+                session=session,
+                user=user,
+                expires_in_hours=24
+            )
+            await session.commit()
+
+            # Send verification email
+            EmailService.send_email_verification(
+                to=user.email,
+                username=user.username,
+                verification_token=verification_token.token
+            )
+        except Exception as e:
+            logger.error(f"Failed to send verification email: {str(e)}")
+            # Don't fail registration if email fails
+
         # Create session cookie
         session_token = serializer.dumps(user.id)
         response.set_cookie(
@@ -304,7 +338,7 @@ async def register(
 
         return {
             "success": True,
-            "message": "User registered successfully",
+            "message": "User registered successfully. Please check your email to verify your account.",
             "data": {
                 "user": UserResponse(**user.to_dict()),
                 "access_token": session_token
@@ -481,17 +515,25 @@ async def request_password_reset(
 
         await session.commit()
 
-        # TODO: Send email with reset link
-        # For now, we'll just return success
-        # In production, you would send an email here with:
-        # reset_link = f"https://yourdomain.com/auth/reset-password?token={reset_token.token}"
+        # Send password reset email
+        from ..services.email_service import EmailService
+
+        email_sent = EmailService.send_password_reset_email(
+            to=user.email,
+            username=user.username,
+            reset_token=reset_token.token
+        )
+
+        if not email_sent:
+            # Log error but still return success (don't reveal if email exists)
+            import logging
+            logger = logging.getLogger(__name__)
+            logger.error(f"Failed to send password reset email to {user.email}")
 
         return {
             "success": True,
             "message": "If the email exists, a password reset link has been sent",
-            "data": {
-                "token": reset_token.token  # Only for testing; remove in production
-            }
+            "data": None  # Never expose tokens in production
         }
 
     except Exception as e:
@@ -538,3 +580,108 @@ async def reset_password(
     except Exception as e:
         await session.rollback()
         raise HTTPException(status_code=500, detail=f"Failed to reset password: {str(e)}")
+
+
+@router.post(
+    "/verify-email",
+    summary="Verify Email Address",
+    description="Verify user email address with verification token sent during registration"
+)
+async def verify_email(
+        data: VerifyEmailRequest,
+        session: AsyncSession = Depends(get_async_session)
+):
+    """Verify user email with token."""
+    # Get verification token
+    verification_token = await UsersDatabase.get_email_verification_token(session, data.token)
+
+    if not verification_token:
+        raise HTTPException(status_code=400, detail="Invalid or expired verification token")
+
+    if not verification_token.is_valid():
+        raise HTTPException(status_code=400, detail="Invalid or expired verification token")
+
+    try:
+        # Verify email
+        success = await UsersDatabase.verify_email(session, verification_token)
+
+        if not success:
+            raise HTTPException(status_code=400, detail="Failed to verify email")
+
+        await session.commit()
+
+        return {
+            "success": True,
+            "message": "Email verified successfully",
+            "data": None
+        }
+
+    except HTTPException:
+        raise
+    except Exception as e:
+        await session.rollback()
+        raise HTTPException(status_code=500, detail=f"Failed to verify email: {str(e)}")
+
+
+@router.post(
+    "/resend-verification",
+    summary="Resend Email Verification",
+    description="Resend email verification link to user's email address"
+)
+async def resend_verification(
+        data: ResendVerificationRequest,
+        session: AsyncSession = Depends(get_async_session)
+):
+    """Resend email verification link."""
+    # Get user by email
+    user = await UsersDatabase.get_user_by_email(session, data.email)
+
+    # Don't reveal if email exists (security best practice)
+    if not user:
+        return {
+            "success": True,
+            "message": "If the email exists and is not yet verified, a verification link has been sent",
+            "data": None
+        }
+
+    # Check if already verified
+    if user.is_verified:
+        return {
+            "success": True,
+            "message": "Email is already verified",
+            "data": None
+        }
+
+    try:
+        # Create new verification token
+        verification_token = await UsersDatabase.create_email_verification_token(
+            session=session,
+            user=user,
+            expires_in_hours=24
+        )
+
+        await session.commit()
+
+        # Send verification email
+        from ..services.email_service import EmailService
+
+        email_sent = EmailService.send_email_verification(
+            to=user.email,
+            username=user.username,
+            verification_token=verification_token.token
+        )
+
+        if not email_sent:
+            import logging
+            logger = logging.getLogger(__name__)
+            logger.error(f"Failed to send verification email to {user.email}")
+
+        return {
+            "success": True,
+            "message": "If the email exists and is not yet verified, a verification link has been sent",
+            "data": None
+        }
+
+    except Exception as e:
+        await session.rollback()
+        raise HTTPException(status_code=500, detail=f"Failed to resend verification: {str(e)}")

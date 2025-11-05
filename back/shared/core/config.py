@@ -54,6 +54,23 @@ class Settings(BaseSettings):
     # DNS Configuration
     DNS_CHECK_ENABLED: bool = Field(default=True, description="Enable DNS verification checks")
 
+    # Email Configuration (for sending transactional emails)
+    EMAIL_ENABLED: bool = Field(default=True, description="Enable email sending")
+    EMAIL_BACKEND: str = Field(default="smtp", description="Email backend (smtp, sendgrid, ses)")
+    EMAIL_FROM: str = Field(default="noreply@smtpy.local", description="Default from email address")
+    EMAIL_FROM_NAME: str = Field(default="SMTPy", description="Default from name")
+
+    # SMTP Email Settings (for transactional emails like password reset)
+    EMAIL_SMTP_HOST: str = Field(default="localhost", description="SMTP host for sending emails")
+    EMAIL_SMTP_PORT: int = Field(default=1025, description="SMTP port for sending emails")
+    EMAIL_SMTP_USERNAME: str = Field(default="", description="SMTP username")
+    EMAIL_SMTP_PASSWORD: str = Field(default="", description="SMTP password")
+    EMAIL_SMTP_USE_TLS: bool = Field(default=False, description="Use TLS for SMTP")
+    EMAIL_SMTP_USE_SSL: bool = Field(default=False, description="Use SSL for SMTP")
+
+    # Application URLs
+    APP_URL: str = Field(default="http://localhost:4200", description="Frontend application URL")
+
     @property
     def is_production(self) -> bool:
         """Check if running in production environment."""
