@@ -56,7 +56,6 @@
       "Bash(timeout 180 npm run build:*)",
       "Bash(gh auth:*)",
       "Bash(docker build:*)",
-      "Bash(git commit:*)",
       "Bash(npx playwright show-report:*)",
       "Bash(docker system:*)",
       "Bash(docker ps:*)",
@@ -69,7 +68,9 @@
       "Bash(timeout 5 curl:*)",
       "Bash(gh run list:*)",
       "Bash(npx tsc:*)",
-      "WebFetch(domain:productionresultssa11.blob.core.windows.net)"
+      "WebFetch(domain:productionresultssa11.blob.core.windows.net)",
+      "Bash(echo:*)",
+      "Bash(docker login:*)"
     ],
     "deny": [],
     "ask": []
