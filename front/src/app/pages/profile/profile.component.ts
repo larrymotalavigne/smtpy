@@ -121,7 +121,7 @@ export class ProfileComponent implements OnInit, OnDestroy {
         if (response.success) {
           // Update current user in auth service
           if (response.data) {
-            this.authService.refreshCurrentUser();
+            this.authService.checkAuthStatus().subscribe();
           }
           this.messageService.add({
             severity: 'success',

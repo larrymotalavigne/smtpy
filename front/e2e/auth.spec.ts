@@ -1,4 +1,4 @@
-import { test, expect } from '@playwright/test';
+import { test, expect } from './global-hooks';
 import { login, logout, waitForAngular } from './helpers';
 
 test.describe('Authentication Flow', () => {

@@ -1,4 +1,4 @@
-import { test, expect } from '@playwright/test';
+import { test, expect } from './global-hooks';
 
 test.describe('Billing and Subscriptions', () => {
   test.beforeEach(async ({ page }) => {
