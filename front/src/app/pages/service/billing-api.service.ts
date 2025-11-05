@@ -26,7 +26,7 @@ export class BillingApiService {
    * Create a Stripe checkout session
    */
   createCheckoutSession(request: CheckoutSessionRequest): Observable<ApiResponse<CheckoutSessionResponse>> {
-    return this.http.post<ApiResponse<CheckoutSessionResponse>>(`${this.apiUrl}/create-checkout-session`, request);
+    return this.http.post<ApiResponse<CheckoutSessionResponse>>(`${this.apiUrl}/checkout-session`, request);
   }
 
   /**
@@ -34,7 +34,7 @@ export class BillingApiService {
    */
   createCustomerPortal(returnUrl?: string): Observable<ApiResponse<CustomerPortalResponse>> {
     const body = returnUrl ? { return_url: returnUrl } : {};
-    return this.http.post<ApiResponse<CustomerPortalResponse>>(`${this.apiUrl}/create-portal-session`, body);
+    return this.http.get<ApiResponse<CustomerPortalResponse>>(`${this.apiUrl}/customer-portal`);
   }
 
   /**
