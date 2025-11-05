@@ -68,7 +68,8 @@
       "WebFetch(domain:github.com)",
       "Bash(timeout 5 curl:*)",
       "Bash(gh run list:*)",
-      "Bash(npx tsc:*)"
+      "Bash(npx tsc:*)",
+      "WebFetch(domain:productionresultssa11.blob.core.windows.net)"
     ],
     "deny": [],
     "ask": []

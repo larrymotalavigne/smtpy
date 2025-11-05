@@ -18,7 +18,7 @@ import {ConfirmationService, MessageService} from 'primeng/api';
 import {InputText} from 'primeng/inputtext';
 import {Toast} from 'primeng/toast';
 import {ConfirmDialog} from 'primeng/confirmdialog';
-import {Chip} from 'primeng/chip';
+import {AutoComplete} from 'primeng/autocomplete';
 
 interface AliasWithDomain extends AliasListItem {
     targetsArray?: string[];
@@ -41,7 +41,7 @@ interface AliasWithDomain extends AliasListItem {
     InputText,
     Toast,
     ConfirmDialog,
-    Chip
+    AutoComplete
 ],
     providers: [MessageService, ConfirmationService]
 })

@@ -125,7 +125,7 @@ jobs:
       - name: Verify admin user exists
         run: |
           echo "Verifying admin user exists in database..."
-          docker exec smtpy-db-dev psql -U postgres -d smtpy_dev -c "SELECT username, email FROM users WHERE username='admin';" || echo "Could not verify user"
+          docker exec smtpy-db-dev psql -U postgres -d smtpy -c "SELECT username, email FROM users WHERE username='admin';" || echo "Could not verify user"
 
       - name: Wait for frontend to be ready
         run: |

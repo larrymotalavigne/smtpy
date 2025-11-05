@@ -193,11 +193,13 @@
 
       <div class="form-field">
         <label for="targets">Adresses de destination *</label>
-        <p-chip id="targets"
+        <p-autocomplete
+          id="targets"
           formControlName="targets"
+          [multiple]="true"
+          [typeahead]="false"
           placeholder="Ajoutez des adresses email"
           styleClass="w-full"
-          separator=","
           [class.ng-invalid]="addAliasForm.get('targets')?.invalid && addAliasForm.get('targets')?.touched" />
         <small class="p-hint">
           Appuyez sur Entrée ou , après chaque email. Les emails reçus seront transférés vers toutes ces adresses.
@@ -244,11 +246,13 @@
     <form [formGroup]="editAliasForm" class="alias-form">
       <div class="form-field">
         <label for="editTargets">Adresses de destination *</label>
-        <p-chips id="editTargets"
+        <p-autocomplete
+          id="editTargets"
           formControlName="targets"
+          [multiple]="true"
+          [typeahead]="false"
           placeholder="Ajoutez des adresses email"
           styleClass="w-full"
-          separator=","
           [class.ng-invalid]="editAliasForm.get('targets')?.invalid && editAliasForm.get('targets')?.touched" />
         <small class="p-hint">
           Appuyez sur Entrée ou , après chaque email. Les emails reçus seront transférés vers toutes ces adresses.
