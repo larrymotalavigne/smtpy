@@ -230,7 +230,7 @@ async def get_plans():
                 }
             },
             {
-                "price_id": "pro",
+                "price_id": "price_1SQ3i1IDKuDXFSH2rfDz6EGx",  # Real Stripe price ID
                 "name": "Pro",
                 "description": "Pour les professionnels et petites équipes",
                 "amount": 900,
@@ -249,7 +249,7 @@ async def get_plans():
                 }
             },
             {
-                "price_id": "entreprise",
+                "price_id": "price_1SQ3i2IDKuDXFSH2ZVtCqL2f",  # Real Stripe price ID
                 "name": "Entreprise",
                 "description": "Solution sur mesure pour les grandes organisations",
                 "amount": 0,

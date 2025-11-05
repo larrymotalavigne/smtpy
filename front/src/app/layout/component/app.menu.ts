@@ -1,13 +1,14 @@
-import { Component } from '@angular/core';
-
+import { Component, OnInit } from '@angular/core';
+import { CommonModule } from '@angular/common';
 import { RouterModule } from '@angular/router';
 import { MenuItem } from 'primeng/api';
 import { AppMenuitem } from './app.menuitem';
+import { AuthService } from '../../pages/service/auth.service';
 
 @Component({
     selector: 'app-menu',
     standalone: true,
-    imports: [AppMenuitem, RouterModule],
+    imports: [CommonModule, AppMenuitem, RouterModule],
     template: `<ul class="layout-menu">
           @for (item of model; track item; let i = $index) {
             @if (!item.separator) {
@@ -19,11 +20,13 @@ import { AppMenuitem } from './app.menuitem';
           }
         </ul>`
 })
-export class AppMenu {
+export class AppMenu implements OnInit {
     model: MenuItem[] = [];
 
+    constructor(private authService: AuthService) {}
+
     ngOnInit() {
-        this.model = [
+        const baseMenu: MenuItem[] = [
             {
                 label: 'Principal',
                 items: [
@@ -48,5 +51,26 @@ export class AppMenu {
                 ]
             }
         ];
+
+        // Add admin section if user is admin
+        if (this.authService.isAdmin()) {
+            baseMenu.push({
+                separator: true
+            });
+            baseMenu.push({
+                label: 'Administration',
+                items: [
+                    {
+                        label: 'Admin Dashboard',
+                        icon: 'pi pi-fw pi-shield',
+                        routerLink: ['/admin'],
+                        badge: 'ADMIN',
+                        badgeClass: 'p-badge-danger'
+                    }
+                ]
+            });
+        }
+
+        this.model = baseMenu;
     }
 }
