@@ -27,12 +27,8 @@ def upgrade():
         unique=False
     )
 
-    op.create_index(
-        'idx_messages_user_created',
-        'messages',
-        ['user_id', 'created_at'],
-        unique=False
-    )
+    # Messages don't have a direct user_id column - they're linked via domains
+    # Removed idx_messages_user_created index
 
     op.create_index(
         'idx_messages_domain_created',
@@ -151,7 +147,7 @@ def downgrade():
 
     # Messages table indexes
     op.drop_index('idx_messages_created_at', table_name='messages')
-    op.drop_index('idx_messages_user_created', table_name='messages')
+    # idx_messages_user_created was removed - messages don't have user_id
     op.drop_index('idx_messages_domain_created', table_name='messages')
     op.drop_index('idx_messages_status', table_name='messages')
 

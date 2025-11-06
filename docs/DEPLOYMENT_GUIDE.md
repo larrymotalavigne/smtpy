@@ -167,6 +167,81 @@ STRIPE_PORTAL_RETURN_URL=https://yourdomain.com/billing
 4. Create webhook endpoint at Developers > Webhooks
 5. Copy webhook signing secret (`whsec_...`)
 
+#### Self-Hosted SMTP Configuration
+
+SMTPy includes a complete self-hosted SMTP delivery system that sends emails directly to recipient mail servers without requiring external services like Gmail or SendGrid.
+
+```bash
+# Self-hosted SMTP settings
+SMTP_HOSTNAME=mail.smtpy.fr              # Your sending hostname (FQDN)
+SMTP_DELIVERY_MODE=direct                # Delivery mode: direct/relay/hybrid/smart
+SMTP_ENABLE_DKIM=true                    # Enable DKIM signing for authentication
+```
+
+**Delivery Modes**:
+- **`direct`** (default): Self-hosted delivery, no external dependencies
+- **`relay`**: Use external SMTP service (Gmail, SendGrid)
+- **`hybrid`**: Try direct first, fall back to relay on failure
+- **`smart`**: AI-driven routing (future)
+
+**For External Relay (optional, only if using relay/hybrid mode)**:
+```bash
+# External relay credentials (optional)
+SMTP_USER=your-email@gmail.com           # SMTP username
+SMTP_PASSWORD=your-app-password          # SMTP password
+SMTP_HOST=smtp.gmail.com                 # SMTP host
+SMTP_PORT=587                            # SMTP port
+SMTP_USE_TLS=true                        # Use STARTTLS
+```
+
+**DNS Requirements for Self-Hosted SMTP** (CRITICAL):
+
+1. **Reverse DNS (PTR) Record** - Contact your hosting provider:
+   ```
+   45.80.25.57  →  mail.smtpy.fr
+   ```
+   Verify: `dig -x 45.80.25.57`
+
+2. **SPF Record** - Add to your domain's DNS:
+   ```
+   example.com.  IN  TXT  "v=spf1 include:smtpy.fr ~all"
+   ```
+   Or: `"v=spf1 ip4:45.80.25.57 ~all"`
+
+3. **DKIM Record** - Generated automatically, add to DNS:
+   ```
+   default._domainkey.example.com.  IN  TXT  "v=DKIM1; k=rsa; p=<public-key>"
+   ```
+
+4. **DMARC Record** - Add to your domain's DNS:
+   ```
+   _dmarc.example.com.  IN  TXT  "v=DMARC1; p=quarantine; rua=mailto:dmarc@example.com"
+   ```
+
+**Firewall Configuration**:
+```bash
+# Allow outbound SMTP
+sudo ufw allow out 25/tcp
+
+# Allow inbound SMTP (for receiving)
+sudo ufw allow 25/tcp
+```
+
+**Benefits of Self-Hosted SMTP**:
+- ✅ No external dependencies or per-email costs
+- ✅ Complete control over email delivery
+- ✅ Better privacy (emails don't pass through third parties)
+- ✅ Lower latency for direct delivery
+- ✅ Automatic DKIM signing for better deliverability
+
+**Important**: For new IPs, gradually increase sending volume (IP warm-up):
+- Day 1-3: 50 emails/day
+- Day 4-7: 200 emails/day
+- Day 8-14: 500 emails/day
+- Day 15+: Full volume
+
+See `back/smtp/relay/README.md` for complete documentation.
+
 #### CORS and Networking
 
 ```bash
