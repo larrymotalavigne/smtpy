@@ -11,11 +11,11 @@ from shared.core.db import get_async_session, get_db
 from shared.models import Domain, Alias, ActivityLog
 from pydantic import validate_email
 
-# Import forwarder - works in both development and production containers
+# Import relay service - async email forwarding with queuing and retries
 try:
-    import smtp.forwarding.forwarder as forwarder_module  # Development path
+    from smtp.relay import send_email, EmailPriority  # Development path
 except ModuleNotFoundError:
-    import forwarding.forwarder as forwarder_module       # Production container path
+    from relay import send_email, EmailPriority       # Production container path
 
 
 class SMTPHandler(AsyncMessage):
@@ -212,27 +212,55 @@ class SMTPHandler(AsyncMessage):
             )
             return  # Reject message
 
-        # Forward email to all resolved targets
+        # Forward email to all resolved targets using async relay service
         try:
-            forwarder_module.forward_email(message, list(all_targets), mail_from="noreply@localhost")
-            logging.info(
-                f"Email forwarded successfully",
-                extra={
-                    "sender": sender,
-                    "targets": list(all_targets),
-                    "subject": subject,
-                    "action": "forward",
-                },
+            # Use the new async relay service with queue and retry support
+            success = await send_email(
+                message=message,
+                targets=list(all_targets),
+                mail_from="noreply@smtpy.fr",
+                priority=EmailPriority.NORMAL
             )
-            for target in all_targets:
-                await self.log_activity(
-                    event_type="forward",
-                    sender=sender,
-                    recipient=target,
-                    subject=subject,
-                    status="success",
-                    message="Email forwarded successfully",
+
+            if success:
+                logging.info(
+                    f"Email queued for forwarding successfully",
+                    extra={
+                        "sender": sender,
+                        "targets": list(all_targets),
+                        "subject": subject,
+                        "action": "forward",
+                    },
                 )
+                for target in all_targets:
+                    await self.log_activity(
+                        event_type="forward",
+                        sender=sender,
+                        recipient=target,
+                        subject=subject,
+                        status="success",
+                        message="Email queued for forwarding",
+                    )
+            else:
+                logging.error(
+                    f"Failed to queue email for forwarding",
+                    extra={
+                        "sender": sender,
+                        "targets": list(all_targets),
+                        "subject": subject,
+                        "action": "forward_failed",
+                    },
+                )
+                for target in all_targets:
+                    await self.log_activity(
+                        event_type="error",
+                        sender=sender,
+                        recipient=target,
+                        subject=subject,
+                        status="failed",
+                        message="Failed to queue email",
+                    )
+
         except Exception as e:
             logging.error(
                 f"Failed to forward email: {e}",

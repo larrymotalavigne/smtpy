@@ -25,9 +25,13 @@ class Settings(BaseSettings):
     API_PORT: int = Field(default=8000, description="API port")
     DEBUG: bool = Field(default=False, description="Debug mode")
 
-    # SMTP Forwarding Settings (for smtp/forwarding/forwarder.py)
+    # SMTP Forwarding Settings (for smtp/forwarding/forwarder.py and relay service)
     SMTP_HOST: str = Field(default="localhost", description="SMTP relay host for forwarding")
     SMTP_PORT: int = Field(default=25, description="SMTP relay port for forwarding")
+    SMTP_USER: str = Field(default="", description="SMTP relay username for authentication")
+    SMTP_PASSWORD: str = Field(default="", description="SMTP relay password for authentication")
+    SMTP_USE_TLS: bool = Field(default=True, description="Use STARTTLS for SMTP relay")
+    SMTP_USE_SSL: bool = Field(default=False, description="Use SSL for SMTP relay")
 
     # Security
     SECRET_KEY: str = Field(
