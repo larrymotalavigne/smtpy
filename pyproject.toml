@@ -9,6 +9,7 @@ requires-python = ">=3.14"
 
 dependencies = [
     "aiosmtpd",
+    "aiosmtplib",
     "fastapi",
     "dkimpy",
     "uvicorn[standard]",
