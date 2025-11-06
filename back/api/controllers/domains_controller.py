@@ -167,7 +167,7 @@ async def verify_domain(
     # Perform real DNS verification
     verification_results = dns_service.verify_all(
         domain=domain.name,
-        expected_mx="smtp.smtpy.fr",
+        expected_mx="mail.smtpy.fr",
         expected_spf_include="smtpy.fr",
         dkim_selector="default"
     )
@@ -243,7 +243,7 @@ async def get_dns_records(
     # Generate required DNS records
     # Production configuration for smtpy.fr
     # Note: Trailing dot prevents DNS providers from appending the domain
-    mx_record = f"10 smtp.smtpy.fr."
+    mx_record = f"10 mail.smtpy.fr."
     spf_record = f"v=spf1 include:smtpy.fr ~all"
     dkim_record = f"v=DKIM1; k=rsa; p={domain.dkim_public_key or 'YOUR_DKIM_PUBLIC_KEY'}"
     dmarc_record = f"v=DMARC1; p=quarantine; rua=mailto:dmarc@{domain.name}"

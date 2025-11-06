@@ -16,7 +16,7 @@ async def test_domain(domain: str):
 
     # Test individual records
     print("Testing MX record...")
-    mx_result = dns_service.verify_mx_record(domain, "smtp.smtpy.fr")
+    mx_result = dns_service.verify_mx_record(domain, "mail.smtpy.fr")
     print(f"  ✓ MX verified: {mx_result}\n")
 
     print("Testing SPF record...")
@@ -36,7 +36,7 @@ async def test_domain(domain: str):
     print("Running complete verification...")
     results = dns_service.verify_all(
         domain=domain,
-        expected_mx="smtp.smtpy.fr",
+        expected_mx="mail.smtpy.fr",
         expected_spf_include="smtpy.fr",
         dkim_selector="default"
     )

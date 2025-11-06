@@ -5,7 +5,7 @@
 This guide covers deploying SMTPy to production with the following domains:
 - **Frontend**: https://smtpy.fr
 - **API**: https://api.smtpy.fr
-- **SMTP**: smtp.smtpy.fr (port 25)
+- **SMTP**: mail.smtpy.fr (port 25)
 
 ## Prerequisites
 
@@ -13,7 +13,7 @@ This guide covers deploying SMTPy to production with the following domains:
 - Domain names configured with DNS pointing to your server:
   - `smtpy.fr` → Server IP
   - `api.smtpy.fr` → Server IP
-  - `smtp.smtpy.fr` → Server IP (MX record)
+  - `mail.smtpy.fr` → Server IP (MX record)
 - Nginx Proxy Manager or similar for SSL termination
 - Stripe account with API keys
 - SMTP relay server for email forwarding (Gmail, SendGrid, Mailgun, AWS SES, etc.)
@@ -189,7 +189,7 @@ Point domain to SMTPy server:
 ```
 Type: MX
 Host: @
-Value: smtp.smtpy.fr
+Value: mail.smtpy.fr
 Priority: 10
 TTL: 3600
 ```
@@ -199,7 +199,7 @@ Allow SMTPy to send emails:
 ```
 Type: TXT
 Host: @
-Value: v=spf1 include:smtp.smtpy.fr ~all
+Value: v=spf1 include:smtpy.fr ~all
 TTL: 3600
 ```
 
@@ -228,7 +228,7 @@ TTL: 3600
    - Force SSL: Yes
    - Advanced: Add custom location for websockets if needed
 
-### 4.3 SMTP Server (smtp.smtpy.fr)
+### 4.3 SMTP Server (mail.smtpy.fr)
 
 SMTP server needs direct access on port 25 (MX record). If using Nginx Proxy Manager:
 
@@ -269,7 +269,7 @@ curl https://api.smtpy.fr/health
 curl https://smtpy.fr
 
 # Check SMTP server (from another machine)
-telnet smtp.smtpy.fr 25
+telnet mail.smtpy.fr 25
 ```
 
 ### 5.5 View Logs
@@ -329,7 +329,7 @@ Same as frontend - automatic SSL with Let's Encrypt.
 ### 8.3 SMTP Server
 
 For SMTP, you may want to configure STARTTLS. This requires:
-1. SSL certificates for smtp.smtpy.fr
+1. SSL certificates for mail.smtpy.fr
 2. Configuring the SMTP server to support TLS (currently not implemented)
 
 ## Step 9: Monitoring and Maintenance
@@ -445,7 +445,7 @@ docker logs smtpy-api-prod
 dig MX example.com
 
 # Check SMTP server is listening
-telnet smtp.smtpy.fr 25
+telnet mail.smtpy.fr 25
 
 # Check SMTP logs
 docker logs smtpy-smtp-prod --tail 100

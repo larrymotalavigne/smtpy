@@ -27,7 +27,7 @@ class DNSService:
 
         Args:
             domain: Domain name to check (e.g., "example.com")
-            expected_mx: Expected MX hostname (e.g., "smtp.smtpy.fr" or "smtp.smtpy.fr.")
+            expected_mx: Expected MX hostname (e.g., "mail.smtpy.fr" or "mail.smtpy.fr.")
 
         Returns:
             True if MX record matches expected value, False otherwise
@@ -193,7 +193,7 @@ class DNSService:
     def verify_all(
         self,
         domain: str,
-        expected_mx: str = "smtp.smtpy.fr",
+        expected_mx: str = "mail.smtpy.fr",
         expected_spf_include: str = "smtpy.fr",
         dkim_selector: str = "default"
     ) -> dict[str, bool]:
