@@ -11,11 +11,11 @@ from shared.core.db import get_async_session, get_db
 from shared.models import Domain, Alias, ActivityLog
 from pydantic import validate_email
 
-# Import relay service - async email forwarding with queuing and retries
+# Import hybrid relay service - self-hosted SMTP with optional external fallback
 try:
-    from smtp.relay import send_email, EmailPriority  # Development path
+    from smtp.relay import send_email_hybrid, EmailPriority  # Development path
 except ModuleNotFoundError:
-    from relay import send_email, EmailPriority       # Production container path
+    from relay import send_email_hybrid, EmailPriority       # Production container path
 
 
 class SMTPHandler(AsyncMessage):
@@ -212,19 +212,21 @@ class SMTPHandler(AsyncMessage):
             )
             return  # Reject message
 
-        # Forward email to all resolved targets using async relay service
+        # Forward email to all resolved targets using hybrid relay service
         try:
-            # Use the new async relay service with queue and retry support
-            success = await send_email(
+            # Use hybrid relay: direct SMTP with optional external fallback
+            results = await send_email_hybrid(
                 message=message,
-                targets=list(all_targets),
+                recipients=list(all_targets),
                 mail_from="noreply@smtpy.fr",
                 priority=EmailPriority.NORMAL
             )
 
-            if success:
+            # Check if all deliveries succeeded
+            all_success = all(results.values()) if results else False
+            if all_success:
                 logging.info(
-                    f"Email queued for forwarding successfully",
+                    f"Email forwarded successfully to all recipients",
                     extra={
                         "sender": sender,
                         "targets": list(all_targets),
@@ -239,27 +241,38 @@ class SMTPHandler(AsyncMessage):
                         recipient=target,
                         subject=subject,
                         status="success",
-                        message="Email queued for forwarding",
+                        message="Email forwarded successfully",
                     )
             else:
-                logging.error(
-                    f"Failed to queue email for forwarding",
-                    extra={
-                        "sender": sender,
-                        "targets": list(all_targets),
-                        "subject": subject,
-                        "action": "forward_failed",
-                    },
-                )
-                for target in all_targets:
-                    await self.log_activity(
-                        event_type="error",
-                        sender=sender,
-                        recipient=target,
-                        subject=subject,
-                        status="failed",
-                        message="Failed to queue email",
-                    )
+                # Log per-recipient results
+                for target, success in results.items():
+                    if success:
+                        await self.log_activity(
+                            event_type="forward",
+                            sender=sender,
+                            recipient=target,
+                            subject=subject,
+                            status="success",
+                            message="Email forwarded successfully",
+                        )
+                    else:
+                        logging.error(
+                            f"Failed to forward email to {target}",
+                            extra={
+                                "sender": sender,
+                                "target": target,
+                                "subject": subject,
+                                "action": "forward_failed",
+                            },
+                        )
+                        await self.log_activity(
+                            event_type="error",
+                            sender=sender,
+                            recipient=target,
+                            subject=subject,
+                            status="failed",
+                            message="Failed to forward email",
+                        )
 
         except Exception as e:
             logging.error(

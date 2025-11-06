@@ -33,6 +33,14 @@ class Settings(BaseSettings):
     SMTP_USE_TLS: bool = Field(default=True, description="Use STARTTLS for SMTP relay")
     SMTP_USE_SSL: bool = Field(default=False, description="Use SSL for SMTP relay")
 
+    # Self-hosted SMTP Settings
+    SMTP_HOSTNAME: str = Field(default="mail.smtpy.fr", description="Our sending hostname (FQDN)")
+    SMTP_DELIVERY_MODE: str = Field(
+        default="direct",
+        description="Email delivery mode: 'direct' (self-hosted only), 'relay' (external only), 'hybrid' (direct with fallback)"
+    )
+    SMTP_ENABLE_DKIM: bool = Field(default=True, description="Enable DKIM signing for outbound emails")
+
     # Security
     SECRET_KEY: str = Field(
         default="change-this-secret-key-in-production",
