@@ -46,16 +46,16 @@ def upgrade():
 
     # Domains table indexes
     op.create_index(
-        'idx_domains_verified',
+        'idx_domains_status',
         'domains',
-        ['verified'],
+        ['status'],
         unique=False
     )
 
     op.create_index(
-        'idx_domains_user_verified',
+        'idx_domains_organization_status',
         'domains',
-        ['user_id', 'verified'],
+        ['organization_id', 'status'],
         unique=False
     )
 
@@ -67,12 +67,8 @@ def upgrade():
     )
 
     # Users table indexes
-    op.create_index(
-        'idx_users_email',
-        'users',
-        ['email'],
-        unique=True
-    )
+    # Note: email already has index from model definition (index=True)
+    # Note: organization_id already has index from model definition (index=True)
 
     op.create_index(
         'idx_users_is_active',
@@ -82,9 +78,9 @@ def upgrade():
     )
 
     op.create_index(
-        'idx_users_organization',
+        'idx_users_organization_active',
         'users',
-        ['organization_id'],
+        ['organization_id', 'is_active'],
         unique=False
     )
 
@@ -112,13 +108,8 @@ def upgrade():
     )
 
     # Password reset tokens
-    op.create_index(
-        'idx_password_reset_tokens_user',
-        'password_reset_tokens',
-        ['user_id'],
-        unique=False
-    )
-
+    # Note: user_id already has index from model definition (index=True)
+    # But expires_at doesn't, so we add that one
     op.create_index(
         'idx_password_reset_tokens_expires',
         'password_reset_tokens',
@@ -126,18 +117,26 @@ def upgrade():
         unique=False
     )
 
-    # Email verification tokens
     op.create_index(
-        'idx_email_verification_tokens_user',
-        'email_verification_tokens',
-        ['user_id'],
+        'idx_password_reset_tokens_user_expires',
+        'password_reset_tokens',
+        ['user_id', 'expires_at'],
         unique=False
     )
 
+    # Email verification tokens
+    # Note: user_id already has index from model definition (index=True)
     op.create_index(
         'idx_email_verification_tokens_expires',
         'email_verification_tokens',
         ['expires_at'],
+        unique=False
+    )
+
+    op.create_index(
+        'idx_email_verification_tokens_user_expires',
+        'email_verification_tokens',
+        ['user_id', 'expires_at'],
         unique=False
     )
 
@@ -152,14 +151,13 @@ def downgrade():
     op.drop_index('idx_messages_status', table_name='messages')
 
     # Domains table indexes
-    op.drop_index('idx_domains_verified', table_name='domains')
-    op.drop_index('idx_domains_user_verified', table_name='domains')
+    op.drop_index('idx_domains_status', table_name='domains')
+    op.drop_index('idx_domains_organization_status', table_name='domains')
     op.drop_index('idx_domains_organization', table_name='domains')
 
     # Users table indexes
-    op.drop_index('idx_users_email', table_name='users')
     op.drop_index('idx_users_is_active', table_name='users')
-    op.drop_index('idx_users_organization', table_name='users')
+    op.drop_index('idx_users_organization_active', table_name='users')
 
     # Aliases table indexes
     op.drop_index('idx_aliases_domain', table_name='aliases')
@@ -169,9 +167,9 @@ def downgrade():
     op.drop_index('idx_organizations_created_at', table_name='organizations')
 
     # Password reset tokens
-    op.drop_index('idx_password_reset_tokens_user', table_name='password_reset_tokens')
     op.drop_index('idx_password_reset_tokens_expires', table_name='password_reset_tokens')
+    op.drop_index('idx_password_reset_tokens_user_expires', table_name='password_reset_tokens')
 
     # Email verification tokens
-    op.drop_index('idx_email_verification_tokens_user', table_name='email_verification_tokens')
     op.drop_index('idx_email_verification_tokens_expires', table_name='email_verification_tokens')
+    op.drop_index('idx_email_verification_tokens_user_expires', table_name='email_verification_tokens')
