@@ -32,29 +32,6 @@ services:
     networks:
       - smtpy-network
 
-  # SMTP Server
-  smtp:
-    container_name: smtpy-smtp-dev
-    build:
-      context: .
-      dockerfile: ./back/smtp/Dockerfile
-    environment:
-      - DATABASE_URL=postgresql+psycopg://postgres:postgres@db:5432/smtpy
-      - SMTP_HOST=localhost
-      - SMTP_PORT=1025
-      - DEBUG=true
-    ports:
-      - "1025:1025"
-    depends_on:
-      db:
-        condition: service_healthy
-    networks:
-      - smtpy-network
-    # Mount code for development (optional - comment out for container-only mode)
-    volumes:
-      - ./back/smtp:/app/smtp
-      - ./back/shared:/app/shared
-
   # API Server
   api:
     container_name: smtpy-api-dev
@@ -68,15 +45,11 @@ services:
       - STRIPE_API_KEY=${STRIPE_API_KEY:-}
       - STRIPE_WEBHOOK_SECRET=${STRIPE_WEBHOOK_SECRET:-}
       - CORS_ORIGINS=http://localhost:4200,http://localhost:3000
-      - SMTP_HOST=smtp
-      - SMTP_PORT=1025
     ports:
       - "8000:8000"
     depends_on:
       db:
         condition: service_healthy
-      smtp:
-        condition: service_started
     networks:
       - smtpy-network
     # Mount code for development (optional - comment out for container-only mode)
