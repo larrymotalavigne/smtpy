@@ -314,7 +314,7 @@ jobs:
           target: "/srv/smtpy/"
 
       - name: Deploy with Docker Compose via SSH
-        uses: appleboy/ssh-action@v1.0.3
+        uses: appleboy/ssh-action@v1.2.2
         with:
           host: ${{ secrets.UNRAID_SSH_HOST }}
           port: 2345
@@ -416,7 +416,7 @@ jobs:
           target: "/srv/smtpy/"
 
       - name: Run health checks
-        uses: appleboy/ssh-action@v1.0.3
+        uses: appleboy/ssh-action@v1.2.2
         with:
           host: ${{ secrets.UNRAID_SSH_HOST }}
           port: 2345
