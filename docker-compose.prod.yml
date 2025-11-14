@@ -85,54 +85,6 @@ services:
         max-size: "10m"
         max-file: "3"
 
-  # SMTP Server
-  smtp:
-    container_name: smtpy-smtp-prod
-    image: ${DOCKER_REGISTRY:-ghcr.io}/${GHCR_OWNER}/smtpy-smtp:${TAG:-latest}
-    environment:
-      # SMTP Server Port (internal)
-      - SMTP_PORT=1025
-
-      # API connection
-      - API_URL=http://api:8000
-
-      # Database connection (needed for email forwarding)
-      - DATABASE_URL=postgresql+psycopg://${POSTGRES_USER:-postgres}:${POSTGRES_PASSWORD}@db:5432/${POSTGRES_DB:-smtpy}
-
-      # Email Forwarding Configuration
-      - SMTP_HOST=${SMTP_HOST:-smtp.gmail.com}
-      - SMTP_PORT_FORWARD=${SMTP_PORT:-587}
-
-      # Logging
-      - LOG_LEVEL=${LOG_LEVEL:-INFO}
-    # Note: SMTP port can be exposed if you need external SMTP access
-    # For internal-only use (via API), comment out the ports section
-    # Uncomment the line below if you need external SMTP server access:
-    # ports:
-    #   - "${SMTP_PORT:-1025}:1025"
-    healthcheck:
-      test: ["CMD-SHELL", "python -c 'import socket; s=socket.socket(); s.connect((\"localhost\", 1025)); s.close()'"]
-      interval: 30s
-      timeout: 10s
-      retries: 3
-      start_period: 30s
-    restart: unless-stopped
-    deploy:
-      resources:
-        limits:
-          cpus: '1'
-          memory: 1G
-        reservations:
-          cpus: '0.5'
-          memory: 512M
-    networks:
-      - smtpy-network
-    logging:
-      driver: "json-file"
-      options:
-        max-size: "10m"
-        max-file: "3"
-
   # API Server
   api:
     # Note: No container_name when using replicas - Docker Compose will auto-generate names
@@ -174,8 +126,6 @@ services:
         condition: service_healthy
       redis:
         condition: service_healthy
-      smtp:
-        condition: service_started
 
     healthcheck:
       test: ["CMD", "curl", "-f", "http://localhost:8000/health"]

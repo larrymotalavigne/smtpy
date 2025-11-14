@@ -21,13 +21,6 @@ services:
       timeout: 5s
       retries: 5
 
-  smtp:
-    container_name: smtpy-smtp
-    image: ghcr.io/${GHCR_OWNER}/smtpy-smtp:${TAG:-latest}
-    ports:
-      - "1025:1025"
-    restart: unless-stopped
-
   api:
     container_name: smtpy-api
     image: ghcr.io/${GHCR_OWNER}/smtpy-api:${TAG:-latest}
@@ -41,8 +34,6 @@ services:
     depends_on:
       db:
         condition: service_healthy
-      smtp:
-        condition: service_started
     restart: unless-stopped
     command: >
       sh -c "
