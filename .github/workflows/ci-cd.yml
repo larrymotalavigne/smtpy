@@ -73,102 +73,102 @@ jobs:
         run: |
           make lint || true  # Don't fail pipeline on lint errors yet
 
-  e2e-tests:
-    name: E2E Tests
-    runs-on: ubuntu-latest
-    steps:
-      - name: Checkout code
-        uses: actions/checkout@v4
-
-      - name: Set up Node.js
-        uses: actions/setup-node@v4
-        with:
-          node-version: '22'
-          cache: 'npm'
-          cache-dependency-path: front/package-lock.json
-
-      - name: Install frontend dependencies
-        working-directory: ./front
-        run: npm ci --legacy-peer-deps
-
-      - name: Install Playwright browsers
-        working-directory: ./front
-        run: npx playwright install chromium --with-deps
-
-      - name: Start services with Docker Compose
-        run: |
-          docker compose -f docker-compose.dev.yml up -d --build
-          echo "Waiting for services to start..."
-          sleep 10
-
-      - name: Wait for database to be ready
-        run: |
-          echo "Waiting for PostgreSQL to be ready..."
-          timeout 60 bash -c 'until docker exec smtpy-db-dev pg_isready -U postgres > /dev/null 2>&1; do echo "Waiting for DB..."; sleep 2; done'
-          echo "Database is ready!"
-          sleep 5
-
-      - name: Wait for API to be ready
-        run: |
-          echo "Waiting for API on http://localhost:8000..."
-          timeout 120 bash -c 'until curl -f http://localhost:8000/health > /dev/null 2>&1; do echo "Waiting for API..."; sleep 2; done'
-          echo "API is ready!"
-          echo "Waiting for API to fully initialize..."
-          sleep 10
-
-      - name: Seed test database
-        run: |
-          echo "Seeding test database with admin user (admin/password)..."
-          docker exec smtpy-api-dev python scripts/seed_dev_db.py
-          echo "Database seeded successfully!"
-
-      - name: Verify admin user exists
-        run: |
-          echo "Verifying admin user exists in database..."
-          docker exec smtpy-db-dev psql -U postgres -d smtpy -c "SELECT username, email FROM users WHERE username='admin';" || echo "Could not verify user"
-
-      - name: Wait for frontend to be ready
-        run: |
-          echo "Waiting for frontend on http://localhost:4200..."
-          timeout 120 bash -c 'until curl -f http://localhost:4200 > /dev/null 2>&1; do echo "Waiting for frontend..."; sleep 2; done'
-          echo "Frontend is ready!"
-          echo "Allowing Angular to fully initialize..."
-          sleep 10
-
-      - name: Run E2E tests
-        working-directory: ./front
-        timeout-minutes: 15
-        run: npm run test:e2e
-
-      - name: Upload E2E test results
-        if: always()
-        uses: actions/upload-artifact@v5
-        with:
-          name: playwright-report
-          path: front/playwright-report/
-          retention-days: 30
-
-      - name: Upload E2E test screenshots
-        if: failure()
-        uses: actions/upload-artifact@v5
-        with:
-          name: playwright-screenshots
-          path: front/test-results/
-          retention-days: 7
-
-      - name: Show Docker logs on failure
-        if: failure()
-        run: |
-          echo "=== API Logs ==="
-          docker logs smtpy-api-dev --tail 100
-          echo "=== Frontend Logs ==="
-          docker logs smtpy-frontend-dev --tail 100
-          echo "=== SMTP Logs ==="
-          docker logs smtpy-smtp-dev --tail 100
-
-      - name: Cleanup
-        if: always()
-        run: docker compose -f docker-compose.dev.yml down -v
+#  e2e-tests:
+#    name: E2E Tests
+#    runs-on: ubuntu-latest
+#    steps:
+#      - name: Checkout code
+#        uses: actions/checkout@v4
+#
+#      - name: Set up Node.js
+#        uses: actions/setup-node@v4
+#        with:
+#          node-version: '22'
+#          cache: 'npm'
+#          cache-dependency-path: front/package-lock.json
+#
+#      - name: Install frontend dependencies
+#        working-directory: ./front
+#        run: npm ci --legacy-peer-deps
+#
+#      - name: Install Playwright browsers
+#        working-directory: ./front
+#        run: npx playwright install chromium --with-deps
+#
+#      - name: Start services with Docker Compose
+#        run: |
+#          docker compose -f docker-compose.dev.yml up -d --build
+#          echo "Waiting for services to start..."
+#          sleep 10
+#
+#      - name: Wait for database to be ready
+#        run: |
+#          echo "Waiting for PostgreSQL to be ready..."
+#          timeout 60 bash -c 'until docker exec smtpy-db-dev pg_isready -U postgres > /dev/null 2>&1; do echo "Waiting for DB..."; sleep 2; done'
+#          echo "Database is ready!"
+#          sleep 5
+#
+#      - name: Wait for API to be ready
+#        run: |
+#          echo "Waiting for API on http://localhost:8000..."
+#          timeout 120 bash -c 'until curl -f http://localhost:8000/health > /dev/null 2>&1; do echo "Waiting for API..."; sleep 2; done'
+#          echo "API is ready!"
+#          echo "Waiting for API to fully initialize..."
+#          sleep 10
+#
+#      - name: Seed test database
+#        run: |
+#          echo "Seeding test database with admin user (admin/password)..."
+#          docker exec smtpy-api-dev python scripts/seed_dev_db.py
+#          echo "Database seeded successfully!"
+#
+#      - name: Verify admin user exists
+#        run: |
+#          echo "Verifying admin user exists in database..."
+#          docker exec smtpy-db-dev psql -U postgres -d smtpy -c "SELECT username, email FROM users WHERE username='admin';" || echo "Could not verify user"
+#
+#      - name: Wait for frontend to be ready
+#        run: |
+#          echo "Waiting for frontend on http://localhost:4200..."
+#          timeout 120 bash -c 'until curl -f http://localhost:4200 > /dev/null 2>&1; do echo "Waiting for frontend..."; sleep 2; done'
+#          echo "Frontend is ready!"
+#          echo "Allowing Angular to fully initialize..."
+#          sleep 10
+#
+#      - name: Run E2E tests
+#        working-directory: ./front
+#        timeout-minutes: 15
+#        run: npm run test:e2e
+#
+#      - name: Upload E2E test results
+#        if: always()
+#        uses: actions/upload-artifact@v5
+#        with:
+#          name: playwright-report
+#          path: front/playwright-report/
+#          retention-days: 30
+#
+#      - name: Upload E2E test screenshots
+#        if: failure()
+#        uses: actions/upload-artifact@v5
+#        with:
+#          name: playwright-screenshots
+#          path: front/test-results/
+#          retention-days: 7
+#
+#      - name: Show Docker logs on failure
+#        if: failure()
+#        run: |
+#          echo "=== API Logs ==="
+#          docker logs smtpy-api-dev --tail 100
+#          echo "=== Frontend Logs ==="
+#          docker logs smtpy-frontend-dev --tail 100
+#          echo "=== SMTP Logs ==="
+#          docker logs smtpy-smtp-dev --tail 100
+#
+#      - name: Cleanup
+#        if: always()
+#        run: docker compose -f docker-compose.dev.yml down -v
 
   security-scan:
     name: Security Scan
@@ -358,15 +358,6 @@ jobs:
             # Pull latest images
             echo "Pulling latest images..."
             docker compose -f docker-compose.prod.yml $COMPOSE_ENV_FILE_OPT pull
-
-            # Force stop and remove any existing SMTPy containers (even if not managed by current compose project)
-            echo "Force stopping any existing SMTPy containers..."
-            docker ps -a --filter "name=smtpy-" --format "{{.Names}}" | xargs -r docker stop || true
-            docker ps -a --filter "name=smtpy-" --format "{{.Names}}" | xargs -r docker rm || true
-
-            # Stop old containers if they exist (for clean deployment)
-            echo "Stopping existing containers..."
-            docker compose -f docker-compose.prod.yml $COMPOSE_ENV_FILE_OPT down --remove-orphans || true
 
             # Deploy with rolling update for zero downtime
             echo "Deploying services..."

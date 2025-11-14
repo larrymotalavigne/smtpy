@@ -70,7 +70,8 @@
       "Bash(npx tsc:*)",
       "WebFetch(domain:productionresultssa11.blob.core.windows.net)",
       "Bash(echo:*)",
-      "Bash(docker login:*)"
+      "Bash(docker login:*)",
+      "Bash(./test-mail-smtpy.sh:*)"
     ],
     "deny": [],
     "ask": []
