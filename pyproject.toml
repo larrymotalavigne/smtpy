@@ -3,7 +3,7 @@ name = "smtpy"
 version = "0.2.0"
 description = "Custom email aliasing and forwarding."
 authors = [
-    { name = "SMTPy Team", email = "team@smtpy.local" }
+    { name = "ATOM STUDIOS", email = "larry@atomstudios.fr" }
 ]
 requires-python = ">=3.14"
 
