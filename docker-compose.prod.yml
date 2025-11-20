@@ -213,10 +213,6 @@ services:
 # Network configuration
 networks:
   smtpy-network:
-    driver: bridge
-    ipam:
-      config:
-        - subnet: 172.28.0.0/16
 
 # Volume configuration
 volumes:
