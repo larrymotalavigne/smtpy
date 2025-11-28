@@ -10,7 +10,7 @@
 
 A self-hosted email aliasing and forwarding service built with FastAPI, SQLAlchemy, and aiosmtpd. SMTPy provides a comprehensive solution for managing email domains, aliases, and forwarding rules with DKIM/SPF/DMARC support and Stripe billing integration.
 
-**Project Status**: 🚀 Production Ready (95% Complete) - Core features complete with email functionality, user management, security enhancements, and comprehensive documentation. Backend: 100% test pass rate. Frontend: Full API integration. Ready for production deployment.
+**Project Status**: 🚀 **DEPLOYED IN PRODUCTION** (98% Complete) - Fully deployed at https://smtpy.fr with Nginx Proxy Manager, Docker Mail Server integration, CI/CD pipeline, and automated deployments. Core features complete with self-hosted SMTP, Stripe billing, comprehensive monitoring, and production infrastructure.
 
 ## Features
 
@@ -60,10 +60,17 @@ A self-hosted email aliasing and forwarding service built with FastAPI, SQLAlche
 - **State Management**: RxJS + Services (no NgRx)
 - **Authentication**: Session-based with HTTP-only cookies
 
-### Infrastructure
-- **Containerization**: Docker with Docker Compose
-- **Database Migrations**: Alembic
-- **Testing**: pytest with pytest-asyncio
+### Infrastructure & Deployment
+- **Containerization**: Docker with multi-stage production Dockerfiles
+- **Orchestration**: Docker Compose with health checks, resource limits, and HA setup
+- **CI/CD**: GitHub Actions with automated testing, security scanning, and deployments
+- **Registry**: GitHub Container Registry (GHCR) for Docker images
+- **Reverse Proxy**: Nginx Proxy Manager (shared infrastructure)
+- **Mail Server**: Docker Mail Server (Postfix, Dovecot, Rspamd, DKIM/DMARC)
+- **Monitoring**: VictoriaMetrics + Grafana (shared infrastructure)
+- **Database Migrations**: Alembic with automated deployment integration
+- **Testing**: pytest with pytest-asyncio, Playwright E2E tests
+- **Security**: Trivy vulnerability scanning, automated updates via Dependabot
 
 ## Requirements
 
@@ -352,6 +359,14 @@ curl http://localhost:8000/health
 For detailed API documentation, visit http://localhost:8000/docs when the application is running.
 
 ## Production Deployment
+
+**Current Status**: ✅ **LIVE IN PRODUCTION**
+- **URL**: https://smtpy.fr
+- **Deployment**: Automated via GitHub Actions on push to `main`
+- **Infrastructure**: Shared server with Nginx Proxy Manager, Docker Mail Server, VictoriaMetrics, Grafana
+- **Database**: PostgreSQL 18 with automated backups
+- **Caching**: Redis 7 for sessions and rate limiting
+- **High Availability**: 2 API replicas with zero-downtime deployments
 
 ### Provide .env.production via GitHub Secrets
 
