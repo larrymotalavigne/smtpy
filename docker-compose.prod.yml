@@ -117,6 +117,17 @@ services:
       # Logging
       - LOG_LEVEL=${LOG_LEVEL:-INFO}
 
+      # SMTP Relay Configuration (for docker-mailserver)
+      - SMTP_HOST=${SMTP_HOST:-mail.atomdev.fr}
+      - SMTP_PORT=${SMTP_PORT:-25}
+      - SMTP_USER=${SMTP_USER:-}
+      - SMTP_PASSWORD=${SMTP_PASSWORD:-}
+      - SMTP_USE_TLS=${SMTP_USE_TLS:-false}
+      - SMTP_USE_SSL=${SMTP_USE_SSL:-false}
+      - SMTP_HOSTNAME=${SMTP_HOSTNAME:-mail.atomdev.fr}
+      - SMTP_DELIVERY_MODE=${SMTP_DELIVERY_MODE:-relay}
+      - SMTP_ENABLE_DKIM=${SMTP_ENABLE_DKIM:-true}
+
     # Note: No external port mapping - API is accessed via nginx reverse proxy
     # The nginx proxy at nginx.atomdev.fr will route traffic to this service
     # This prevents port conflicts with other services on the host
@@ -148,6 +159,8 @@ services:
 
     networks:
       - smtpy-network
+      # Uncomment if mailserver is in a separate network:
+      # - mailserver-network
 
     logging:
       driver: "json-file"
@@ -213,6 +226,13 @@ services:
 # Network configuration
 networks:
   smtpy-network:
+    driver: bridge
+
+  # External mailserver network (if mailserver is in a separate network)
+  # Uncomment and configure if your mailserver uses a dedicated network
+  # mailserver-network:
+  #   external: true
+  #   name: mailserver_default  # Replace with your actual mailserver network name
 
 # Volume configuration
 volumes:
