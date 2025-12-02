@@ -153,7 +153,7 @@ smtpy-redis-prod   Up (healthy)
 smtpy-api-1        Up (healthy)
 smtpy-api-2        Up (healthy)
 smtpy-smtp-prod    Up
-smtpy-frontend-prod Up
+smtpy-front Up
 
 Health Check Summary:
   Database: ✓ Healthy

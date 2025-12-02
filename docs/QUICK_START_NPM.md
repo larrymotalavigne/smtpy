@@ -14,7 +14,7 @@ docker ps | grep smtpy
 ```
 
 You should see:
-- `smtpy-frontend-prod`
+- `smtpy-front`
 - `smtpy-api-1`
 - `smtpy-api-2`
 - `smtpy-smtp-prod`
@@ -51,7 +51,7 @@ Domain Names:      smtpy.fr
                    www.smtpy.fr
 
 Scheme:            http
-Forward Host/IP:   smtpy-frontend-prod
+Forward Host/IP:   smtpy-front
 Forward Port:      80
 
 ☑ Cache Assets
@@ -77,7 +77,7 @@ Email:             your-email@example.com
 
 ```bash
 # Test from NPM container
-docker exec Nginx-Proxy-Manager-Official curl http://smtpy-frontend-prod:80
+docker exec Nginx-Proxy-Manager-Official curl http://smtpy-front:80
 docker exec Nginx-Proxy-Manager-Official curl http://smtpy-api-1:8000/health
 
 # Test external access
@@ -106,7 +106,7 @@ docker ps | grep smtpy
 
 Check NPM can reach containers:
 ```bash
-docker exec Nginx-Proxy-Manager-Official ping smtpy-frontend-prod
+docker exec Nginx-Proxy-Manager-Official ping smtpy-front
 ```
 
 ### "Could not resolve host"

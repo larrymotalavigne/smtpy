@@ -68,8 +68,8 @@ Simplified the frontend image reference to use local builds:
 
 ```yaml
 frontend:
-  container_name: smtpy-frontend-prod
-  image: smtpy-frontend:latest
+  container_name: smtpy-front
+  image: smtpy-front:latest
 ```
 
 ## Deployment
@@ -121,7 +121,7 @@ If you prefer to deploy manually:
 ```bash
 # 1. Build the new frontend image
 cd front
-docker build -f Dockerfile.prod -t smtpy-frontend:latest .
+docker build -f Dockerfile.prod -t smtpy-front:latest .
 cd ..
 
 # 2. Restart the frontend container
@@ -166,7 +166,7 @@ HTTPS (smtpy.fr)
     ↓
 Nginx Proxy Manager (SSL termination, port 443)
     ↓
-smtpy-frontend-prod (nginx:1.27-alpine, internal port 80)
+smtpy-front (nginx:1.27-alpine, internal port 80)
     ├─ Serves Angular app (static files)
     └─ Proxies /api/* requests to backend
             ↓
@@ -209,8 +209,8 @@ To ensure this doesn't break again:
 
 2. **Test with production Docker image:**
    ```bash
-   docker build -f Dockerfile.prod -t smtpy-frontend:test .
-   docker run -p 8080:80 smtpy-frontend:test
+   docker build -f Dockerfile.prod -t smtpy-front:test .
+   docker run -p 8080:80 smtpy-front:test
    # Visit http://localhost:8080 and check the Network tab
    ```
 
@@ -228,15 +228,15 @@ To ensure this doesn't break again:
 3. **Verify the frontend container:**
    ```bash
    # Check if the container is using the new image
-   docker inspect smtpy-frontend-prod | grep Image
+   docker inspect smtpy-front | grep Image
 
    # Check nginx config inside the container
-   docker exec smtpy-frontend-prod cat /etc/nginx/conf.d/default.conf
+   docker exec smtpy-front cat /etc/nginx/conf.d/default.conf
    ```
 
 4. **Check API connectivity from frontend container:**
    ```bash
-   docker exec smtpy-frontend-prod wget -q -O - http://api:8000/health
+   docker exec smtpy-front wget -q -O - http://api:8000/health
    ```
 
 ## Related Files

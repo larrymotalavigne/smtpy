@@ -44,7 +44,7 @@ api:
   # No external ports - nginx proxies to smtpy-api-1:8000 and smtpy-api-2:8000
 
 frontend:
-  # No external ports - nginx proxies to smtpy-frontend-prod:80
+  # No external ports - nginx proxies to smtpy-front:80
 ```
 
 ### 2. Updated Nginx Reverse Proxy (`nginx/smtpy.conf`)
@@ -63,7 +63,7 @@ upstream smtpy_api {
 **After** (connecting to Docker containers):
 ```nginx
 upstream smtpy_frontend {
-    server smtpy-frontend-prod:80;  # ✅ Direct container connection
+    server smtpy-front:80;  # ✅ Direct container connection
 }
 
 upstream smtpy_api {
@@ -122,7 +122,7 @@ docker compose -f $COMPOSE_FILE down --remove-orphans || true
 │          Subnet: 172.28.0.0/16                          │
 │                                                          │
 │  ┌─────────────────────────────────────────────────┐   │
-│  │  smtpy-frontend-prod:80                         │   │
+│  │  smtpy-front:80                         │   │
 │  │  (Angular + nginx)                              │   │
 │  └─────────────────────────────────────────────────┘   │
 │                                                          │
@@ -211,7 +211,7 @@ docker ps | grep nginx
 docker network connect smtpy_smtpy-network <nginx-container-name>
 
 # Verify connection
-docker exec <nginx-container-name> ping -c 1 smtpy-frontend-prod
+docker exec <nginx-container-name> ping -c 1 smtpy-front
 docker exec <nginx-container-name> curl http://smtpy-api-1:8000/health
 ```
 
@@ -243,7 +243,7 @@ docker ps | grep smtpy
 # Test internal connectivity
 docker exec <nginx-container-name> curl http://smtpy-api-1:8000/health
 docker exec <nginx-container-name> curl http://smtpy-api-2:8000/health
-docker exec <nginx-container-name> curl http://smtpy-frontend-prod:80
+docker exec <nginx-container-name> curl http://smtpy-front:80
 
 # Test external access
 curl https://smtpy.fr/
@@ -260,7 +260,7 @@ docker ps --filter "name=smtpy" --format "table {{.Names}}\t{{.Ports}}"
 
 **Symptom**:
 ```
-nginx: [emerg] host not found in upstream "smtpy-frontend-prod"
+nginx: [emerg] host not found in upstream "smtpy-front"
 ```
 
 **Solution**:
@@ -289,7 +289,7 @@ docker ps | grep smtpy
 
 # Check container logs
 docker logs smtpy-api-1
-docker logs smtpy-frontend-prod
+docker logs smtpy-front
 
 # Test connectivity from nginx
 docker exec <nginx-container-name> curl -v http://smtpy-api-1:8000/health
@@ -322,7 +322,7 @@ Before considering deployment complete:
 - [ ] Nginx connected to network: `docker network inspect smtpy_smtpy-network | grep nginx`
 - [ ] DNS resolution works: `docker exec nginx ping -c 1 smtpy-api-1`
 - [ ] API health check works: `docker exec nginx curl http://smtpy-api-1:8000/health`
-- [ ] Frontend accessible: `docker exec nginx curl http://smtpy-frontend-prod:80`
+- [ ] Frontend accessible: `docker exec nginx curl http://smtpy-front:80`
 - [ ] External HTTPS works: `curl https://smtpy.fr/health`
 - [ ] Load balancing works: Check logs from both `smtpy-api-1` and `smtpy-api-2`
 

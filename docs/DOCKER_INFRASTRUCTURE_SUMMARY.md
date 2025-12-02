@@ -84,7 +84,7 @@ Created comprehensive production configuration with:
    - Configurable workers (default: 4)
 
 5. **Frontend**
-   - Custom image: smtpy-frontend:latest
+   - Custom image: smtpy-front:latest
    - Resources: 1 CPU core, 512MB RAM (limit)
    - Ports: 80, 443 (HTTP, HTTPS)
    - Nginx-based

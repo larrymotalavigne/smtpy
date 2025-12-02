@@ -162,7 +162,7 @@ jobs:
 #          echo "=== API Logs ==="
 #          docker logs smtpy-api-dev --tail 100
 #          echo "=== Frontend Logs ==="
-#          docker logs smtpy-frontend-dev --tail 100
+#          docker logs smtpy-front-dev --tail 100
 #          echo "=== SMTP Logs ==="
 #          docker logs smtpy-smtp-dev --tail 100
 #
@@ -249,7 +249,7 @@ jobs:
           - service: smtp
             dockerfile: ./back/smtp/Dockerfile.prod
             context: .
-          - service: frontend
+          - service: front
             dockerfile: ./front/Dockerfile.prod
             context: ./front
     steps:
@@ -383,9 +383,9 @@ jobs:
             echo "Waiting for API to be healthy..."
             sleep 15
 
-            # Start frontend
-            echo "Starting frontend..."
-            docker compose -f docker-compose.prod.yml $COMPOSE_ENV_FILE_OPT up -d --no-deps frontend
+            # Start front
+            echo "Starting front..."
+            docker compose -f docker-compose.prod.yml $COMPOSE_ENV_FILE_OPT up -d --no-deps front
 
             # Clean up unused images
             echo "Cleaning up unused Docker images..."
@@ -458,12 +458,12 @@ jobs:
               exit 1
             fi
 
-            # Check Frontend
-            echo "Checking Frontend..."
+            # Check front
+            echo "Checking front..."
             if curl -f -s https://smtpy.fr/ > /dev/null; then
-              echo "✅ Frontend is running and responding"
+              echo "✅ front is running and responding"
             else
-              echo "❌ Frontend health check failed"
+              echo "❌ front health check failed"
               exit 1
             fi
 

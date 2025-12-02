@@ -252,7 +252,7 @@ Once deployment completes, verify:
 docker ps | grep smtpy
 
 # Expected output:
-# smtpy-frontend-prod    Up (healthy)
+# smtpy-front    Up (healthy)
 # smtpy-api-1           Up (healthy)
 # smtpy-api-2           Up (healthy)
 # smtpy-smtp-prod       Up (healthy)
@@ -293,7 +293,7 @@ docker ps | grep nginx-proxy-manager
 docker network connect smtpy_smtpy-network <npm-container-name>
 
 # Verify connection
-docker exec <npm-container-name> ping -c 1 smtpy-frontend-prod
+docker exec <npm-container-name> ping -c 1 smtpy-front
 docker exec <npm-container-name> curl http://smtpy-api-1:8000/health
 ```
 
@@ -304,7 +304,7 @@ Open NPM web interface: `http://<unraid-ip>:81`
 **Create Proxy Host**:
 - Domain Names: `smtpy.fr`, `www.smtpy.fr`
 - Scheme: `http`
-- Forward Hostname: `smtpy-frontend-prod`
+- Forward Hostname: `smtpy-front`
 - Forward Port: `80`
 - Enable: Cache Assets, Block Exploits, Websockets
 - SSL: Request New Certificate, Force SSL, HTTP/2, HSTS

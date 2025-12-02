@@ -1,24 +1,6 @@
-# Production Docker Compose Configuration for SMTPy
-#
-# This file defines a production-ready deployment with:
-# - Resource limits
-# - Health checks
-# - Restart policies
-# - Security configurations
-# - Environment variable management
-#
-# Usage:
-#   docker-compose -f docker-compose.prod.yml up -d
-#
-# Prerequisites:
-#   - Set environment variables in .env.production
-#   - Build production images or use GHCR images
-#   - Configure external secrets management (recommended)
-
 services:
-  # PostgreSQL Database
   db:
-    container_name: smtpy-db-prod
+    container_name: smtpy-db
     image: postgres:18-alpine
     environment:
       POSTGRES_DB: ${POSTGRES_DB:-smtpy}
@@ -54,9 +36,8 @@ services:
         max-size: "10m"
         max-file: "3"
 
-  # Redis Cache (optional but recommended for production)
   redis:
-    container_name: smtpy-redis-prod
+    container_name: smtpy-redis
     image: redis:7-alpine
     command: redis-server --appendonly yes --requirepass ${REDIS_PASSWORD:?REDIS_PASSWORD must be set}
     volumes:
@@ -85,9 +66,7 @@ services:
         max-size: "10m"
         max-file: "3"
 
-  # API Server
   api:
-    # Note: No container_name when using replicas - Docker Compose will auto-generate names
     image: ${DOCKER_REGISTRY:-ghcr.io}/${GHCR_OWNER}/smtpy-api:${TAG:-latest}
     environment:
       # Database
@@ -118,7 +97,7 @@ services:
       - LOG_LEVEL=${LOG_LEVEL:-INFO}
 
     # Note: No external port mapping - API is accessed via nginx reverse proxy
-    # The nginx proxy at nginx.atomdev.fr will route traffic to this service
+    # The nginx proxy will route traffic to this service
     # This prevents port conflicts with other services on the host
 
     depends_on:
@@ -166,10 +145,9 @@ services:
         uvicorn api.main:create_app --host 0.0.0.0 --port 8000 --factory --workers $$API_WORKERS
       "
 
-  # Frontend (Nginx serving Angular app)
-  frontend:
-    container_name: smtpy-frontend-prod
-    image: ${DOCKER_REGISTRY:-ghcr.io}/${GHCR_OWNER}/smtpy-frontend:${TAG:-latest}
+  front:
+    container_name: smtpy-front
+    image: ${DOCKER_REGISTRY:-ghcr.io}/${GHCR_OWNER}/smtpy-front:${TAG:-latest}
 
     # Note: No external port mapping - frontend is accessed via nginx reverse proxy
     # The nginx proxy at nginx.atomdev.fr will route traffic to this service

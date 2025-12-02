@@ -1,9 +1,4 @@
 services:
-  # Set GHCR_OWNER (and optional TAG) in environment before running docker compose
-  # Example export on server:
-  #   export GHCR_OWNER=$(echo "$GITHUB_REPOSITORY_OWNER" | tr '[:upper:]' '[:lower:]')
-  #   export TAG=latest
-
   db:
     container_name: smtpy-db
     image: postgres:18
@@ -45,9 +40,9 @@ services:
         uvicorn api.main:create_app --host 0.0.0.0 --port 8000 --factory
       "
 
-  frontend:
-    container_name: smtpy-frontend
-    image: ghcr.io/${GHCR_OWNER}/smtpy-frontend:${TAG:-latest}
+  front:
+    container_name: smtpy-front
+    image: ghcr.io/${GHCR_OWNER}/smtpy-front:${TAG:-latest}
     ports:
       - "80:80"
     depends_on:

@@ -18,7 +18,7 @@ Internet
            │
            └─> Docker Network: smtpy_smtpy-network
                    │
-                   ├─> smtpy-frontend-prod:80 (Angular app)
+                   ├─> smtpy-front:80 (Angular app)
                    └─> smtpy-api-1:8000, smtpy-api-2:8000 (API servers)
 ```
 
@@ -50,7 +50,7 @@ Login to your Nginx Proxy Manager web interface (usually `http://<server-ip>:81`
 2. **Details Tab**:
    - **Domain Names**: `smtpy.fr`, `www.smtpy.fr`
    - **Scheme**: `http` (internal communication)
-   - **Forward Hostname/IP**: `smtpy-frontend-prod`
+   - **Forward Hostname/IP**: `smtpy-front`
    - **Forward Port**: `80`
    - **Cache Assets**: ✅ Enabled
    - **Block Common Exploits**: ✅ Enabled
@@ -110,12 +110,12 @@ If you want to expose the API separately (e.g., `api.smtpy.fr`):
 
 ```bash
 # Test DNS resolution from NPM container
-docker exec <npm-container-name> ping -c 1 smtpy-frontend-prod
+docker exec <npm-container-name> ping -c 1 smtpy-front
 docker exec <npm-container-name> ping -c 1 smtpy-api-1
 docker exec <npm-container-name> ping -c 1 smtpy-api-2
 
 # Test HTTP connectivity
-docker exec <npm-container-name> curl -f http://smtpy-frontend-prod:80
+docker exec <npm-container-name> curl -f http://smtpy-front:80
 docker exec <npm-container-name> curl -f http://smtpy-api-1:8000/health
 docker exec <npm-container-name> curl -f http://smtpy-api-2:8000/health
 
@@ -132,7 +132,7 @@ If your Angular app already proxies API requests internally:
 
 **Create 1 Proxy Host**:
 - Domain: `smtpy.fr`
-- Forward to: `smtpy-frontend-prod:80`
+- Forward to: `smtpy-front:80`
 
 The frontend's internal nginx will handle API routing to the backend containers.
 
@@ -144,7 +144,7 @@ If you want to expose the API on a subdomain:
 
 1. **Frontend**:
    - Domain: `smtpy.fr`
-   - Forward to: `smtpy-frontend-prod:80`
+   - Forward to: `smtpy-front:80`
 
 2. **API**:
    - Domain: `api.smtpy.fr`
@@ -157,7 +157,7 @@ Use NPM's location blocks to route everything:
 
 **Create 1 Proxy Host** with custom config:
 - Domain: `smtpy.fr`
-- Default Forward to: `smtpy-frontend-prod:80`
+- Default Forward to: `smtpy-front:80`
 
 **Advanced Tab**:
 ```nginx
@@ -182,7 +182,7 @@ location /health {
 
 # Everything else to frontend
 location / {
-    proxy_pass http://smtpy-frontend-prod:80;
+    proxy_pass http://smtpy-front:80;
     proxy_http_version 1.1;
     proxy_set_header Host $host;
     proxy_set_header X-Real-IP $remote_addr;
@@ -211,7 +211,7 @@ location / {
    ```
 
 3. **Wrong forward hostname**:
-   - Check that you used `smtpy-frontend-prod` (container name), not `localhost` or IP
+   - Check that you used `smtpy-front` (container name), not `localhost` or IP
 
 4. **Containers not healthy**:
    ```bash
@@ -221,7 +221,7 @@ location / {
 
 ### Issue: "Could not resolve host"
 
-**Symptom**: NPM can't find `smtpy-frontend-prod`
+**Symptom**: NPM can't find `smtpy-front`
 
 **Fix**: Ensure NPM is on the same Docker network
 ```bash
@@ -397,7 +397,7 @@ After deployment, verify:
 - [ ] SMTPy containers running: `docker ps | grep smtpy`
 - [ ] NPM connected to network: `docker network inspect smtpy_smtpy-network | grep npm`
 - [ ] DNS resolving: `nslookup smtpy.fr` points to server
-- [ ] NPM can ping containers: `docker exec <npm> ping smtpy-frontend-prod`
+- [ ] NPM can ping containers: `docker exec <npm> ping smtpy-front`
 - [ ] NPM can curl containers: `docker exec <npm> curl http://smtpy-api-1:8000/health`
 - [ ] Proxy host created in NPM UI
 - [ ] SSL certificate issued successfully

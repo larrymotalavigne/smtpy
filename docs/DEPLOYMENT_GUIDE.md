@@ -318,7 +318,7 @@ docker build -f back/api/Dockerfile.prod -t smtpy-api:custom .
 docker build -f back/smtp/Dockerfile.prod -t smtpy-smtp:custom .
 
 # Build frontend with custom tag
-docker build -f front/Dockerfile.prod -t smtpy-frontend:custom .
+docker build -f front/Dockerfile.prod -t smtpy-front:custom .
 ```
 
 ### Image Size Optimization
@@ -774,7 +774,7 @@ docker compose -f docker-compose.prod.yml pull  # Updates images
 # Scan images for vulnerabilities
 docker scan smtpy-api-prod
 docker scan smtpy-smtp-prod
-docker scan smtpy-frontend-prod
+docker scan smtpy-front
 
 # Check container security
 docker inspect smtpy-api-prod | jq '.[0].HostConfig.SecurityOpt'
@@ -863,10 +863,10 @@ docker compose -f docker-compose.prod.yml ps frontend
 docker compose -f docker-compose.prod.yml logs frontend
 
 # Verify nginx config
-docker exec smtpy-frontend-prod nginx -t
+docker exec smtpy-front nginx -t
 
 # Check file permissions
-docker exec smtpy-frontend-prod ls -la /usr/share/nginx/html
+docker exec smtpy-front ls -la /usr/share/nginx/html
 
 # Restart frontend
 docker compose -f docker-compose.prod.yml restart frontend

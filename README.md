@@ -428,7 +428,7 @@ Security notes:
 - Configure nginx or similar for SSL termination
 - Set up proper domain and SSL certificates
 - Forward traffic to port 8000 (API) and port 80/443 (frontend)
-- Ensure frontend is built with `npm run build` and served from `front/dist/smtpy-frontend/`
+- Ensure frontend is built with `npm run build` and served from `front/dist/smtpy-front/`
 
 ### Monitoring
 - Set up logging aggregation

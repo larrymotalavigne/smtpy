@@ -70,12 +70,12 @@ for container in smtpy-api-1 smtpy-api-2; do
 done
 
 # Test frontend
-if docker ps --format "{{.Names}}" | grep -q "^smtpy-frontend-prod$"; then
-    echo "Testing smtpy-frontend-prod..."
-    if docker exec "$NPM_CONTAINER" curl -sf -m 5 "http://smtpy-frontend-prod:80" > /dev/null 2>&1; then
-        echo "  ✓ smtpy-frontend-prod:80 is accessible"
+if docker ps --format "{{.Names}}" | grep -q "^smtpy-front$"; then
+    echo "Testing smtpy-front..."
+    if docker exec "$NPM_CONTAINER" curl -sf -m 5 "http://smtpy-front:80" > /dev/null 2>&1; then
+        echo "  ✓ smtpy-front:80 is accessible"
     else
-        echo "  ✗ smtpy-frontend-prod:80 is NOT accessible"
+        echo "  ✗ smtpy-front:80 is NOT accessible"
     fi
 fi
 

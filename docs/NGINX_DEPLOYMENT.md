@@ -233,7 +233,7 @@ docker compose -f docker-compose.prod.yml logs -f
 
 # Individual service logs
 docker logs smtpy-api-prod -f
-docker logs smtpy-frontend-prod -f
+docker logs smtpy-front -f
 docker logs smtpy-smtp-prod -f
 ```
 
@@ -272,7 +272,7 @@ chmod +x /usr/local/bin/smtpy-health-check.sh
 
 1. Check frontend container logs:
    ```bash
-   docker logs smtpy-frontend-prod
+   docker logs smtpy-front
    ```
 
 2. Verify nginx can reach the frontend:

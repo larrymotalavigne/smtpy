@@ -211,7 +211,7 @@ TTL: 3600
 2. Configure:
    - Domain: `smtpy.fr`
    - Scheme: `http`
-   - Forward Hostname/IP: `smtpy-frontend-prod`
+   - Forward Hostname/IP: `smtpy-front`
    - Forward Port: `80`
    - Enable SSL with Let's Encrypt
    - Force SSL: Yes
@@ -279,7 +279,7 @@ telnet mail.smtpy.fr 25
 docker logs smtpy-api-prod --tail 100 -f
 
 # Frontend logs
-docker logs smtpy-frontend-prod --tail 100 -f
+docker logs smtpy-front --tail 100 -f
 
 # SMTP logs
 docker logs smtpy-smtp-prod --tail 100 -f

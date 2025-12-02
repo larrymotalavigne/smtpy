@@ -30,7 +30,7 @@ Internet
    │       │
    │       └─> Docker Network: smtpy_smtpy-network
    │               │
-   │               ├─> smtpy-frontend-prod:80
+   │               ├─> smtpy-front:80
    │               ├─> smtpy-api-1:8000
    │               ├─> smtpy-api-2:8000
    │               ├─> smtpy-smtp-prod:1025 (internal)
@@ -58,7 +58,7 @@ docker network inspect smtpy_smtpy-network
 **Configuration**: Use container names in `nginx/smtpy.conf`:
 ```nginx
 upstream smtpy_frontend {
-    server smtpy-frontend-prod:80;
+    server smtpy-front:80;
 }
 
 upstream smtpy_api {
@@ -159,7 +159,7 @@ cd /srv/smtpy
 docker network connect smtpy_smtpy-network nginx
 
 # Verify
-docker exec nginx ping -c 1 smtpy-frontend-prod
+docker exec nginx ping -c 1 smtpy-front
 docker exec nginx ping -c 1 smtpy-api-1
 ```
 
@@ -195,7 +195,7 @@ sudo systemctl reload nginx
 
 ```bash
 # Test from nginx container to SMTPy services
-docker exec nginx curl -f http://smtpy-frontend-prod:80
+docker exec nginx curl -f http://smtpy-front:80
 docker exec nginx curl -f http://smtpy-api-1:8000/health
 docker exec nginx curl -f http://smtpy-api-2:8000/health
 
@@ -210,7 +210,7 @@ curl -f https://smtpy.fr/health
 
 **Symptom**:
 ```
-nginx: [emerg] host not found in upstream "smtpy-frontend-prod"
+nginx: [emerg] host not found in upstream "smtpy-front"
 ```
 
 **Cause**: Nginx cannot resolve Docker container names
@@ -241,7 +241,7 @@ docker ps | grep smtpy
 
 # Check container logs
 docker logs smtpy-api-1
-docker logs smtpy-frontend-prod
+docker logs smtpy-front
 
 # Test connectivity from within nginx
 docker exec nginx curl -v http://smtpy-api-1:8000/health
@@ -301,7 +301,7 @@ After setup, verify:
 docker logs -f nginx 2>&1 | grep smtpy
 
 # Monitor SMTPy services
-docker stats smtpy-frontend-prod smtpy-api-1 smtpy-api-2
+docker stats smtpy-front smtpy-api-1 smtpy-api-2
 
 # Check which backend is serving requests
 docker logs smtpy-api-1 -f --tail 10

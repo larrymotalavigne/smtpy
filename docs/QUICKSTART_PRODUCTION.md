@@ -82,7 +82,7 @@ docker build -f back/api/Dockerfile.prod -t smtpy-api:v1.0.0 .
 docker build -f back/smtp/Dockerfile.prod -t smtpy-smtp:v1.0.0 .
 
 # Build Frontend with version tag
-docker build -f front/Dockerfile.prod -t smtpy-frontend:v1.0.0 .
+docker build -f front/Dockerfile.prod -t smtpy-front:v1.0.0 .
 ```
 
 ### Build for GHCR (GitHub Container Registry)
@@ -95,12 +95,12 @@ export TAG=v1.0.0
 # Build and tag for GHCR
 docker build -f back/api/Dockerfile.prod -t ghcr.io/$GHCR_OWNER/smtpy-api:$TAG .
 docker build -f back/smtp/Dockerfile.prod -t ghcr.io/$GHCR_OWNER/smtpy-smtp:$TAG .
-docker build -f front/Dockerfile.prod -t ghcr.io/$GHCR_OWNER/smtpy-frontend:$TAG .
+docker build -f front/Dockerfile.prod -t ghcr.io/$GHCR_OWNER/smtpy-front:$TAG .
 
 # Push to GHCR
 docker push ghcr.io/$GHCR_OWNER/smtpy-api:$TAG
 docker push ghcr.io/$GHCR_OWNER/smtpy-smtp:$TAG
-docker push ghcr.io/$GHCR_OWNER/smtpy-frontend:$TAG
+docker push ghcr.io/$GHCR_OWNER/smtpy-front:$TAG
 ```
 
 ### Multi-Architecture Builds
@@ -127,7 +127,7 @@ docker buildx build \
 docker buildx build \
   --platform linux/amd64,linux/arm64 \
   -f front/Dockerfile.prod \
-  -t ghcr.io/$GHCR_OWNER/smtpy-frontend:$TAG \
+  -t ghcr.io/$GHCR_OWNER/smtpy-front:$TAG \
   --push \
   .
 ```
@@ -311,10 +311,10 @@ docker compose -f docker-compose.prod.yml up -d --scale api=1
 ls -la ssl/
 
 # Check nginx config
-docker exec smtpy-frontend-prod nginx -t
+docker exec smtpy-front nginx -t
 
 # Reload nginx
-docker exec smtpy-frontend-prod nginx -s reload
+docker exec smtpy-front nginx -s reload
 ```
 
 ## Security Checklist
