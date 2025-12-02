@@ -1,5 +1,6 @@
 import { Component, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
+import { FormsModule } from '@angular/forms';
 import { Card } from 'primeng/card';
 import { Button } from 'primeng/button';
 import { TableModule } from 'primeng/table';
@@ -9,6 +10,8 @@ import { MessageService } from 'primeng/api';
 import { Toast } from 'primeng/toast';
 import { AdminApiService } from '../service/admin-api.service';
 import { Skeleton } from 'primeng/skeleton';
+import { InputText } from 'primeng/inputtext';
+import { Accordion, AccordionTab } from 'primeng/accordion';
 
 interface DatabaseStats {
   users: {
@@ -73,13 +76,17 @@ interface SystemHealth {
   standalone: true,
   imports: [
     CommonModule,
+    FormsModule,
     Card,
     Button,
     TableModule,
     Tag,
     Chart,
     Toast,
-    Skeleton
+    Skeleton,
+    InputText,
+    Accordion,
+    AccordionTab
   ],
   providers: [MessageService]
 })
@@ -88,6 +95,14 @@ export class AdminComponent implements OnInit {
   stats: DatabaseStats | null = null;
   recentActivity: RecentActivity[] = [];
   systemHealth: SystemHealth | null = null;
+
+  // SMTP Testing
+  smtpConfig: any = null;
+  smtpDiagnostics: any = null;
+  smtpTestLoading = false;
+  smtpDiagnosticsLoading = false;
+  smtpConfigLoading = false;
+  testEmailRecipient = '';
 
   // Chart data
   userGrowthData: any;
@@ -282,5 +297,105 @@ export class AdminComponent implements OnInit {
 
   refreshData(): void {
     this.loadAdminData();
+  }
+
+  // SMTP Testing Methods
+  loadSMTPConfig(): void {
+    this.smtpConfigLoading = true;
+    this.adminApiService.getSMTPConfig().subscribe({
+      next: (response) => {
+        if (response?.success) {
+          this.smtpConfig = response.data;
+        }
+        this.smtpConfigLoading = false;
+      },
+      error: (error) => {
+        console.error('Error loading SMTP config:', error);
+        this.messageService.add({
+          severity: 'error',
+          summary: 'Erreur',
+          detail: 'Impossible de charger la configuration SMTP'
+        });
+        this.smtpConfigLoading = false;
+      }
+    });
+  }
+
+  runDiagnostics(): void {
+    this.smtpDiagnosticsLoading = true;
+    this.smtpDiagnostics = null;
+    this.adminApiService.runSMTPDiagnostics().subscribe({
+      next: (response) => {
+        if (response?.success) {
+          this.smtpDiagnostics = response.data;
+          this.messageService.add({
+            severity: 'success',
+            summary: 'Diagnostics terminés',
+            detail: 'Les tests SMTP ont été exécutés'
+          });
+        }
+        this.smtpDiagnosticsLoading = false;
+      },
+      error: (error) => {
+        console.error('Error running diagnostics:', error);
+        this.messageService.add({
+          severity: 'error',
+          summary: 'Erreur',
+          detail: 'Impossible d\'exécuter les diagnostics SMTP'
+        });
+        this.smtpDiagnosticsLoading = false;
+      }
+    });
+  }
+
+  sendTestEmail(): void {
+    if (!this.testEmailRecipient || !this.isValidEmail(this.testEmailRecipient)) {
+      this.messageService.add({
+        severity: 'warn',
+        summary: 'Email invalide',
+        detail: 'Veuillez entrer une adresse email valide'
+      });
+      return;
+    }
+
+    this.smtpTestLoading = true;
+    this.adminApiService.sendTestEmail(this.testEmailRecipient).subscribe({
+      next: (response) => {
+        if (response?.success) {
+          this.messageService.add({
+            severity: 'success',
+            summary: 'Email envoyé',
+            detail: `Email de test envoyé à ${this.testEmailRecipient}`
+          });
+          this.testEmailRecipient = '';
+        }
+        this.smtpTestLoading = false;
+      },
+      error: (error) => {
+        console.error('Error sending test email:', error);
+        this.messageService.add({
+          severity: 'error',
+          summary: 'Erreur',
+          detail: 'Impossible d\'envoyer l\'email de test'
+        });
+        this.smtpTestLoading = false;
+      }
+    });
+  }
+
+  isValidEmail(email: string): boolean {
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    return emailRegex.test(email);
+  }
+
+  getStatusSeverity(status: string): string {
+    if (!status) return 'info';
+    switch (status.toLowerCase()) {
+      case 'success': return 'success';
+      case 'error': return 'danger';
+      case 'warning': return 'warn';
+      case 'skipped': return 'secondary';
+      default: return 'info';
+    }
   }
 }
