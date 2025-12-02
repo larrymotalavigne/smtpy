@@ -295,6 +295,201 @@
     </div>
   }
 
+  <!-- SMTP Configuration and Testing -->
+  @if (!loading) {
+    <p-card class="smtp-testing-card" styleClass="mt-4">
+      <ng-template pTemplate="header">
+        <div class="card-header" style="display: flex; justify-content: space-between; align-items: center; padding: 1rem;">
+          <div>
+            <i class="pi pi-envelope"></i>
+            <h3 style="display: inline; margin-left: 0.5rem;">Configuration et Tests SMTP</h3>
+          </div>
+          <p-button
+            label="Charger Configuration"
+            icon="pi pi-download"
+            (onClick)="loadSMTPConfig()"
+            [loading]="smtpConfigLoading"
+            size="small" />
+        </div>
+      </ng-template>
+      <ng-template pTemplate="content">
+        <!-- SMTP Configuration Display -->
+        @if (smtpConfig) {
+          <p-accordion [activeIndex]="0">
+            <!-- Transactional Email Config -->
+            <p-accordionTab header="📧 Configuration Email Transactionnel">
+              <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 1rem;">
+                <div>
+                  <strong>Activé:</strong>
+                  <p-tag
+                    [value]="smtpConfig.transactional_email.enabled ? 'Oui' : 'Non'"
+                    [severity]="smtpConfig.transactional_email.enabled ? 'success' : 'danger'" />
+                </div>
+                <div><strong>Hôte SMTP:</strong> {{ smtpConfig.transactional_email.host }}</div>
+                <div><strong>Port:</strong> {{ smtpConfig.transactional_email.port }}</div>
+                <div><strong>Utilisateur:</strong> {{ smtpConfig.transactional_email.username || '(non configuré)' }}</div>
+                <div>
+                  <strong>Mot de passe:</strong>
+                  <p-tag
+                    [value]="smtpConfig.transactional_email.password_set ? 'Configuré' : 'Non configuré'"
+                    [severity]="smtpConfig.transactional_email.password_set ? 'success' : 'warn'" />
+                </div>
+                <div>
+                  <strong>TLS:</strong>
+                  <p-tag [value]="smtpConfig.transactional_email.use_tls ? 'Oui' : 'Non'" />
+                </div>
+              </div>
+            </p-accordionTab>
+
+            <!-- SMTP Relay Config -->
+            <p-accordionTab header="📨 Configuration Relais SMTP">
+              <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 1rem;">
+                <div><strong>Nom d'hôte:</strong> {{ smtpConfig.smtp_relay.hostname }}</div>
+                <div><strong>Mode:</strong> {{ smtpConfig.smtp_relay.delivery_mode }}</div>
+                <div><strong>Hôte:</strong> {{ smtpConfig.smtp_relay.host }}</div>
+                <div><strong>Port:</strong> {{ smtpConfig.smtp_relay.port }}</div>
+                <div>
+                  <strong>DKIM:</strong>
+                  <p-tag
+                    [value]="smtpConfig.smtp_relay.enable_dkim ? 'Activé' : 'Désactivé'"
+                    [severity]="smtpConfig.smtp_relay.enable_dkim ? 'success' : 'warn'" />
+                </div>
+              </div>
+            </p-accordionTab>
+          </p-accordion>
+        }
+
+        <!-- Test Email Section -->
+        <div style="margin-top: 2rem; padding: 1.5rem; background: var(--surface-100); border-radius: 8px;">
+          <h4 style="margin-top: 0;"><i class="pi pi-send"></i> Envoyer un email de test</h4>
+          <div style="display: flex; gap: 1rem; align-items: center;">
+            <input
+              type="email"
+              pInputText
+              [(ngModel)]="testEmailRecipient"
+              placeholder="destinataire@example.com"
+              style="flex: 1;"
+              [disabled]="smtpTestLoading" />
+            <p-button
+              label="Envoyer Test"
+              icon="pi pi-envelope"
+              (onClick)="sendTestEmail()"
+              [loading]="smtpTestLoading"
+              [disabled]="!testEmailRecipient" />
+          </div>
+          <p style="margin-top: 0.5rem; color: var(--text-color-secondary); font-size: 0.875rem;">
+            <i class="pi pi-info-circle"></i>
+            Un email de test (réinitialisation de mot de passe) sera envoyé à l'adresse indiquée
+          </p>
+        </div>
+
+        <!-- Diagnostics Section -->
+        <div style="margin-top: 2rem;">
+          <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1rem;">
+            <h4 style="margin: 0;"><i class="pi pi-wrench"></i> Diagnostics SMTP</h4>
+            <p-button
+              label="Exécuter Diagnostics"
+              icon="pi pi-play"
+              (onClick)="runDiagnostics()"
+              [loading]="smtpDiagnosticsLoading" />
+          </div>
+
+          @if (smtpDiagnostics) {
+            <div style="padding: 1.5rem; background: var(--surface-50); border-radius: 8px;">
+              <p style="color: var(--text-color-secondary); margin-bottom: 1rem;">
+                <i class="pi pi-clock"></i>
+                Exécuté le: {{ smtpDiagnostics.timestamp | date:'medium':'':'fr' }}
+              </p>
+
+              <!-- Transactional Email Diagnostics -->
+              <div style="margin-bottom: 2rem;">
+                <h5>📧 Email Transactionnel</h5>
+                <div style="display: grid; gap: 0.75rem;">
+                  @if (smtpDiagnostics.transactional_email.dns_resolution) {
+                    <div style="display: flex; align-items: center; gap: 0.5rem;">
+                      <i class="pi pi-globe"></i>
+                      <strong>Résolution DNS:</strong>
+                      <p-tag
+                        [value]="smtpDiagnostics.transactional_email.dns_resolution.status"
+                        [severity]="getStatusSeverity(smtpDiagnostics.transactional_email.dns_resolution.status)" />
+                      @if (smtpDiagnostics.transactional_email.dns_resolution.ip) {
+                        <span>{{ smtpDiagnostics.transactional_email.dns_resolution.ip }}</span>
+                      }
+                    </div>
+                  }
+
+                  @if (smtpDiagnostics.transactional_email.port_connectivity) {
+                    <div style="display: flex; align-items: center; gap: 0.5rem;">
+                      <i class="pi pi-link"></i>
+                      <strong>Connectivité Port:</strong>
+                      <p-tag
+                        [value]="smtpDiagnostics.transactional_email.port_connectivity.status"
+                        [severity]="getStatusSeverity(smtpDiagnostics.transactional_email.port_connectivity.status)" />
+                      <span>{{ smtpDiagnostics.transactional_email.port_connectivity.message }}</span>
+                    </div>
+                  }
+
+                  @if (smtpDiagnostics.transactional_email.smtp_connection) {
+                    <div style="display: flex; align-items: center; gap: 0.5rem;">
+                      <i class="pi pi-server"></i>
+                      <strong>Connexion SMTP:</strong>
+                      <p-tag
+                        [value]="smtpDiagnostics.transactional_email.smtp_connection.status"
+                        [severity]="getStatusSeverity(smtpDiagnostics.transactional_email.smtp_connection.status)" />
+                      @if (smtpDiagnostics.transactional_email.smtp_connection.message) {
+                        <span>{{ smtpDiagnostics.transactional_email.smtp_connection.message }}</span>
+                      }
+                    </div>
+                  }
+
+                  @if (smtpDiagnostics.transactional_email.authentication) {
+                    <div style="display: flex; align-items: center; gap: 0.5rem;">
+                      <i class="pi pi-key"></i>
+                      <strong>Authentification:</strong>
+                      <p-tag
+                        [value]="smtpDiagnostics.transactional_email.authentication.status"
+                        [severity]="getStatusSeverity(smtpDiagnostics.transactional_email.authentication.status)" />
+                      <span>{{ smtpDiagnostics.transactional_email.authentication.message }}</span>
+                    </div>
+                  }
+                </div>
+              </div>
+
+              <!-- SMTP Relay Diagnostics -->
+              <div>
+                <h5>📨 Relais SMTP</h5>
+                <div style="display: grid; gap: 0.75rem;">
+                  @if (smtpDiagnostics.smtp_relay.dns_resolution) {
+                    <div style="display: flex; align-items: center; gap: 0.5rem;">
+                      <i class="pi pi-globe"></i>
+                      <strong>Résolution DNS:</strong>
+                      <p-tag
+                        [value]="smtpDiagnostics.smtp_relay.dns_resolution.status"
+                        [severity]="getStatusSeverity(smtpDiagnostics.smtp_relay.dns_resolution.status)" />
+                      @if (smtpDiagnostics.smtp_relay.dns_resolution.ip) {
+                        <span>{{ smtpDiagnostics.smtp_relay.dns_resolution.ip }}</span>
+                      }
+                    </div>
+                  }
+
+                  @if (smtpDiagnostics.smtp_relay.port_connectivity) {
+                    <div style="display: flex; align-items: center; gap: 0.5rem;">
+                      <i class="pi pi-link"></i>
+                      <strong>Connectivité Port:</strong>
+                      <p-tag
+                        [value]="smtpDiagnostics.smtp_relay.port_connectivity.status"
+                        [severity]="getStatusSeverity(smtpDiagnostics.smtp_relay.port_connectivity.status)" />
+                      <span>{{ smtpDiagnostics.smtp_relay.port_connectivity.message }}</span>
+                    </div>
+                  }
+                </div>
+              </div>
+            </div>
+          }
+        </div>
+      </ng-template>
+    </p-card>
+  }
   <!-- Recent Activity -->
   @if (!loading && recentActivity.length > 0) {
     <p-card class="activity-card">
