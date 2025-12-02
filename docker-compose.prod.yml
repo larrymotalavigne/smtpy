@@ -166,6 +166,48 @@ services:
         uvicorn api.main:create_app --host 0.0.0.0 --port 8000 --factory --workers $$API_WORKERS
       "
 
+  # pgAdmin - Web-based PostgreSQL Management
+  # Access at: https://database.smtpy.fr
+  pgadmin:
+    container_name: smtpy-pgadmin-prod
+    image: dpage/pgadmin4:latest
+    environment:
+      PGADMIN_DEFAULT_EMAIL: ${PGADMIN_EMAIL:?PGADMIN_EMAIL must be set}
+      PGADMIN_DEFAULT_PASSWORD: ${PGADMIN_PASSWORD:?PGADMIN_PASSWORD must be set}
+      PGADMIN_CONFIG_SERVER_MODE: 'True'
+      PGADMIN_CONFIG_MASTER_PASSWORD_REQUIRED: 'True'
+      # Disable enhanced cookie protection if behind reverse proxy
+      PGADMIN_CONFIG_ENHANCED_COOKIE_PROTECTION: 'False'
+    volumes:
+      - pgadmin_data:/var/lib/pgadmin
+    # Note: No external port mapping - accessed via Nginx Proxy Manager
+    # NPM will proxy database.smtpy.fr to this container on port 80
+    depends_on:
+      db:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD", "wget", "-O", "-", "http://localhost:80/misc/ping"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 20s
+    restart: unless-stopped
+    deploy:
+      resources:
+        limits:
+          cpus: '0.5'
+          memory: 512M
+        reservations:
+          cpus: '0.25'
+          memory: 256M
+    networks:
+      - smtpy-network
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "10m"
+        max-file: "3"
+
   # Frontend (Nginx serving Angular app)
   frontend:
     container_name: smtpy-frontend-prod
@@ -219,4 +261,6 @@ volumes:
   postgres_data:
     driver: local
   redis_data:
+    driver: local
+  pgadmin_data:
     driver: local
