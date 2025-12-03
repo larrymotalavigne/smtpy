@@ -148,8 +148,8 @@ Configuration:
 
 Running containers:
 NAME               STATUS
-smtpy-db-prod      Up (healthy)
-smtpy-redis-prod   Up (healthy)
+smtpy-db      Up (healthy)
+smtpy-redis   Up (healthy)
 smtpy-api-1        Up (healthy)
 smtpy-api-2        Up (healthy)
 smtpy-smtp-prod    Up
@@ -242,13 +242,13 @@ kill <PID>
 
 ```bash
 # Check database logs
-docker logs smtpy-db-prod
+docker logs smtpy-db
 
 # Manual health check
-docker exec smtpy-db-prod pg_isready -U postgres
+docker exec smtpy-db pg_isready -U postgres
 
 # Connect to database
-docker exec -it smtpy-db-prod psql -U postgres -d smtpy
+docker exec -it smtpy-db psql -U postgres -d smtpy
 ```
 
 ### API Not Starting?
@@ -325,7 +325,7 @@ docker compose -f docker-compose.prod.yml pull
 docker compose -f docker-compose.prod.yml up -d --scale api=2
 
 # Or restore from backup
-docker exec -i smtpy-db-prod psql -U postgres smtpy < backup.sql
+docker exec -i smtpy-db psql -U postgres smtpy < backup.sql
 ```
 
 ## Related Documentation

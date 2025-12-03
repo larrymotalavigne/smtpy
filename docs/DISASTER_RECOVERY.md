@@ -246,10 +246,10 @@ docker run --rm \
 docker compose -f docker-compose.prod.yml logs db | tail -100
 
 # Try to connect
-docker exec smtpy-db-prod psql -U postgres -d smtpy -c "SELECT 1;"
+docker exec smtpy-db psql -U postgres -d smtpy -c "SELECT 1;"
 
 # Check table integrity
-docker exec smtpy-db-prod psql -U postgres -d smtpy -c "
+docker exec smtpy-db psql -U postgres -d smtpy -c "
   SELECT tablename, pg_relation_size(schemaname||'.'||tablename)
   FROM pg_tables WHERE schemaname='public';"
 ```
@@ -280,7 +280,7 @@ ls -lh backups/smtpy_*.sql.gz | tail -5
 ./scripts/verify-deployment.sh
 
 # Check critical tables
-docker exec smtpy-db-prod psql -U postgres -d smtpy -c "
+docker exec smtpy-db psql -U postgres -d smtpy -c "
   SELECT
     (SELECT COUNT(*) FROM users) as users,
     (SELECT COUNT(*) FROM domains) as domains,
@@ -442,7 +442,7 @@ docker compose -f docker-compose.prod.yml logs -f
 1. **Identify Deletion Scope** (10 minutes):
 ```bash
 # Check recent database activity
-docker exec smtpy-db-prod psql -U postgres -d smtpy -c "
+docker exec smtpy-db psql -U postgres -d smtpy -c "
   SELECT * FROM pg_stat_activity
   WHERE state != 'idle'
   ORDER BY query_start DESC
@@ -461,10 +461,10 @@ ls -lh backups/smtpy_*.sql.gz
 ```bash
 # Restore to temporary database
 gunzip -c backups/smtpy_YYYYMMDD.sql.gz | \
-  docker exec -i smtpy-db-prod psql -U postgres -d temp_restore
+  docker exec -i smtpy-db psql -U postgres -d temp_restore
 
 # Export specific data
-docker exec smtpy-db-prod psql -U postgres -d temp_restore -c "
+docker exec smtpy-db psql -U postgres -d temp_restore -c "
   COPY (SELECT * FROM table_name WHERE ...)
   TO STDOUT CSV HEADER" > recovered_data.csv
 ```
@@ -472,7 +472,7 @@ docker exec smtpy-db-prod psql -U postgres -d temp_restore -c "
 4. **Import Recovered Data** (10 minutes):
 ```bash
 # Import to production
-cat recovered_data.csv | docker exec -i smtpy-db-prod psql -U postgres -d smtpy -c "
+cat recovered_data.csv | docker exec -i smtpy-db psql -U postgres -d smtpy -c "
   COPY table_name FROM STDIN CSV HEADER"
 ```
 
@@ -512,7 +512,7 @@ docker compose -f docker-compose.prod.yml logs > incident_logs.txt
 
 # Save container state
 docker commit smtpy-api-prod api-forensics
-docker commit smtpy-db-prod db-forensics
+docker commit smtpy-db db-forensics
 
 # Copy critical files
 cp -r /srv/smtpy/ /backup/forensics/$(date +%Y%m%d)/

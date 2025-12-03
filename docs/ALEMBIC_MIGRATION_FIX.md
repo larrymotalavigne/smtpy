@@ -123,7 +123,7 @@ docker exec smtpy-api-1 alembic current
 # Should show current revision
 
 # Check database tables exist
-docker exec smtpy-db-prod psql -U postgres -d smtpy -c "\dt"
+docker exec smtpy-db psql -U postgres -d smtpy -c "\dt"
 # Should list all tables created by migrations
 ```
 

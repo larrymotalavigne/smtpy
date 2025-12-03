@@ -34,8 +34,8 @@ Internet
    │               ├─> smtpy-api-1:8000
    │               ├─> smtpy-api-2:8000
    │               ├─> smtpy-smtp-prod:1025 (internal)
-   │               ├─> smtpy-db-prod:5432 (internal)
-   │               └─> smtpy-redis-prod:6379 (internal)
+   │               ├─> smtpy-db:5432 (internal)
+   │               └─> smtpy-redis:6379 (internal)
 ```
 
 ## Implementation

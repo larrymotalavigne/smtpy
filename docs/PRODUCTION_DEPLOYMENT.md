@@ -285,7 +285,7 @@ docker logs smtpy-front --tail 100 -f
 docker logs smtpy-smtp-prod --tail 100 -f
 
 # Database logs
-docker logs smtpy-db-prod --tail 100 -f
+docker logs smtpy-db --tail 100 -f
 ```
 
 ## Step 6: Database Migrations
@@ -304,7 +304,7 @@ docker exec smtpy-api-prod alembic current
 
 ```bash
 # Connect to database
-docker exec -it smtpy-db-prod psql -U postgres -d smtpy
+docker exec -it smtpy-db psql -U postgres -d smtpy
 
 # Create admin user (example)
 INSERT INTO users (username, email, password_hash, is_admin, created_at)
@@ -348,17 +348,17 @@ docker compose -f docker-compose.prod.yml ps
 
 ```bash
 # Backup database
-docker exec smtpy-db-prod pg_dump -U postgres smtpy > backup-$(date +%Y%m%d).sql
+docker exec smtpy-db pg_dump -U postgres smtpy > backup-$(date +%Y%m%d).sql
 
 # Or use the mounted backup directory
-docker exec smtpy-db-prod pg_dump -U postgres smtpy > /backups/backup-$(date +%Y%m%d).sql
+docker exec smtpy-db pg_dump -U postgres smtpy > /backups/backup-$(date +%Y%m%d).sql
 ```
 
 ### 9.3 Restore Database
 
 ```bash
 # Restore from backup
-docker exec -i smtpy-db-prod psql -U postgres smtpy < backup-20250101.sql
+docker exec -i smtpy-db psql -U postgres smtpy < backup-20250101.sql
 ```
 
 ### 9.4 Update Application
@@ -468,13 +468,13 @@ curl -X POST https://api.smtpy.fr/billing/webhook \
 
 ```bash
 # Check database size
-docker exec smtpy-db-prod psql -U postgres -d smtpy -c "SELECT pg_size_pretty(pg_database_size('smtpy'));"
+docker exec smtpy-db psql -U postgres -d smtpy -c "SELECT pg_size_pretty(pg_database_size('smtpy'));"
 
 # Check active connections
-docker exec smtpy-db-prod psql -U postgres -d smtpy -c "SELECT count(*) FROM pg_stat_activity;"
+docker exec smtpy-db psql -U postgres -d smtpy -c "SELECT count(*) FROM pg_stat_activity;"
 
 # Vacuum database
-docker exec smtpy-db-prod psql -U postgres -d smtpy -c "VACUUM ANALYZE;"
+docker exec smtpy-db psql -U postgres -d smtpy -c "VACUUM ANALYZE;"
 ```
 
 ## Performance Tuning
@@ -495,7 +495,7 @@ Configure in API settings if needed (not currently exposed).
 
 Redis is configured for session storage and caching. Monitor usage:
 ```bash
-docker exec smtpy-redis-prod redis-cli --raw incr ping
+docker exec smtpy-redis redis-cli --raw incr ping
 ```
 
 ## Support

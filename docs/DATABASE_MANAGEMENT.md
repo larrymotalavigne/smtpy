@@ -20,7 +20,7 @@
 ### Database Architecture
 
 **Database Management System**: PostgreSQL 16
-**Deployment**: Docker container (`smtpy-db-prod`)
+**Deployment**: Docker container (`smtpy-db`)
 **Image**: `postgres:18-alpine`
 **Data Volume**: `smtpy_postgres_data`
 **Backup Location**: `/srv/smtpy/backups/`
@@ -102,24 +102,24 @@ The script automatically:
 
 ```bash
 # Compressed backup
-docker exec smtpy-db-prod pg_dump -U postgres smtpy | gzip > backups/manual_$(date +%Y%m%d).sql.gz
+docker exec smtpy-db pg_dump -U postgres smtpy | gzip > backups/manual_$(date +%Y%m%d).sql.gz
 
 # Uncompressed backup
-docker exec smtpy-db-prod pg_dump -U postgres smtpy > backups/manual_$(date +%Y%m%d).sql
+docker exec smtpy-db pg_dump -U postgres smtpy > backups/manual_$(date +%Y%m%d).sql
 ```
 
 #### Specific Table Backup
 
 ```bash
 # Backup single table
-docker exec smtpy-db-prod pg_dump -U postgres -d smtpy -t messages | gzip > backups/messages_only.sql.gz
+docker exec smtpy-db pg_dump -U postgres -d smtpy -t messages | gzip > backups/messages_only.sql.gz
 ```
 
 #### Schema-Only Backup
 
 ```bash
 # Backup structure without data
-docker exec smtpy-db-prod pg_dump -U postgres -d smtpy --schema-only > backups/schema_only.sql
+docker exec smtpy-db pg_dump -U postgres -d smtpy --schema-only > backups/schema_only.sql
 ```
 
 ### Volume Backups
@@ -178,7 +178,7 @@ docker compose -f docker-compose.prod.yml stop api smtp
 
 # Restore from compressed backup
 gunzip -c backups/smtpy_20250126.sql.gz | \
-  docker exec -i smtpy-db-prod psql -U postgres -d smtpy
+  docker exec -i smtpy-db psql -U postgres -d smtpy
 
 # Restart services
 docker compose -f docker-compose.prod.yml start api smtp
@@ -188,22 +188,22 @@ docker compose -f docker-compose.prod.yml start api smtp
 
 ```bash
 # Create temporary database
-docker exec smtpy-db-prod psql -U postgres -c "CREATE DATABASE temp_restore;"
+docker exec smtpy-db psql -U postgres -c "CREATE DATABASE temp_restore;"
 
 # Restore full backup to temp
 gunzip -c backups/smtpy_20250126.sql.gz | \
-  docker exec -i smtpy-db-prod psql -U postgres -d temp_restore
+  docker exec -i smtpy-db psql -U postgres -d temp_restore
 
 # Export specific table
-docker exec smtpy-db-prod psql -U postgres -d temp_restore -c \
+docker exec smtpy-db psql -U postgres -d temp_restore -c \
   "COPY messages TO STDOUT CSV HEADER" > messages_export.csv
 
 # Import to production
-cat messages_export.csv | docker exec -i smtpy-db-prod psql -U postgres -d smtpy -c \
+cat messages_export.csv | docker exec -i smtpy-db psql -U postgres -d smtpy -c \
   "COPY messages FROM STDIN CSV HEADER"
 
 # Drop temp database
-docker exec smtpy-db-prod psql -U postgres -c "DROP DATABASE temp_restore;"
+docker exec smtpy-db psql -U postgres -c "DROP DATABASE temp_restore;"
 ```
 
 ### Point-in-Time Recovery
@@ -273,39 +273,39 @@ crontab -e
 
 ```bash
 # Standard VACUUM (no locks)
-docker exec smtpy-db-prod psql -U postgres -d smtpy -c "VACUUM;"
+docker exec smtpy-db psql -U postgres -d smtpy -c "VACUUM;"
 
 # VACUUM specific table
-docker exec smtpy-db-prod psql -U postgres -d smtpy -c "VACUUM messages;"
+docker exec smtpy-db psql -U postgres -d smtpy -c "VACUUM messages;"
 
 # VACUUM VERBOSE for details
-docker exec smtpy-db-prod psql -U postgres -d smtpy -c "VACUUM VERBOSE;"
+docker exec smtpy-db psql -U postgres -d smtpy -c "VACUUM VERBOSE;"
 
 # VACUUM ANALYZE (reclaim + update stats)
-docker exec smtpy-db-prod psql -U postgres -d smtpy -c "VACUUM ANALYZE;"
+docker exec smtpy-db psql -U postgres -d smtpy -c "VACUUM ANALYZE;"
 ```
 
 #### ANALYZE
 
 ```bash
 # Update query planner statistics
-docker exec smtpy-db-prod psql -U postgres -d smtpy -c "ANALYZE;"
+docker exec smtpy-db psql -U postgres -d smtpy -c "ANALYZE;"
 
 # Analyze specific table
-docker exec smtpy-db-prod psql -U postgres -d smtpy -c "ANALYZE messages;"
+docker exec smtpy-db psql -U postgres -d smtpy -c "ANALYZE messages;"
 ```
 
 #### REINDEX
 
 ```bash
 # Rebuild all indexes
-docker exec smtpy-db-prod psql -U postgres -d smtpy -c "REINDEX DATABASE smtpy;"
+docker exec smtpy-db psql -U postgres -d smtpy -c "REINDEX DATABASE smtpy;"
 
 # Reindex specific table
-docker exec smtpy-db-prod psql -U postgres -d smtpy -c "REINDEX TABLE messages;"
+docker exec smtpy-db psql -U postgres -d smtpy -c "REINDEX TABLE messages;"
 
 # Reindex specific index
-docker exec smtpy-db-prod psql -U postgres -d smtpy -c "REINDEX INDEX messages_pkey;"
+docker exec smtpy-db psql -U postgres -d smtpy -c "REINDEX INDEX messages_pkey;"
 ```
 
 ## Monitoring and Health
@@ -315,21 +315,21 @@ docker exec smtpy-db-prod psql -U postgres -d smtpy -c "REINDEX INDEX messages_p
 **Quick Health Check**:
 ```bash
 # Is database accepting connections?
-docker exec smtpy-db-prod pg_isready -U postgres
+docker exec smtpy-db pg_isready -U postgres
 
 # Can we query?
-docker exec smtpy-db-prod psql -U postgres -d smtpy -c "SELECT 1;"
+docker exec smtpy-db psql -U postgres -d smtpy -c "SELECT 1;"
 ```
 
 ### Database Size Monitoring
 
 ```bash
 # Total database size
-docker exec smtpy-db-prod psql -U postgres -d smtpy -c \
+docker exec smtpy-db psql -U postgres -d smtpy -c \
   "SELECT pg_size_pretty(pg_database_size('smtpy'));"
 
 # Table sizes
-docker exec smtpy-db-prod psql -U postgres -d smtpy -c "
+docker exec smtpy-db psql -U postgres -d smtpy -c "
   SELECT
     schemaname || '.' || tablename AS table_name,
     pg_size_pretty(pg_total_relation_size(schemaname||'.'||tablename)) AS total_size,
@@ -344,13 +344,13 @@ docker exec smtpy-db-prod psql -U postgres -d smtpy -c "
 
 ```bash
 # Active connections
-docker exec smtpy-db-prod psql -U postgres -d smtpy -c "
+docker exec smtpy-db psql -U postgres -d smtpy -c "
   SELECT COUNT(*) as connections
   FROM pg_stat_activity
   WHERE datname = 'smtpy';"
 
 # Connection details
-docker exec smtpy-db-prod psql -U postgres -d smtpy -c "
+docker exec smtpy-db psql -U postgres -d smtpy -c "
   SELECT
     usename,
     application_name,
@@ -366,7 +366,7 @@ docker exec smtpy-db-prod psql -U postgres -d smtpy -c "
 
 ```bash
 # Queries running >5 minutes
-docker exec smtpy-db-prod psql -U postgres -d smtpy -c "
+docker exec smtpy-db psql -U postgres -d smtpy -c "
   SELECT
     pid,
     usename,
@@ -384,7 +384,7 @@ docker exec smtpy-db-prod psql -U postgres -d smtpy -c "
 
 ```bash
 # Dead tuples and bloat
-docker exec smtpy-db-prod psql -U postgres -d smtpy -c "
+docker exec smtpy-db psql -U postgres -d smtpy -c "
   SELECT
     schemaname || '.' || tablename AS table_name,
     n_live_tup AS live_rows,
@@ -402,10 +402,10 @@ docker exec smtpy-db-prod psql -U postgres -d smtpy -c "
 
 **Enable Query Logging** (temporary):
 ```bash
-docker exec smtpy-db-prod psql -U postgres -c \
+docker exec smtpy-db psql -U postgres -c \
   "ALTER SYSTEM SET log_min_duration_statement = 1000;"  # Log queries >1s
 
-docker exec smtpy-db-prod psql -U postgres -c "SELECT pg_reload_conf();"
+docker exec smtpy-db psql -U postgres -c "SELECT pg_reload_conf();"
 ```
 
 **View Slow Queries**:
@@ -417,7 +417,7 @@ docker compose -f docker-compose.prod.yml logs db | grep "duration:"
 
 **Find Missing Indexes**:
 ```bash
-docker exec smtpy-db-prod psql -U postgres -d smtpy -c "
+docker exec smtpy-db psql -U postgres -d smtpy -c "
   SELECT
     schemaname || '.' || tablename AS table_name,
     seq_scan,
@@ -432,7 +432,7 @@ docker exec smtpy-db-prod psql -U postgres -d smtpy -c "
 
 **Find Unused Indexes**:
 ```bash
-docker exec smtpy-db-prod psql -U postgres -d smtpy -c "
+docker exec smtpy-db psql -U postgres -d smtpy -c "
   SELECT
     schemaname || '.' || tablename AS table_name,
     indexname,
@@ -476,7 +476,7 @@ See [DISASTER_RECOVERY.md](./DISASTER_RECOVERY.md) for comprehensive disaster re
 NEW_PASSWORD=$(openssl rand -base64 32)
 
 # Update in database
-docker exec smtpy-db-prod psql -U postgres -c \
+docker exec smtpy-db psql -U postgres -c \
   "ALTER USER postgres WITH PASSWORD '$NEW_PASSWORD';"
 
 # Update .env.production
@@ -505,7 +505,7 @@ gpg --symmetric --cipher-algo AES256 backups/smtpy_20250126.sql.gz
 
 # Decrypt for restore
 gpg --decrypt backups/smtpy_20250126.sql.gz.gpg | \
-  gunzip | docker exec -i smtpy-db-prod psql -U postgres -d smtpy
+  gunzip | docker exec -i smtpy-db psql -U postgres -d smtpy
 ```
 
 ## Best Practices
@@ -567,7 +567,7 @@ find /srv/smtpy/backups/ -name "smtpy_*.sql.gz" -mtime +30 -delete
 **Solution**:
 ```bash
 # Kill all connections
-docker exec smtpy-db-prod psql -U postgres -c "
+docker exec smtpy-db psql -U postgres -c "
   SELECT pg_terminate_backend(pid)
   FROM pg_stat_activity
   WHERE datname = 'smtpy' AND pid <> pg_backend_pid();"
@@ -580,7 +580,7 @@ docker exec smtpy-db-prod psql -U postgres -c "
 **Solution**:
 ```bash
 # Run ANALYZE to update statistics
-docker exec smtpy-db-prod psql -U postgres -d smtpy -c "ANALYZE;"
+docker exec smtpy-db psql -U postgres -d smtpy -c "ANALYZE;"
 
 # Check for missing indexes
 ./scripts/db-maintenance.sh --check-bloat
@@ -604,14 +604,14 @@ docker exec smtpy-db-prod psql -U postgres -d smtpy -c "ANALYZE;"
 ./scripts/db-maintenance.sh --all
 
 # Health check
-docker exec smtpy-db-prod pg_isready
+docker exec smtpy-db pg_isready
 
 # Database size
-docker exec smtpy-db-prod psql -U postgres -d smtpy -c \
+docker exec smtpy-db psql -U postgres -d smtpy -c \
   "SELECT pg_size_pretty(pg_database_size('smtpy'));"
 
 # Connection count
-docker exec smtpy-db-prod psql -U postgres -d smtpy -c \
+docker exec smtpy-db psql -U postgres -d smtpy -c \
   "SELECT COUNT(*) FROM pg_stat_activity WHERE datname='smtpy';"
 ```
 

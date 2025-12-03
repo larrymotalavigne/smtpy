@@ -232,10 +232,10 @@ docker exec smtpy-api-prod alembic upgrade head
 docker exec smtpy-api-prod alembic current
 
 # Backup database
-docker exec smtpy-db-prod pg_dump -U postgres smtpy > backups/smtpy_$(date +%Y%m%d).sql
+docker exec smtpy-db pg_dump -U postgres smtpy > backups/smtpy_$(date +%Y%m%d).sql
 
 # Restore database
-cat backups/smtpy_20250126.sql | docker exec -i smtpy-db-prod psql -U postgres smtpy
+cat backups/smtpy_20250126.sql | docker exec -i smtpy-db psql -U postgres smtpy
 ```
 
 ### Stop and Remove
@@ -255,8 +255,8 @@ docker compose -f docker-compose.prod.yml down -v
 
 - **API**: `http://localhost:8000/health`
 - **Frontend**: `http://localhost:80/`
-- **Database**: `docker exec smtpy-db-prod pg_isready`
-- **Redis**: `docker exec smtpy-redis-prod redis-cli ping`
+- **Database**: `docker exec smtpy-db pg_isready`
+- **Redis**: `docker exec smtpy-redis redis-cli ping`
 - **SMTP**: `telnet localhost 1025`
 
 ## Troubleshooting Quick Reference
@@ -284,7 +284,7 @@ docker compose -f docker-compose.prod.yml restart api
 docker compose -f docker-compose.prod.yml ps db
 
 # Test connection
-docker exec smtpy-db-prod psql -U postgres -d smtpy -c "SELECT 1;"
+docker exec smtpy-db psql -U postgres -d smtpy -c "SELECT 1;"
 
 # Check password in env
 docker exec smtpy-api-prod env | grep POSTGRES_PASSWORD
@@ -377,7 +377,7 @@ docker run --rm \
 
 ```bash
 # Restore database
-cat backups/smtpy_20250126.sql | docker exec -i smtpy-db-prod psql -U postgres smtpy
+cat backups/smtpy_20250126.sql | docker exec -i smtpy-db psql -U postgres smtpy
 
 # Restart services
 docker compose -f docker-compose.prod.yml restart
@@ -448,7 +448,7 @@ docker compose -f docker-compose.prod.yml restart api
 docker compose -f docker-compose.prod.yml pull && docker compose -f docker-compose.prod.yml up -d
 
 # Backup
-docker exec smtpy-db-prod pg_dump -U postgres smtpy > backups/backup_$(date +%Y%m%d).sql
+docker exec smtpy-db pg_dump -U postgres smtpy > backups/backup_$(date +%Y%m%d).sql
 
 # Stop
 docker compose -f docker-compose.prod.yml down

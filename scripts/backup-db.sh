@@ -32,7 +32,7 @@ VERBOSE=false
 DRY_RUN=false
 COMPOSE_FILE="docker-compose.prod.yml"
 TIMESTAMP=$(date +%Y%m%d_%H%M%S)
-CONTAINER_NAME="smtpy-db-prod"
+CONTAINER_NAME="smtpy-db"
 
 # Remote storage configuration (set these via environment variables)
 S3_BUCKET="${BACKUP_S3_BUCKET:-}"

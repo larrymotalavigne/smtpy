@@ -80,10 +80,10 @@ docker compose up -d
 1. **Backup existing database:**
    ```bash
    # Create backup
-   docker exec smtpy-db-prod pg_dumpall -U postgres > backup-$(date +%Y%m%d).sql
+   docker exec smtpy-db pg_dumpall -U postgres > backup-$(date +%Y%m%d).sql
 
    # Or use the backup script
-   docker exec smtpy-db-prod pg_dump -U postgres smtpy > smtpy-backup-$(date +%Y%m%d).sql
+   docker exec smtpy-db pg_dump -U postgres smtpy > smtpy-backup-$(date +%Y%m%d).sql
    ```
 
 2. **Stop the application:**
@@ -100,13 +100,13 @@ docker compose up -d
    docker compose -f docker-compose.prod.yml up -d db
 
    # Wait for database to be ready
-   docker exec smtpy-db-prod pg_isready -U postgres
+   docker exec smtpy-db pg_isready -U postgres
    ```
 
 4. **Restore data if needed:**
    ```bash
    # Only if starting fresh volume
-   docker exec -i smtpy-db-prod psql -U postgres smtpy < smtpy-backup-YYYYMMDD.sql
+   docker exec -i smtpy-db psql -U postgres smtpy < smtpy-backup-YYYYMMDD.sql
    ```
 
 5. **Start remaining services:**
@@ -128,7 +128,7 @@ docker compose down
 docker compose up -d
 
 # Check logs for any migration warnings
-docker logs smtpy-db-prod
+docker logs smtpy-db
 ```
 
 ### For New Deployments
@@ -165,7 +165,7 @@ docker compose down
 
 # Restore from backup if needed
 docker compose up -d db
-docker exec -i smtpy-db-prod psql -U postgres smtpy < backup-YYYYMMDD.sql
+docker exec -i smtpy-db psql -U postgres smtpy < backup-YYYYMMDD.sql
 
 # Start all services
 docker compose up -d
@@ -189,14 +189,14 @@ If you encounter issues:
 
 1. **Check logs:**
    ```bash
-   docker logs smtpy-db-prod
+   docker logs smtpy-db
    docker logs smtpy-api-prod
    ```
 
 2. **Verify database health:**
    ```bash
-   docker exec smtpy-db-prod pg_isready -U postgres
-   docker exec smtpy-db-prod psql -U postgres -c "SELECT version();"
+   docker exec smtpy-db pg_isready -U postgres
+   docker exec smtpy-db psql -U postgres -c "SELECT version();"
    ```
 
 3. **Review PostgreSQL 18 release notes** for breaking changes

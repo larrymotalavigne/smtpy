@@ -224,14 +224,14 @@ else
 fi
 
 # Test PostgreSQL
-if docker exec smtpy-db-prod pg_isready -U postgres &> /dev/null; then
+if docker exec smtpy-db pg_isready -U postgres &> /dev/null; then
     log_success "PostgreSQL is ready"
 else
     log_error "PostgreSQL is not ready"
 fi
 
 # Test Redis
-if docker exec smtpy-redis-prod redis-cli --raw incr ping &> /dev/null; then
+if docker exec smtpy-redis redis-cli --raw incr ping &> /dev/null; then
     log_success "Redis is responding"
 else
     log_error "Redis is not responding"
@@ -302,7 +302,7 @@ echo ""
 # Step 8: Check database connectivity
 log_info "Step 8: Testing database operations..."
 
-if docker exec smtpy-db-prod psql -U postgres -d smtpy -c "SELECT 1;" &> /dev/null; then
+if docker exec smtpy-db psql -U postgres -d smtpy -c "SELECT 1;" &> /dev/null; then
     log_success "Database query successful"
 
     # Check for migrations

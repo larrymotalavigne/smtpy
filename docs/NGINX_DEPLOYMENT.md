@@ -367,7 +367,7 @@ sudo systemctl reload nginx
 
 ```bash
 # Backup database
-docker exec smtpy-db-prod pg_dump -U postgres smtpy > backup-$(date +%Y%m%d).sql
+docker exec smtpy-db pg_dump -U postgres smtpy > backup-$(date +%Y%m%d).sql
 
 # Backup nginx configuration
 sudo tar -czf nginx-config-backup-$(date +%Y%m%d).tar.gz /etc/nginx/

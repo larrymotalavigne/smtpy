@@ -18,8 +18,8 @@ You should see:
 - `smtpy-api-1`
 - `smtpy-api-2`
 - `smtpy-smtp-prod`
-- `smtpy-db-prod`
-- `smtpy-redis-prod`
+- `smtpy-db`
+- `smtpy-redis`
 
 ## Step 2: Connect NPM to SMTPy Network (One-Time)
 

@@ -256,8 +256,8 @@ docker ps | grep smtpy
 # smtpy-api-1           Up (healthy)
 # smtpy-api-2           Up (healthy)
 # smtpy-smtp-prod       Up (healthy)
-# smtpy-db-prod         Up (healthy)
-# smtpy-redis-prod      Up (healthy)
+# smtpy-db         Up (healthy)
+# smtpy-redis      Up (healthy)
 
 # 2. Check API logs (should show successful migration)
 docker logs smtpy-api-1 --tail 20

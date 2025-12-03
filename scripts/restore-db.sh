@@ -27,7 +27,7 @@ PRE_RESTORE_BACKUP=true
 FORCE=false
 VERBOSE=false
 DRY_RUN=false
-CONTAINER_NAME="smtpy-db-prod"
+CONTAINER_NAME="smtpy-db"
 COMPOSE_FILE="docker-compose.prod.yml"
 
 # Parse arguments

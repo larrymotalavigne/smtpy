@@ -447,8 +447,8 @@ docker compose -f docker-compose.prod.yml ps
 # Individual health checks
 curl -f http://localhost:8000/health  # API
 curl -f http://localhost:80  # Frontend
-docker exec smtpy-db-prod pg_isready -U postgres  # Database
-docker exec smtpy-redis-prod redis-cli --raw incr ping  # Redis
+docker exec smtpy-db pg_isready -U postgres  # Database
+docker exec smtpy-redis redis-cli --raw incr ping  # Redis
 ```
 
 ### Health Check Endpoints
@@ -597,10 +597,10 @@ Monitor key metrics:
 
 ```bash
 # Database connections
-docker exec smtpy-db-prod psql -U postgres -d smtpy -c "SELECT count(*) FROM pg_stat_activity;"
+docker exec smtpy-db psql -U postgres -d smtpy -c "SELECT count(*) FROM pg_stat_activity;"
 
 # Redis memory usage
-docker exec smtpy-redis-prod redis-cli INFO memory
+docker exec smtpy-redis redis-cli INFO memory
 
 # API request count
 docker exec smtpy-api-prod curl localhost:8000/metrics  # If Prometheus enabled
@@ -617,10 +617,10 @@ docker exec smtpy-api-prod curl localhost:8000/metrics  # If Prometheus enabled
 mkdir -p backups
 
 # Backup database
-docker exec smtpy-db-prod pg_dump -U postgres smtpy > backups/smtpy_$(date +%Y%m%d_%H%M%S).sql
+docker exec smtpy-db pg_dump -U postgres smtpy > backups/smtpy_$(date +%Y%m%d_%H%M%S).sql
 
 # Compressed backup
-docker exec smtpy-db-prod pg_dump -U postgres smtpy | gzip > backups/smtpy_$(date +%Y%m%d_%H%M%S).sql.gz
+docker exec smtpy-db pg_dump -U postgres smtpy | gzip > backups/smtpy_$(date +%Y%m%d_%H%M%S).sql.gz
 ```
 
 #### Automated Backup Script
@@ -636,7 +636,7 @@ RETENTION_DAYS=30
 
 # Create backup
 BACKUP_FILE="$BACKUP_DIR/smtpy_$(date +%Y%m%d_%H%M%S).sql.gz"
-docker exec smtpy-db-prod pg_dump -U postgres smtpy | gzip > "$BACKUP_FILE"
+docker exec smtpy-db pg_dump -U postgres smtpy | gzip > "$BACKUP_FILE"
 
 # Remove old backups
 find "$BACKUP_DIR" -name "smtpy_*.sql.gz" -mtime +$RETENTION_DAYS -delete
@@ -655,10 +655,10 @@ Set up daily backup cron:
 
 ```bash
 # Backup to S3
-docker exec smtpy-db-prod pg_dump -U postgres smtpy | gzip | aws s3 cp - s3://your-bucket/backups/smtpy_$(date +%Y%m%d).sql.gz
+docker exec smtpy-db pg_dump -U postgres smtpy | gzip | aws s3 cp - s3://your-bucket/backups/smtpy_$(date +%Y%m%d).sql.gz
 
 # Backup to remote server
-docker exec smtpy-db-prod pg_dump -U postgres smtpy | gzip | ssh user@backup-server "cat > /backups/smtpy_$(date +%Y%m%d).sql.gz"
+docker exec smtpy-db pg_dump -U postgres smtpy | gzip | ssh user@backup-server "cat > /backups/smtpy_$(date +%Y%m%d).sql.gz"
 ```
 
 ### Database Restore
@@ -667,10 +667,10 @@ docker exec smtpy-db-prod pg_dump -U postgres smtpy | gzip | ssh user@backup-ser
 
 ```bash
 # Restore from uncompressed backup
-docker exec -i smtpy-db-prod psql -U postgres smtpy < backups/smtpy_20250126.sql
+docker exec -i smtpy-db psql -U postgres smtpy < backups/smtpy_20250126.sql
 
 # Restore from compressed backup
-gunzip -c backups/smtpy_20250126.sql.gz | docker exec -i smtpy-db-prod psql -U postgres smtpy
+gunzip -c backups/smtpy_20250126.sql.gz | docker exec -i smtpy-db psql -U postgres smtpy
 ```
 
 #### Full Recovery Procedure
@@ -680,11 +680,11 @@ gunzip -c backups/smtpy_20250126.sql.gz | docker exec -i smtpy-db-prod psql -U p
 docker compose -f docker-compose.prod.yml stop api smtp
 
 # 2. Drop and recreate database
-docker exec smtpy-db-prod psql -U postgres -c "DROP DATABASE smtpy;"
-docker exec smtpy-db-prod psql -U postgres -c "CREATE DATABASE smtpy;"
+docker exec smtpy-db psql -U postgres -c "DROP DATABASE smtpy;"
+docker exec smtpy-db psql -U postgres -c "CREATE DATABASE smtpy;"
 
 # 3. Restore backup
-gunzip -c backups/smtpy_20250126.sql.gz | docker exec -i smtpy-db-prod psql -U postgres smtpy
+gunzip -c backups/smtpy_20250126.sql.gz | docker exec -i smtpy-db psql -U postgres smtpy
 
 # 4. Restart services
 docker compose -f docker-compose.prod.yml start smtp api
@@ -803,7 +803,7 @@ docker compose -f docker-compose.prod.yml logs db
 docker exec smtpy-api-prod env | grep DATABASE_URL
 
 # Test connection manually
-docker exec smtpy-db-prod psql -U postgres -d smtpy -c "SELECT 1;"
+docker exec smtpy-db psql -U postgres -d smtpy -c "SELECT 1;"
 ```
 
 #### Issue 2: API Returns 500 Errors

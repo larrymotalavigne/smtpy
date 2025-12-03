@@ -41,7 +41,7 @@ CHECK_QUERIES=false
 RUN_ALL=false
 VERBOSE=false
 DRY_RUN=false
-CONTAINER_NAME="smtpy-db-prod"
+CONTAINER_NAME="smtpy-db"
 
 # Parse arguments
 if [ $# -eq 0 ]; then

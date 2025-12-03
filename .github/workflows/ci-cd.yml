@@ -467,7 +467,7 @@ jobs:
 
             # Check database connectivity
             echo "Checking database..."
-            if docker exec smtpy-db-prod pg_isready -U postgres > /dev/null; then
+            if docker exec smtpy-db pg_isready -U postgres > /dev/null; then
               echo "✅ Database is ready"
             else
               echo "❌ Database health check failed"
@@ -476,7 +476,7 @@ jobs:
 
             # Check Redis
             echo "Checking Redis..."
-            if docker exec smtpy-redis-prod redis-cli --raw incr ping > /dev/null; then
+            if docker exec smtpy-redis redis-cli --raw incr ping > /dev/null; then
               echo "✅ Redis is responding"
             else
               echo "❌ Redis health check failed"
