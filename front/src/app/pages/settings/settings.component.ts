@@ -13,6 +13,7 @@ import {ConfirmationService, MessageService} from 'primeng/api';
 import {DividerModule} from 'primeng/divider';
 import {ConfirmDialogModule} from 'primeng/confirmdialog';
 import {InputTextModule} from 'primeng/inputtext';
+import {ToggleSwitchModule} from 'primeng/toggleswitch';
 import {DialogModule} from 'primeng/dialog';
 import {TableModule} from 'primeng/table';
 
@@ -54,6 +55,7 @@ interface Session {
     DividerModule,
     ConfirmDialogModule,
     InputTextModule,
+    ToggleSwitchModule,
     DialogModule,
     TableModule
 ],
