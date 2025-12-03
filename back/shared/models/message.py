@@ -12,12 +12,12 @@ from .base import Base, TimestampMixin
 
 class MessageStatus(enum.Enum):
     """Message processing status."""
-    PENDING = "pending"
-    PROCESSING = "processing"
-    DELIVERED = "delivered"
-    FAILED = "failed"
-    BOUNCED = "bounced"
-    REJECTED = "rejected"
+    PENDING = "PENDING"
+    PROCESSING = "PROCESSING"
+    DELIVERED = "DELIVERED"
+    FAILED = "FAILED"
+    BOUNCED = "BOUNCED"
+    REJECTED = "REJECTED"
 
 
 class Message(Base, TimestampMixin):
