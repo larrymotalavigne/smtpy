@@ -70,29 +70,47 @@ export const guestGuard: CanActivateFn = (route, state) => {
 
 /**
  * Admin guard to protect routes that require admin role
+ * Revalidates session with backend and checks admin role before allowing access
  * Redirects to dashboard if user is not an admin
  */
 export const adminGuard: CanActivateFn = (route, state) => {
   const authService = inject(AuthService);
   const router = inject(Router);
 
-  return authService.currentUser$.pipe(
-    take(1),
-    map(user => {
-      if (user && user.role === 'admin') {
-        // User is admin, allow access
-        return true;
-      } else if (user) {
-        // User is authenticated but not admin, redirect to dashboard
-        router.navigate(['/dashboard']);
-        return false;
-      } else {
-        // User is not authenticated, redirect to login
+  // Check if user appears authenticated first
+  if (authService.isAuthenticated()) {
+    // Revalidate session and check admin role
+    return authService.checkAuthStatus().pipe(
+      map(response => {
+        const user = response.data;
+        if (user && user.role === 'admin') {
+          // User is admin, allow access
+          return true;
+        } else if (user) {
+          // User is authenticated but not admin, redirect to dashboard
+          router.navigate(['/dashboard']);
+          return false;
+        } else {
+          // Session invalid, redirect to login
+          router.navigate(['/auth/login'], {
+            queryParams: { returnUrl: state.url }
+          });
+          return false;
+        }
+      }),
+      catchError(() => {
+        // Error checking auth status, redirect to login
         router.navigate(['/auth/login'], {
           queryParams: { returnUrl: state.url }
         });
-        return false;
-      }
-    })
-  );
+        return of(false);
+      })
+    );
+  } else {
+    // User is not authenticated, redirect to login immediately
+    router.navigate(['/auth/login'], {
+      queryParams: { returnUrl: state.url }
+    });
+    return of(false);
+  }
 };

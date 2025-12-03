@@ -14,7 +14,7 @@ export const appRoutes: Routes = [
             {
                 path: 'admin',
                 loadComponent: () => import('./app/pages/admin/admin.component').then(m => m.AdminComponent),
-                canActivate: [authGuard, adminGuard]
+                canActivate: [adminGuard]
             },
             {path: 'domains', loadComponent: () => import('./app/pages/domains/domains.component').then(m => m.DomainsComponent)},
             {path: 'aliases', loadComponent: () => import('./app/pages/aliases/aliases.component').then(m => m.AliasesComponent)},
