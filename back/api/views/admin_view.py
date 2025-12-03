@@ -15,7 +15,7 @@ from shared.core.config import SETTINGS
 from .auth_view import get_current_user
 from ..schemas.common import ErrorResponse
 from ..services.email_service import EmailService
-from shared.models.user import User
+from shared.models.user import User, UserRole
 from shared.models.organization import Organization
 from shared.models.domain import Domain
 from shared.models.alias import Alias
@@ -58,15 +58,16 @@ async def get_database_stats(
         # User statistics
         users_total = await db.scalar(select(func.count(User.id)))
         users_active = await db.scalar(select(func.count(User.id)).where(User.is_active == True))
-        users_admins = await db.scalar(select(func.count(User.id)).where(User.role == "admin"))
+        users_admins = await db.scalar(select(func.count(User.id)).where(User.role == UserRole.ADMIN))
         users_recent = await db.scalar(
             select(func.count(User.id)).where(User.created_at >= thirty_days_ago)
         )
 
         # Organization statistics
         orgs_total = await db.scalar(select(func.count(Organization.id)))
+        # Count organizations with active subscriptions (no is_active field in model)
         orgs_active = await db.scalar(
-            select(func.count(Organization.id)).where(Organization.is_active == True)
+            select(func.count(Organization.id)).where(Organization.stripe_subscription_id.isnot(None))
         )
         orgs_with_sub = await db.scalar(
             select(func.count(Organization.id)).where(Organization.stripe_subscription_id.isnot(None))
