@@ -3,11 +3,13 @@ import { StyleClassModule } from 'primeng/styleclass';
 import { Router, RouterModule } from '@angular/router';
 import { RippleModule } from 'primeng/ripple';
 import { ButtonModule } from 'primeng/button';
-import {AppFloatingConfigurator} from "@/layout/component/app.floatingconfigurator";
+import { AppFloatingConfigurator } from "@/layout/component/app.floatingconfigurator";
+import { AuthService } from '../../service/auth.service';
+import { AsyncPipe } from '@angular/common';
 
 @Component({
     selector: 'topbar-widget',
-    imports: [RouterModule, StyleClassModule, ButtonModule, RippleModule, AppFloatingConfigurator],
+    imports: [RouterModule, StyleClassModule, ButtonModule, RippleModule, AppFloatingConfigurator, AsyncPipe],
     template: `<a class="flex items-center" href="#">
             <i class="pi pi-envelope" style="font-size: 2.5rem; color: var(--primary-color); margin-right: 0.75rem;"></i>
             <span class="text-surface-900 dark:text-surface-0 font-medium text-2xl leading-normal mr-20">SMTPy</span>
@@ -41,12 +43,19 @@ import {AppFloatingConfigurator} from "@/layout/component/app.floatingconfigurat
                 </li>
             </ul>
             <div class="flex border-t lg:border-t-0 border-surface py-4 lg:py-0 mt-4 lg:mt-0 gap-2">
-                <button pButton pRipple label="Connexion" routerLink="/auth/login" [rounded]="true" [text]="true"></button>
-                <button pButton pRipple label="S'inscrire" routerLink="/auth/register" [rounded]="true"></button>
+                @if (!(authService.currentUser$ | async)) {
+                    <button pButton pRipple label="Connexion" routerLink="/auth/login" [rounded]="true" [text]="true"></button>
+                    <button pButton pRipple label="S'inscrire" routerLink="/auth/register" [rounded]="true"></button>
+                } @else {
+                    <button pButton pRipple label="Tableau de bord" routerLink="/dashboard" [rounded]="true"></button>
+                }
                 <app-floating-configurator [float]="false"/>
             </div>
         </div> `
 })
 export class TopbarWidget {
-    constructor(public router: Router) {}
+    constructor(
+        public router: Router,
+        public authService: AuthService
+    ) {}
 }
