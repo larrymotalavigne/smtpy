@@ -15,6 +15,7 @@ import {ConfirmDialogModule} from 'primeng/confirmdialog';
 import {InputTextModule} from 'primeng/inputtext';
 import {DialogModule} from 'primeng/dialog';
 import {TableModule} from 'primeng/table';
+import {InputSwitchModule} from 'primeng/inputswitch';
 
 // Services
 import {AuthService, User} from '../service/auth.service';
@@ -54,6 +55,7 @@ interface Session {
     DividerModule,
     ConfirmDialogModule,
     InputTextModule,
+    InputSwitchModule,
     DialogModule,
     TableModule
 ],
