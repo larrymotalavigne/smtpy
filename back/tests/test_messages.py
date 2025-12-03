@@ -81,7 +81,7 @@ class TestMessagesEndpoints:
     def test_list_messages_with_filters(self):
         """Test messages endpoint with various filters."""
         # Test with status filter
-        response = client.get("/messages?status=pending")
+        response = client.get("/messages?status=PENDING")
         assert response.status_code == 200
 
         # Test with domain filter
@@ -173,7 +173,7 @@ class TestMessagesEndpoints:
 
     def test_update_message_status_not_found(self):
         """Test PATCH /messages/{id}/status with non-existent message."""
-        response = client.patch("/messages/999999/status?new_status=delivered")
+        response = client.patch("/messages/999999/status?new_status=DELIVERED")
         assert response.status_code == 404
 
 
