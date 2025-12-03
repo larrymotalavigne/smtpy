@@ -19,7 +19,7 @@ from shared.models.user import User, UserRole
 from shared.models.organization import Organization
 from shared.models.domain import Domain
 from shared.models.alias import Alias
-from shared.models.message import Message
+from shared.models.message import Message, MessageStatus
 
 # Create router
 router = APIRouter(prefix="/admin", tags=["admin"])
@@ -106,7 +106,7 @@ async def get_database_stats(
             select(func.count(Message.id)).where(Message.created_at >= month_start)
         )
         messages_failed = await db.scalar(
-            select(func.count(Message.id)).where(Message.status == "failed")
+            select(func.count(Message.id)).where(Message.status == MessageStatus.FAILED)
         )
 
         return {
