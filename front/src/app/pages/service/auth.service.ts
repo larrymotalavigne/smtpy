@@ -44,10 +44,8 @@ export class AuthService implements OnDestroy {
   public currentUser$ = this.currentUserSubject.asObservable();
 
   constructor(private http: HttpClient) {
-    // Check if user is already logged in on app start
-    this.checkAuthStatus().subscribe();
-
     // Set up periodic auth status checks
+    // Note: Initial auth check is handled by APP_INITIALIZER in app.config.ts
     this.startPeriodicAuthCheck();
   }
 
