@@ -5,13 +5,13 @@ import { Card } from 'primeng/card';
 import { Button } from 'primeng/button';
 import { TableModule } from 'primeng/table';
 import { Tag } from 'primeng/tag';
-import { Chart } from 'primeng/chart';
+import { UIChart } from 'primeng/chart';
 import { MessageService } from 'primeng/api';
 import { Toast } from 'primeng/toast';
 import { AdminApiService } from '../service/admin-api.service';
 import { Skeleton } from 'primeng/skeleton';
 import { InputText } from 'primeng/inputtext';
-import { Accordion, AccordionTab } from 'primeng/accordion';
+import { Accordion, AccordionPanel, AccordionHeader, AccordionContent } from 'primeng/accordion';
 
 interface DatabaseStats {
   users: {
@@ -81,20 +81,22 @@ interface SystemHealth {
     Button,
     TableModule,
     Tag,
-    Chart,
+    UIChart,
     Toast,
     Skeleton,
     InputText,
     Accordion,
-    AccordionTab
+    AccordionPanel,
+    AccordionHeader,
+    AccordionContent
   ],
   providers: [MessageService]
 })
 export class AdminComponent implements OnInit {
   loading = true;
-  stats: DatabaseStats | null = null;
+  stats: DatabaseStats | null | undefined = null;
   recentActivity: RecentActivity[] = [];
-  systemHealth: SystemHealth | null = null;
+  systemHealth: SystemHealth | null | undefined = null;
 
   // SMTP Testing
   smtpConfig: any = null;

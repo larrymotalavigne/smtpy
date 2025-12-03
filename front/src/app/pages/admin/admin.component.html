@@ -315,47 +315,53 @@
       <ng-template pTemplate="content">
         <!-- SMTP Configuration Display -->
         @if (smtpConfig) {
-          <p-accordion [activeIndex]="0">
+          <p-accordion [value]="0">
             <!-- Transactional Email Config -->
-            <p-accordionTab header="📧 Configuration Email Transactionnel">
-              <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 1rem;">
-                <div>
-                  <strong>Activé:</strong>
-                  <p-tag
-                    [value]="smtpConfig.transactional_email.enabled ? 'Oui' : 'Non'"
-                    [severity]="smtpConfig.transactional_email.enabled ? 'success' : 'danger'" />
+            <p-accordion-panel [value]="0">
+              <p-accordion-header>📧 Configuration Email Transactionnel</p-accordion-header>
+              <p-accordion-content>
+                <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 1rem;">
+                  <div>
+                    <strong>Activé:</strong>
+                    <p-tag
+                      [value]="smtpConfig.transactional_email.enabled ? 'Oui' : 'Non'"
+                      [severity]="smtpConfig.transactional_email.enabled ? 'success' : 'danger'" />
+                  </div>
+                  <div><strong>Hôte SMTP:</strong> {{ smtpConfig.transactional_email.host }}</div>
+                  <div><strong>Port:</strong> {{ smtpConfig.transactional_email.port }}</div>
+                  <div><strong>Utilisateur:</strong> {{ smtpConfig.transactional_email.username || '(non configuré)' }}</div>
+                  <div>
+                    <strong>Mot de passe:</strong>
+                    <p-tag
+                      [value]="smtpConfig.transactional_email.password_set ? 'Configuré' : 'Non configuré'"
+                      [severity]="smtpConfig.transactional_email.password_set ? 'success' : 'warn'" />
+                  </div>
+                  <div>
+                    <strong>TLS:</strong>
+                    <p-tag [value]="smtpConfig.transactional_email.use_tls ? 'Oui' : 'Non'" />
+                  </div>
                 </div>
-                <div><strong>Hôte SMTP:</strong> {{ smtpConfig.transactional_email.host }}</div>
-                <div><strong>Port:</strong> {{ smtpConfig.transactional_email.port }}</div>
-                <div><strong>Utilisateur:</strong> {{ smtpConfig.transactional_email.username || '(non configuré)' }}</div>
-                <div>
-                  <strong>Mot de passe:</strong>
-                  <p-tag
-                    [value]="smtpConfig.transactional_email.password_set ? 'Configuré' : 'Non configuré'"
-                    [severity]="smtpConfig.transactional_email.password_set ? 'success' : 'warn'" />
-                </div>
-                <div>
-                  <strong>TLS:</strong>
-                  <p-tag [value]="smtpConfig.transactional_email.use_tls ? 'Oui' : 'Non'" />
-                </div>
-              </div>
-            </p-accordionTab>
+              </p-accordion-content>
+            </p-accordion-panel>
 
             <!-- SMTP Relay Config -->
-            <p-accordionTab header="📨 Configuration Relais SMTP">
-              <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 1rem;">
-                <div><strong>Nom d'hôte:</strong> {{ smtpConfig.smtp_relay.hostname }}</div>
-                <div><strong>Mode:</strong> {{ smtpConfig.smtp_relay.delivery_mode }}</div>
-                <div><strong>Hôte:</strong> {{ smtpConfig.smtp_relay.host }}</div>
-                <div><strong>Port:</strong> {{ smtpConfig.smtp_relay.port }}</div>
-                <div>
-                  <strong>DKIM:</strong>
-                  <p-tag
-                    [value]="smtpConfig.smtp_relay.enable_dkim ? 'Activé' : 'Désactivé'"
-                    [severity]="smtpConfig.smtp_relay.enable_dkim ? 'success' : 'warn'" />
+            <p-accordion-panel [value]="1">
+              <p-accordion-header>📨 Configuration Relais SMTP</p-accordion-header>
+              <p-accordion-content>
+                <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 1rem;">
+                  <div><strong>Nom d'hôte:</strong> {{ smtpConfig.smtp_relay.hostname }}</div>
+                  <div><strong>Mode:</strong> {{ smtpConfig.smtp_relay.delivery_mode }}</div>
+                  <div><strong>Hôte:</strong> {{ smtpConfig.smtp_relay.host }}</div>
+                  <div><strong>Port:</strong> {{ smtpConfig.smtp_relay.port }}</div>
+                  <div>
+                    <strong>DKIM:</strong>
+                    <p-tag
+                      [value]="smtpConfig.smtp_relay.enable_dkim ? 'Activé' : 'Désactivé'"
+                      [severity]="smtpConfig.smtp_relay.enable_dkim ? 'success' : 'warn'" />
+                  </div>
                 </div>
-              </div>
-            </p-accordionTab>
+              </p-accordion-content>
+            </p-accordion-panel>
           </p-accordion>
         }
 
