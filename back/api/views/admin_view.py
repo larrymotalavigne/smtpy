@@ -88,10 +88,10 @@ async def get_database_stats(
         # Alias statistics
         aliases_total = await db.scalar(select(func.count(Alias.id)))
         aliases_active = await db.scalar(
-            select(func.count(Alias.id)).where(Alias.is_active == True)
+            select(func.count(Alias.id)).where(Alias.is_deleted == False)
         )
         aliases_inactive = await db.scalar(
-            select(func.count(Alias.id)).where(Alias.is_active == False)
+            select(func.count(Alias.id)).where(Alias.is_deleted == True)
         )
 
         # Message statistics

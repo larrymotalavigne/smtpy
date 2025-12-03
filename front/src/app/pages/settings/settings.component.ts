@@ -61,7 +61,7 @@ interface Session {
 })
 export class SettingsComponent implements OnInit, OnDestroy {
     currentUser: User | null = null;
-    notificationsForm!: FormGroup;
+    notificationsForm: FormGroup;
     loading = false;
     // API Keys
     apiKeys: ApiKey[] = [
@@ -112,16 +112,30 @@ export class SettingsComponent implements OnInit, OnDestroy {
         private confirmationService: ConfirmationService,
         private router: Router
     ) {
+        // Initialize form in constructor to prevent null reference errors
+        this.notificationsForm = this.fb.group({
+            emailOnNewMessage: [true],
+            emailOnDomainVerified: [true],
+            emailOnQuotaWarning: [true],
+            emailWeeklySummary: [false]
+        });
     }
 
     ngOnInit(): void {
+        // Set up form value changes subscription
+        this.notificationsForm.valueChanges
+            .pipe(takeUntil(this.destroy$))
+            .subscribe(() => {
+                this.saveNotificationPreferences();
+            });
+
         // Subscribe to current user
         this.authService.currentUser$
             .pipe(takeUntil(this.destroy$))
             .subscribe(user => {
                 this.currentUser = user;
                 if (user) {
-                    this.initializeNotificationsForm();
+                    this.updateFormWithUserPreferences();
                 }
             });
     }
@@ -366,19 +380,10 @@ export class SettingsComponent implements OnInit, OnDestroy {
         });
     }
 
-    private initializeNotificationsForm(): void {
-        this.notificationsForm = this.fb.group({
-            emailOnNewMessage: [true],
-            emailOnDomainVerified: [true],
-            emailOnQuotaWarning: [true],
-            emailWeeklySummary: [false]
-        });
-
-        // Watch for changes and auto-save
-        this.notificationsForm.valueChanges
-            .pipe(takeUntil(this.destroy$))
-            .subscribe(() => {
-                this.saveNotificationPreferences();
-            });
+    private updateFormWithUserPreferences(): void {
+        // Update form values if user has specific preferences
+        // For now, keeping default values
+        // In the future, you could load user preferences from the backend
+        // and update the form using patchValue
     }
 }
