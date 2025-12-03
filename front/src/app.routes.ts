@@ -1,5 +1,5 @@
 import { Routes } from '@angular/router';
-
+import { authGuard, adminGuard } from './app/core/guards/auth.guard';
 
 export const appRoutes: Routes = [
     {
@@ -11,6 +11,7 @@ export const appRoutes: Routes = [
         loadComponent: () => import('./app/layout/component/app.layout').then(m => m.AppLayout),
         children: [
             { path: 'dashboard', loadComponent: () => import('./app/pages/dashboard/dashboard.component').then(m => m.DashboardComponent) },
+            { path: 'admin', loadComponent: () => import('./app/pages/admin/admin.component').then(m => m.AdminComponent), canActivate: [authGuard, adminGuard] },
             { path: 'domains', loadComponent: () => import('./app/pages/domains/domains.component').then(m => m.DomainsComponent) },
             { path: 'aliases', loadComponent: () => import('./app/pages/aliases/aliases.component').then(m => m.AliasesComponent) },
             { path: 'messages', loadComponent: () => import('./app/pages/messages/messages.component').then(m => m.MessagesComponent) },
