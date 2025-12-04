@@ -402,10 +402,12 @@
 
           @if (smtpDiagnostics) {
             <div style="padding: 1.5rem; background: var(--surface-50); border-radius: 8px;">
-              <p style="color: var(--text-color-secondary); margin-bottom: 1rem;">
-                <i class="pi pi-clock"></i>
-                Exécuté le: {{ smtpDiagnostics.timestamp | date:'medium':'':'fr' }}
-              </p>
+              @if (smtpDiagnostics.timestamp) {
+                <p style="color: var(--text-color-secondary); margin-bottom: 1rem;">
+                  <i class="pi pi-clock"></i>
+                  Exécuté le: {{ smtpDiagnostics.timestamp | date:'medium':'':'fr' }}
+                </p>
+              }
 
               <!-- Transactional Email Diagnostics -->
               <div style="margin-bottom: 2rem;">
@@ -527,7 +529,7 @@
               </td>
               <td>{{ activity.description }}</td>
               <td>{{ activity.user || '-' }}</td>
-              <td>{{ activity.timestamp | date:'short':'':'fr' }}</td>
+              <td>{{ activity.timestamp ? (activity.timestamp | date:'short':'':'fr') : '-' }}</td>
             </tr>
           </ng-template>
         </p-table>
