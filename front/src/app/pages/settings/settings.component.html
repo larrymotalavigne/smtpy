@@ -10,7 +10,7 @@
   <div class="settings-content">
     <!-- Notifications Settings -->
     <p-card class="settings-card">
-      <ng-template pTemplate="header">
+      <ng-template #header>
         <div class="card-header">
           <i class="pi pi-bell"></i>
           <h3>Notifications Email</h3>
@@ -62,7 +62,7 @@
 
     <!-- API Keys Management -->
     <p-card class="settings-card">
-      <ng-template pTemplate="header">
+      <ng-template #header>
         <div class="card-header">
           <i class="pi pi-key"></i>
           <h3>Clés API</h3>
@@ -81,7 +81,7 @@
         </div>
 
         <p-table [value]="apiKeys" styleClass="mt-4">
-          <ng-template pTemplate="header">
+          <ng-template #header>
             <tr>
               <th>Nom</th>
               <th>Clé</th>
@@ -90,7 +90,7 @@
               <th>Actions</th>
             </tr>
           </ng-template>
-          <ng-template pTemplate="body" let-apiKey>
+          <ng-template #body let-apiKey>
             <tr>
               <td><strong>{{ apiKey.name }}</strong></td>
               <td>
@@ -116,7 +116,7 @@
               </td>
             </tr>
           </ng-template>
-          <ng-template pTemplate="emptymessage">
+          <ng-template #emptymessage>
             <tr>
               <td colspan="5" class="text-center">
                 <p class="empty-state">Aucune clé API configurée</p>
@@ -129,7 +129,7 @@
 
     <!-- Active Sessions -->
     <p-card class="settings-card">
-      <ng-template pTemplate="header">
+      <ng-template #header>
         <div class="card-header">
           <i class="pi pi-desktop"></i>
           <h3>Sessions actives</h3>
@@ -186,7 +186,7 @@
 
     <!-- Danger Zone -->
     <p-card class="settings-card danger-card">
-      <ng-template pTemplate="header">
+      <ng-template #header>
         <div class="card-header">
           <i class="pi pi-exclamation-triangle"></i>
           <h3>Zone Dangereuse</h3>
@@ -251,7 +251,7 @@
       </div>
     }
 
-    <ng-template pTemplate="footer">
+    <ng-template #footer>
       @if (!generatedApiKey) {
         <p-button label="Annuler"
           severity="secondary"

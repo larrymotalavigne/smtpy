@@ -3,7 +3,7 @@ import {CommonModule} from '@angular/common';
 import {ReactiveFormsModule} from '@angular/forms';
 import {Subject, takeUntil} from 'rxjs';
 import {MessageService} from 'primeng/api';
-import {BillingApiService} from '../service/billing-api.service';
+import {BillingApiService} from '../../core/services/billing-api.service';
 import {OrganizationBilling, PlanInfo, SubscriptionResponse} from '../../core/interfaces/billing.interface';
 
 // PrimeNG Modules

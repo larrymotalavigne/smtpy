@@ -19,7 +19,7 @@ import {AvatarModule} from 'primeng/avatar';
 import {ProgressBarModule} from 'primeng/progressbar';
 
 import {DNSRecords, DomainResponse, DomainStatus} from '../../core/interfaces/domain.interface';
-import {DomainsApiService} from '../service/domains-api.service';
+import {DomainsApiService} from '../../core/services/domains-api.service';
 
 interface DomainWithStats extends DomainResponse {
     aliasCount?: number;

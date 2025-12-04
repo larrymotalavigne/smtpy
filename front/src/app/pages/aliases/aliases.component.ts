@@ -6,8 +6,8 @@ import {ActivatedRoute, Router} from '@angular/router';
 
 import {AliasCreate, AliasListItem, AliasResponse, AliasUpdate} from '../../core/interfaces/alias.interface';
 import {DomainResponse} from '../../core/interfaces/domain.interface';
-import {AliasesApiService} from '../service/aliases-api.service';
-import {DomainsApiService} from '../service/domains-api.service';
+import {AliasesApiService} from '../../core/services/aliases-api.service';
+import {DomainsApiService} from '../../core/services/domains-api.service';
 import {Select} from 'primeng/select';
 import {Button} from 'primeng/button';
 import {Card} from 'primeng/card';

@@ -8,7 +8,7 @@ import { Tag } from 'primeng/tag';
 import { UIChart } from 'primeng/chart';
 import { MessageService } from 'primeng/api';
 import { Toast } from 'primeng/toast';
-import { AdminApiService } from '../service/admin-api.service';
+import { AdminApiService } from '../../core/services/admin-api.service';
 import { Skeleton } from 'primeng/skeleton';
 import { InputText } from 'primeng/inputtext';
 import { Accordion, AccordionPanel, AccordionHeader, AccordionContent } from 'primeng/accordion';

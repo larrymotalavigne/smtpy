@@ -45,7 +45,7 @@
         class="p-datatable-sm"
         [globalFilterFields]="['full_address', 'local_part', 'domain_name']">
 
-        <ng-template pTemplate="header">
+        <ng-template #header>
           <tr>
             <th>Adresse complète</th>
             <th>Destinations</th>
@@ -55,7 +55,7 @@
           </tr>
         </ng-template>
 
-        <ng-template pTemplate="body" let-alias>
+        <ng-template #body let-alias>
           <tr>
             <!-- Full Address -->
             <td>
@@ -119,7 +119,7 @@
           </tr>
         </ng-template>
 
-        <ng-template pTemplate="emptymessage">
+        <ng-template #emptymessage>
           <tr>
             <td colspan="5" class="empty-message">
               <div class="empty-state">
@@ -146,7 +146,7 @@
   [style]="{width: '600px'}"
   [draggable]="false"
   [resizable]="false">
-  <ng-template pTemplate="content">
+  <ng-template #content>
     <form [formGroup]="addAliasForm" class="alias-form">
       <div class="form-field">
         <label for="domain">Domaine *</label>
@@ -221,7 +221,7 @@
       </div>
     </form>
   </ng-template>
-  <ng-template pTemplate="footer">
+  <ng-template #footer>
     <p-button label="Annuler"
       severity="secondary"
       [text]="true"
@@ -242,7 +242,7 @@
   [style]="{width: '600px'}"
   [draggable]="false"
   [resizable]="false">
-  <ng-template pTemplate="content">
+  <ng-template #content>
     <form [formGroup]="editAliasForm" class="alias-form">
       <div class="form-field">
         <label for="editTargets">Adresses de destination *</label>
@@ -274,7 +274,7 @@
       </div>
     </form>
   </ng-template>
-  <ng-template pTemplate="footer">
+  <ng-template #footer>
     <p-button label="Annuler"
       severity="secondary"
       [text]="true"

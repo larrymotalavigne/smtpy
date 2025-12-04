@@ -8,7 +8,7 @@ import { MessageService, ConfirmationService } from 'primeng/api';
 import { appRoutes } from './app.routes';
 import { authInterceptor } from './app/core/interceptors/auth.interceptor';
 import { errorInterceptor } from './app/core/interceptors/error.interceptor';
-import { AuthService } from './app/pages/service/auth.service';
+import { AuthService } from './app/core/services/auth.service';
 import { firstValueFrom } from 'rxjs';
 
 /**

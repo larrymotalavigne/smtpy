@@ -2,7 +2,7 @@ import { Component, OnInit } from '@angular/core';
 
 import { ReactiveFormsModule, FormBuilder, FormGroup } from '@angular/forms';
 import { MessageResponse, MessageStatus, MessageFilter } from '../../core/interfaces/message.interface';
-import { MessagesApiService } from '../service/messages-api.service';
+import { MessagesApiService } from '../../core/services/messages-api.service';
 
 // PrimeNG Modules
 import { CardModule } from 'primeng/card';

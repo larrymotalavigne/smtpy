@@ -18,7 +18,7 @@
 
     <!-- Filters -->
     <p-card class="filters-card">
-        <ng-template pTemplate="content">
+        <ng-template #content>
             <div class="filters-grid">
                 <div class="filter-item">
                     <label for="period">Période:</label>
@@ -145,12 +145,12 @@
 
         <!-- Domain Breakdown Chart -->
         <p-card class="chart-card">
-            <ng-template pTemplate="header">
+            <ng-template #header>
                 <div class="card-header">
                     <h3>Répartition par domaine</h3>
                 </div>
             </ng-template>
-            <ng-template pTemplate="content">
+            <ng-template #content>
                 @if (!loading && domainStats.length > 0) {
                     <div class="chart-wrapper domain-chart">
                         <canvas #domainBreakdownCanvas></canvas>
@@ -166,18 +166,18 @@
     <!-- Domain Statistics Table -->
     @if (!loading && domainStats.length > 0) {
         <p-card class="table-card">
-            <ng-template pTemplate="header">
+            <ng-template #header>
                 <div class="card-header">
                     <h3>Statistiques par domaine</h3>
                 </div>
             </ng-template>
-            <ng-template pTemplate="content">
+            <ng-template #content>
                 <p-table
                     [value]="domainStats"
                     [paginator]="false"
                     [tableStyle]="{ 'min-width': '60rem' }"
                     class="p-datatable-sm">
-                    <ng-template pTemplate="header">
+                    <ng-template #header>
                         <tr>
                             <th>Domaine</th>
                             <th class="text-right">Total emails</th>
@@ -187,7 +187,7 @@
                             <th class="text-right">% du total</th>
                         </tr>
                     </ng-template>
-                    <ng-template pTemplate="body" let-domain>
+                    <ng-template #body let-domain>
                         <tr>
                             <td>
                                 <div class="domain-cell">
@@ -227,18 +227,18 @@
     <!-- Top Aliases Table -->
     @if (!loading && topAliases.length > 0) {
         <p-card class="table-card">
-            <ng-template pTemplate="header">
+            <ng-template #header>
                 <div class="card-header">
                     <h3>Top des alias les plus utilisés</h3>
                 </div>
             </ng-template>
-            <ng-template pTemplate="content">
+            <ng-template #content>
                 <p-table
                     [value]="topAliases"
                     [paginator]="false"
                     [tableStyle]="{ 'min-width': '50rem' }"
                     class="p-datatable-sm">
-                    <ng-template pTemplate="header">
+                    <ng-template #header>
                         <tr>
                             <th>Alias</th>
                             <th>Domaine</th>
@@ -246,7 +246,7 @@
                             <th class="text-right">Dernière utilisation</th>
                         </tr>
                     </ng-template>
-                    <ng-template pTemplate="body" let-alias let-i="rowIndex">
+                    <ng-template #body let-alias let-i="rowIndex">
                         <tr>
                             <td>
                                 <div class="alias-cell">
@@ -274,7 +274,7 @@
     <!-- Empty State -->
     @if (!loading && (!overallStats || overallStats.total_emails === 0)) {
         <p-card class="empty-state">
-            <ng-template pTemplate="content">
+            <ng-template #content>
                 <div class="empty-content">
                     <i class="pi pi-chart-bar"></i>
                     <h3>Aucune donnée disponible</h3>

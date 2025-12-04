@@ -16,8 +16,8 @@ import { TagModule } from 'primeng/tag';
 import { SkeletonModule } from 'primeng/skeleton';
 
 // Services
-import { AuthService, User } from '../service/auth.service';
-import { UsersApiService } from '../service/users-api.service';
+import { AuthService, User } from '../../core/services/auth.service';
+import { UsersApiService } from '../../core/services/users-api.service';
 
 // Layout
 
