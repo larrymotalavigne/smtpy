@@ -9,7 +9,7 @@
 
   <!-- Filters -->
   <p-card class="filters-card">
-    <ng-template pTemplate="content">
+    <ng-template #content>
       <form [formGroup]="filterForm" class="filters-form">
         <div class="filter-row">
           <div class="filter-field">
@@ -70,7 +70,7 @@
 
   <!-- Messages Table -->
   <p-card class="messages-card">
-    <ng-template pTemplate="content">
+    <ng-template #content>
       <p-table
         [value]="messages"
         [loading]="loading"
@@ -85,7 +85,7 @@
         styleClass="p-datatable-sm"
         [globalFilterFields]="['sender_email', 'recipient_email', 'subject']">
 
-        <ng-template pTemplate="header">
+        <ng-template #header>
           <tr>
             <th style="width: 60px"></th>
             <th>De / À</th>
@@ -97,7 +97,7 @@
           </tr>
         </ng-template>
 
-        <ng-template pTemplate="body" let-message>
+        <ng-template #body let-message>
           <tr [class.message-row-clickable]="true" (click)="viewMessageDetails(message)">
             <!-- Avatar -->
             <td>
@@ -204,7 +204,7 @@
           </tr>
         </ng-template>
 
-        <ng-template pTemplate="emptymessage">
+        <ng-template #emptymessage>
           <tr>
             <td colspan="7" class="empty-message">
               <div class="empty-state">
@@ -228,7 +228,7 @@
   [style]="{width: '700px'}"
   [draggable]="false"
   [resizable]="false">
-  <ng-template pTemplate="content">
+  <ng-template #content>
     @if (selectedMessage) {
       <div class="message-detail">
         <!-- Status Banner -->
@@ -303,7 +303,7 @@
       </div>
     }
   </ng-template>
-  <ng-template pTemplate="footer">
+  <ng-template #footer>
     <p-button label="Fermer"
       severity="secondary"
       (onClick)="displayDetailDialog = false" />

@@ -17,12 +17,12 @@
   <div class="top-cards">
     <!-- Current Subscription Card -->
     <p-card class="subscription-card">
-      <ng-template pTemplate="header">
+      <ng-template #header>
         <div class="card-header">
           <h3>Abonnement actuel</h3>
         </div>
       </ng-template>
-      <ng-template pTemplate="content">
+      <ng-template #content>
         @if (!loading) {
           <div>
             @if (subscription?.is_active) {
@@ -87,12 +87,12 @@
     <!-- Usage & Limits Card -->
     @if (usageLimits) {
       <p-card class="usage-card">
-        <ng-template pTemplate="header">
+        <ng-template #header>
           <div class="card-header">
             <h3>Utilisation & Limites</h3>
           </div>
         </ng-template>
-        <ng-template pTemplate="content">
+        <ng-template #content>
           @if (!loading) {
             <div>
               <!-- Domains Usage -->
@@ -209,12 +209,12 @@
   <!-- Organization Info -->
   @if (!loading && organizationBilling) {
     <p-card class="organization-card">
-      <ng-template pTemplate="header">
+      <ng-template #header>
         <div class="card-header">
           <h3>Informations de l'organisation</h3>
         </div>
       </ng-template>
-      <ng-template pTemplate="content">
+      <ng-template #content>
         <div class="organization-grid">
           <div class="org-info-item">
             <span class="org-label">Email de facturation:</span>

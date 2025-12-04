@@ -1,7 +1,7 @@
 import {HttpInterceptorFn} from '@angular/common/http';
 import {inject} from '@angular/core';
 import {tap} from 'rxjs/operators';
-import {AuthService} from '@/pages/service/auth.service';
+import {AuthService} from '@/core/services/auth.service';
 
 /**
  * Auth interceptor to add credentials to all HTTP requests

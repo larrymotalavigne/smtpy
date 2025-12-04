@@ -11,7 +11,7 @@
 
     <!-- Register Form Card -->
     <p-card class="auth-card">
-      <ng-template pTemplate="content">
+      <ng-template #content>
         <form [formGroup]="registerForm" (ngSubmit)="onSubmit()" class="auth-form">
           <!-- Error Message -->
           @if (errorMessage) {

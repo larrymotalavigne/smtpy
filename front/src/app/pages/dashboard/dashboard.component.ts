@@ -13,8 +13,8 @@ import {ToastModule} from 'primeng/toast';
 import {MessageService} from 'primeng/api';
 import {SkeletonModule} from 'primeng/skeleton';
 
-import {StatisticsApiService} from '../service/statistics-api.service';
-import {DomainsApiService} from '../service/domains-api.service';
+import {StatisticsApiService} from '../../core/services/statistics-api.service';
+import {DomainsApiService} from '../../core/services/domains-api.service';
 import {DomainList, DomainStatus} from '../../core/interfaces/domain.interface';
 
 interface DomainSummary {

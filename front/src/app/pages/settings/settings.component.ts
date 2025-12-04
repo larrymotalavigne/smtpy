@@ -18,8 +18,8 @@ import {DialogModule} from 'primeng/dialog';
 import {TableModule} from 'primeng/table';
 
 // Services
-import {AuthService, User} from '../service/auth.service';
-import {UsersApiService} from '../service/users-api.service';
+import {AuthService, User} from '../../core/services/auth.service';
+import {UsersApiService} from '../../core/services/users-api.service';
 
 // Layout
 

@@ -19,13 +19,13 @@
   @if (systemHealth) {
     <div class="health-cards">
       <p-card class="health-card">
-        <ng-template pTemplate="header">
+        <ng-template #header>
           <div class="card-header">
             <i class="pi pi-database"></i>
             <h3>Base de données</h3>
           </div>
         </ng-template>
-        <ng-template pTemplate="content">
+        <ng-template #content>
           <div class="health-content">
             <p-tag
               [value]="systemHealth.database.status"
@@ -40,13 +40,13 @@
 
       @if (systemHealth.redis) {
         <p-card class="health-card">
-          <ng-template pTemplate="header">
+          <ng-template #header>
             <div class="card-header">
               <i class="pi pi-server"></i>
               <h3>Redis</h3>
             </div>
           </ng-template>
-          <ng-template pTemplate="content">
+          <ng-template #content>
             <div class="health-content">
               <p-tag
                 [value]="systemHealth.redis.status"
@@ -60,13 +60,13 @@
       }
 
       <p-card class="health-card">
-        <ng-template pTemplate="header">
+        <ng-template #header>
           <div class="card-header">
             <i class="pi pi-send"></i>
             <h3>SMTP</h3>
           </div>
         </ng-template>
-        <ng-template pTemplate="content">
+        <ng-template #content>
           <div class="health-content">
             <p-tag
               [value]="systemHealth.smtp.status"
@@ -85,13 +85,13 @@
     <div class="stats-grid">
       <!-- Users Card -->
       <p-card class="stat-card">
-        <ng-template pTemplate="header">
+        <ng-template #header>
           <div class="card-header">
             <i class="pi pi-users"></i>
             <h3>Utilisateurs</h3>
           </div>
         </ng-template>
-        <ng-template pTemplate="content">
+        <ng-template #content>
           <div class="stat-content">
             <div class="stat-main">
               <span class="stat-number">{{ stats.users.total }}</span>
@@ -117,13 +117,13 @@
 
       <!-- Organizations Card -->
       <p-card class="stat-card">
-        <ng-template pTemplate="header">
+        <ng-template #header>
           <div class="card-header">
             <i class="pi pi-building"></i>
             <h3>Organisations</h3>
           </div>
         </ng-template>
-        <ng-template pTemplate="content">
+        <ng-template #content>
           <div class="stat-content">
             <div class="stat-main">
               <span class="stat-number">{{ stats.organizations.total }}</span>
@@ -145,13 +145,13 @@
 
       <!-- Domains Card -->
       <p-card class="stat-card">
-        <ng-template pTemplate="header">
+        <ng-template #header>
           <div class="card-header">
             <i class="pi pi-globe"></i>
             <h3>Domaines</h3>
           </div>
         </ng-template>
-        <ng-template pTemplate="content">
+        <ng-template #content>
           <div class="stat-content">
             <div class="stat-main">
               <span class="stat-number">{{ stats.domains.total }}</span>
@@ -177,13 +177,13 @@
 
       <!-- Aliases Card -->
       <p-card class="stat-card">
-        <ng-template pTemplate="header">
+        <ng-template #header>
           <div class="card-header">
             <i class="pi pi-at"></i>
             <h3>Alias</h3>
           </div>
         </ng-template>
-        <ng-template pTemplate="content">
+        <ng-template #content>
           <div class="stat-content">
             <div class="stat-main">
               <span class="stat-number">{{ stats.aliases.total }}</span>
@@ -205,13 +205,13 @@
 
       <!-- Messages Card -->
       <p-card class="stat-card messages">
-        <ng-template pTemplate="header">
+        <ng-template #header>
           <div class="card-header">
             <i class="pi pi-envelope"></i>
             <h3>Messages</h3>
           </div>
         </ng-template>
-        <ng-template pTemplate="content">
+        <ng-template #content>
           <div class="stat-content">
             <div class="stat-main">
               <span class="stat-number">{{ stats.messages.total }}</span>
@@ -245,37 +245,37 @@
     <!-- Charts Section -->
     <div class="charts-grid">
       <p-card class="chart-card">
-        <ng-template pTemplate="header">
+        <ng-template #header>
           <h3>Statut des domaines</h3>
         </ng-template>
-        <ng-template pTemplate="content">
+        <ng-template #content>
           <p-chart type="pie" [data]="domainStatusData" [options]="chartOptions" />
         </ng-template>
       </p-card>
 
       <p-card class="chart-card">
-        <ng-template pTemplate="header">
+        <ng-template #header>
           <h3>Répartition des abonnements</h3>
         </ng-template>
-        <ng-template pTemplate="content">
+        <ng-template #content>
           <p-chart type="pie" [data]="subscriptionData" [options]="chartOptions" />
         </ng-template>
       </p-card>
 
       <p-card class="chart-card wide">
-        <ng-template pTemplate="header">
+        <ng-template #header>
           <h3>Volume de messages</h3>
         </ng-template>
-        <ng-template pTemplate="content">
+        <ng-template #content>
           <p-chart type="bar" [data]="messageVolumeData" [options]="chartOptions" />
         </ng-template>
       </p-card>
 
       <p-card class="chart-card wide">
-        <ng-template pTemplate="header">
+        <ng-template #header>
           <h3>Statistiques utilisateurs</h3>
         </ng-template>
-        <ng-template pTemplate="content">
+        <ng-template #content>
           <p-chart type="line" [data]="userGrowthData" [options]="chartOptions" />
         </ng-template>
       </p-card>
@@ -298,7 +298,7 @@
   <!-- SMTP Configuration and Testing -->
   @if (!loading) {
     <p-card class="smtp-testing-card" styleClass="mt-4">
-      <ng-template pTemplate="header">
+      <ng-template #header>
         <div class="card-header" style="display: flex; justify-content: space-between; align-items: center; padding: 1rem;">
           <div>
             <i class="pi pi-envelope"></i>
@@ -312,7 +312,7 @@
             size="small" />
         </div>
       </ng-template>
-      <ng-template pTemplate="content">
+      <ng-template #content>
         <!-- SMTP Configuration Display -->
         @if (smtpConfig) {
           <p-accordion [value]="0">
@@ -499,14 +499,14 @@
   <!-- Recent Activity -->
   @if (!loading && recentActivity.length > 0) {
     <p-card class="activity-card">
-      <ng-template pTemplate="header">
+      <ng-template #header>
         <div class="card-header">
           <h3>Activité récente</h3>
         </div>
       </ng-template>
-      <ng-template pTemplate="content">
+      <ng-template #content>
         <p-table [value]="recentActivity" [rows]="10" [paginator]="true">
-          <ng-template pTemplate="header">
+          <ng-template #header>
             <tr>
               <th style="width: 3rem"></th>
               <th>Type</th>
@@ -515,7 +515,7 @@
               <th>Date</th>
             </tr>
           </ng-template>
-          <ng-template pTemplate="body" let-activity>
+          <ng-template #body let-activity>
             <tr>
               <td>
                 <i [class]="'pi ' + getActivityIcon(activity.type)"></i>

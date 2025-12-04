@@ -16,7 +16,7 @@ import { ToastModule } from 'primeng/toast';
 import { MessageService } from 'primeng/api';
 
 // Services
-import { StatisticsApiService } from '../service/statistics-api.service';
+import { StatisticsApiService } from '../../core/services/statistics-api.service';
 
 // Layout
 

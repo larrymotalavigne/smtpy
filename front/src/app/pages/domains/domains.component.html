@@ -12,7 +12,7 @@
 
   <!-- Domains Table -->
   <p-card class="domains-card">
-    <ng-template pTemplate="content">
+    <ng-template #content>
       <p-table
         [value]="domains"
         [loading]="loading"
@@ -24,7 +24,7 @@
         styleClass="p-datatable-sm"
         [globalFilterFields]="['name', 'status']">
 
-        <ng-template pTemplate="header">
+        <ng-template #header>
           <tr>
             <th>Domaine</th>
             <th>Statut</th>
@@ -35,7 +35,7 @@
           </tr>
         </ng-template>
 
-        <ng-template pTemplate="body" let-domain>
+        <ng-template #body let-domain>
           <tr>
             <!-- Domain Name -->
             <td>
@@ -170,7 +170,7 @@
           </tr>
         </ng-template>
 
-        <ng-template pTemplate="emptymessage">
+        <ng-template #emptymessage>
           <tr>
             <td colspan="6" class="empty-message">
               <div class="empty-state">
@@ -197,7 +197,7 @@
   [style]="{width: '500px'}"
   [draggable]="false"
   [resizable]="false">
-  <ng-template pTemplate="content">
+  <ng-template #content>
     <form [formGroup]="addDomainForm" class="add-domain-form">
       <div class="form-field">
         <label for="domainName">Nom de domaine</label>
@@ -224,7 +224,7 @@
       </div>
     </form>
   </ng-template>
-  <ng-template pTemplate="footer">
+  <ng-template #footer>
     <p-button label="Annuler"
       severity="secondary"
       [text]="true"
@@ -245,7 +245,7 @@
   [style]="{width: '800px', 'max-width': '95vw'}"
   [draggable]="false"
   [resizable]="false">
-  <ng-template pTemplate="content">
+  <ng-template #content>
     @if (selectedDomain) {
       <div class="dns-dialog-content">
         <div class="dns-intro-section">
@@ -613,7 +613,7 @@
       </div>
     }
   </ng-template>
-  <ng-template pTemplate="footer">
+  <ng-template #footer>
     <p-button label="Fermer"
       severity="secondary"
       (onClick)="displayDNSDialog = false" />

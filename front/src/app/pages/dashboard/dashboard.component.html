@@ -51,7 +51,7 @@
   <div class="content-grid">
     <!-- Email Activity Chart -->
     <p-card class="chart-card">
-      <ng-template pTemplate="header">
+      <ng-template #header>
         <div class="card-header">
           <h3>Activité des 7 derniers jours</h3>
           <p-button icon="pi pi-ellipsis-v"
@@ -60,7 +60,7 @@
             size="small" />
         </div>
       </ng-template>
-      <ng-template pTemplate="content">
+      <ng-template #content>
         <div class="chart-wrapper">
           <!-- Loading State -->
           @if (loadingChart) {
@@ -88,12 +88,12 @@
 
     <!-- Quick Actions -->
     <p-card class="quick-actions-card">
-      <ng-template pTemplate="header">
+      <ng-template #header>
         <div class="card-header">
           <h3>Actions rapides</h3>
         </div>
       </ng-template>
-      <ng-template pTemplate="content">
+      <ng-template #content>
         <div class="quick-actions">
           <button class="quick-action-btn" (click)="navigateTo('/domains')">
             <div class="action-icon bg-blue-100">
@@ -134,7 +134,7 @@
 
   <!-- Recent Domains Table -->
   <p-card class="domains-card">
-    <ng-template pTemplate="header">
+    <ng-template #header>
       <div class="card-header">
         <h3>Domaines récents</h3>
         <p-button label="Voir tout"
@@ -144,9 +144,9 @@
           (onClick)="navigateTo('/domains')" />
       </div>
     </ng-template>
-    <ng-template pTemplate="content">
+    <ng-template #content>
       <p-table [value]="recentDomains" [loading]="loadingDomains" [tableStyle]="{'min-width': '50rem'}" styleClass="p-datatable-sm">
-        <ng-template pTemplate="header">
+        <ng-template #header>
           <tr>
             <th>Domaine</th>
             <th>Statut</th>
@@ -156,7 +156,7 @@
             <th>Actions</th>
           </tr>
         </ng-template>
-        <ng-template pTemplate="body" let-domain>
+        <ng-template #body let-domain>
           <tr>
             <td>
               <div class="domain-cell">
@@ -188,7 +188,7 @@
             </td>
           </tr>
         </ng-template>
-        <ng-template pTemplate="emptymessage">
+        <ng-template #emptymessage>
           <tr>
             <td colspan="6">
               <div class="empty-state-table">

@@ -2,7 +2,7 @@ import { Component } from '@angular/core';
 import { RouterModule } from '@angular/router';
 import { ButtonModule } from 'primeng/button';
 import { RippleModule } from 'primeng/ripple';
-import { AuthService } from '../../service/auth.service';
+import { AuthService } from '../../../core/services/auth.service';
 import { AsyncPipe } from '@angular/common';
 
 @Component({
