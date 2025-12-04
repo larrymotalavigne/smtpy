@@ -200,10 +200,10 @@ To ensure this doesn't break again:
    npm run build -- --configuration production
 
    # Check the built files contain /api instead of localhost
-   grep -r "localhost:8000" dist/sakai-ng/browser
+   grep -r "localhost:8000" dist/app/browser
    # Should return nothing
 
-   grep -r "apiUrl" dist/sakai-ng/browser | head -1
+   grep -r "apiUrl" dist/app/browser | head -1
    # Should show: apiUrl:"/api"
    ```
 
