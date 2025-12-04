@@ -6,7 +6,7 @@ import { Button } from 'primeng/button';
 import { TableModule } from 'primeng/table';
 import { Tag } from 'primeng/tag';
 import { UIChart } from 'primeng/chart';
-import { MessageService } from 'primeng/api';
+import { MessageService, SharedModule } from 'primeng/api';
 import { Toast } from 'primeng/toast';
 import { AdminApiService } from '../../core/services/admin-api.service';
 import { Skeleton } from 'primeng/skeleton';
@@ -88,7 +88,8 @@ interface SystemHealth {
     Accordion,
     AccordionPanel,
     AccordionHeader,
-    AccordionContent
+    AccordionContent,
+    SharedModule
   ],
   providers: [MessageService]
 })
