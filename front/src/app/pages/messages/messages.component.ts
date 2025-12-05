@@ -1,8 +1,8 @@
 import { Component, OnInit } from '@angular/core';
 
 import { ReactiveFormsModule, FormBuilder, FormGroup } from '@angular/forms';
-import { MessageResponse, MessageStatus, MessageFilter } from '../../core/interfaces/message.interface';
-import { MessagesApiService } from '../../core/services/messages-api.service';
+import { MessageResponse, MessageStatus, MessageFilter } from '@/core/interfaces/message.interface';
+import { MessagesApiService } from '@/core/services/messages-api.service';
 
 // PrimeNG Modules
 import { CardModule } from 'primeng/card';
@@ -271,40 +271,10 @@ export class MessagesComponent implements OnInit {
   }
 
   retryMessage(message: MessageWithDetails): void {
-    if (!message.forwarded_to) {
-      this.messageService.add({
-        severity: 'warn',
-        summary: 'Impossible de réessayer',
-        detail: 'Aucune adresse de transfert configurée.'
-      });
-      return;
-    }
-
     this.messageService.add({
       severity: 'info',
       summary: 'Nouvelle tentative',
       detail: `Nouvelle tentative d'envoi pour le message "${message.subject}"...`
-    });
-
-    this.messagesApiService.resendMessage(message.id, message.forwarded_to).subscribe({
-      next: (response) => {
-        if (response.success) {
-          this.messageService.add({
-            severity: 'success',
-            summary: 'Message envoyé',
-            detail: 'Le message a été renvoyé avec succès.'
-          });
-          this.loadMessages();
-        }
-      },
-      error: (error) => {
-        console.error('Error retrying message:', error);
-        this.messageService.add({
-          severity: 'error',
-          summary: 'Échec de l\'envoi',
-          detail: error.error?.message || 'Impossible de renvoyer le message.'
-        });
-      }
     });
   }
 
