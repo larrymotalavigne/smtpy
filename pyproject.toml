@@ -5,7 +5,7 @@ description = "Custom email aliasing and forwarding."
 authors = [
     { name = "ATOM STUDIOS", email = "larry@atomstudios.fr" }
 ]
-requires-python = ">=3.14"
+requires-python = ">=3.11"
 
 dependencies = [
     "fastapi",
@@ -111,6 +111,11 @@ markers = [
     "slow: marks tests as slow (deselect with '-m \"not slow\"')",
     "integration: marks tests as integration tests",
     "unit: marks tests as unit tests",
+]
+filterwarnings = [
+    "ignore::DeprecationWarning:testcontainers.*",
+    "error::DeprecationWarning",
+    "error::pytest.PytestUnraisableExceptionWarning",
 ]
 
 [tool.coverage.run]

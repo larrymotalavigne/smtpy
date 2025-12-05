@@ -674,7 +674,7 @@ async def resend_verification(
         # Send verification email
         from ..services.email_service import EmailService
 
-        email_sent = EmailService.send_email_verification(
+        email_sent = await EmailService.send_email_verification(
             to=user.email,
             username=user.username,
             verification_token=verification_token.token
