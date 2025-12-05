@@ -148,6 +148,9 @@ jobs:
           - service: api
             dockerfile: ./back/api/Dockerfile.prod
             context: .
+          - service: smtp-receiver
+            dockerfile: ./back/smtp_receiver/Dockerfile.prod
+            context: .
           - service: front
             dockerfile: ./front/Dockerfile.prod
             context: ./front

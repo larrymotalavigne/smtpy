@@ -50,11 +50,21 @@ class Settings(BaseSettings):
     # DNS Configuration
     DNS_CHECK_ENABLED: bool = Field(default=True, description="Enable DNS verification checks")
 
-    # Email Configuration (for sending transactional emails)
+    # Email Configuration (for sending transactional emails via Docker mailserver)
     EMAIL_ENABLED: bool = Field(default=True, description="Enable email sending")
-    EMAIL_BACKEND: str = Field(default="smtp", description="Email backend (smtp, sendgrid, ses)")
     EMAIL_FROM: str = Field(default="noreply@smtpy.local", description="Default from email address")
     EMAIL_FROM_NAME: str = Field(default="SMTPy", description="Default from name")
+
+    # Docker Mailserver Configuration
+    MAILSERVER_HOST: str = Field(default="mailserver", description="Docker mailserver hostname")
+    MAILSERVER_PORT: int = Field(default=587, description="Mailserver SMTP submission port")
+    MAILSERVER_USER: str = Field(default="", description="Mailserver username (if auth required)")
+    MAILSERVER_PASSWORD: str = Field(default="", description="Mailserver password (if auth required)")
+    MAILSERVER_USE_TLS: bool = Field(default=True, description="Use STARTTLS for mailserver connection")
+
+    # SMTP Receiver Configuration (for receiving emails from mailserver)
+    SMTP_RECEIVER_HOST: str = Field(default="0.0.0.0", description="SMTP receiver bind address")
+    SMTP_RECEIVER_PORT: int = Field(default=2525, description="SMTP receiver port")
 
     # Application URLs
     APP_URL: str = Field(default="http://localhost:4200", description="Frontend application URL")

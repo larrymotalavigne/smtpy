@@ -24,6 +24,8 @@ dependencies = [
     "python-json-logger",
     "alembic",
     "cryptography",
+    "aiosmtpd",
+    "aiosmtplib",
 ]
 
 [project.optional-dependencies]

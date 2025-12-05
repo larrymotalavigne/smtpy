@@ -96,6 +96,18 @@ services:
       # Logging
       - LOG_LEVEL=${LOG_LEVEL:-INFO}
 
+      # Mailserver
+      - MAILSERVER_HOST=${MAILSERVER_HOST:-mailserver}
+      - MAILSERVER_PORT=${MAILSERVER_PORT:-587}
+      - MAILSERVER_USER=${MAILSERVER_USER:-}
+      - MAILSERVER_PASSWORD=${MAILSERVER_PASSWORD:-}
+      - MAILSERVER_USE_TLS=${MAILSERVER_USE_TLS:-true}
+
+      # Email
+      - EMAIL_ENABLED=${EMAIL_ENABLED:-true}
+      - EMAIL_FROM=${EMAIL_FROM:-noreply@smtpy.local}
+      - EMAIL_FROM_NAME=${EMAIL_FROM_NAME:-SMTPy}
+
     # Note: No external port mapping - API is accessed via nginx reverse proxy
     # The nginx proxy will route traffic to this service
     # This prevents port conflicts with other services on the host
@@ -144,6 +156,61 @@ services:
         echo 'Starting API server with $$API_WORKERS workers...' &&
         uvicorn api.main:create_app --host 0.0.0.0 --port 8000 --factory --workers $$API_WORKERS
       "
+
+  smtp-receiver:
+    container_name: smtpy-smtp-receiver
+    image: ${DOCKER_REGISTRY:-ghcr.io}/${GHCR_OWNER}/smtpy-smtp-receiver:${TAG:-latest}
+    environment:
+      # Database
+      - DATABASE_URL=postgresql+psycopg://${POSTGRES_USER:-postgres}:${POSTGRES_PASSWORD}@db:5432/${POSTGRES_DB:-smtpy}
+
+      # Mailserver
+      - MAILSERVER_HOST=${MAILSERVER_HOST:-mailserver}
+      - MAILSERVER_PORT=${MAILSERVER_PORT:-587}
+      - MAILSERVER_USER=${MAILSERVER_USER:-}
+      - MAILSERVER_PASSWORD=${MAILSERVER_PASSWORD:-}
+      - MAILSERVER_USE_TLS=${MAILSERVER_USE_TLS:-true}
+
+      # SMTP Receiver
+      - SMTP_RECEIVER_HOST=${SMTP_RECEIVER_HOST:-0.0.0.0}
+      - SMTP_RECEIVER_PORT=${SMTP_RECEIVER_PORT:-2525}
+
+      # Logging
+      - LOG_LEVEL=${LOG_LEVEL:-INFO}
+
+    ports:
+      - "2525:2525"  # Expose SMTP receiver port for mailserver to connect
+
+    depends_on:
+      db:
+        condition: service_healthy
+
+    healthcheck:
+      test: ["CMD", "python", "-c", "import socket; s = socket.socket(); s.connect(('localhost', 2525)); s.close()"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 40s
+
+    restart: unless-stopped
+
+    deploy:
+      resources:
+        limits:
+          cpus: '1'
+          memory: 1G
+        reservations:
+          cpus: '0.5'
+          memory: 512M
+
+    networks:
+      - smtpy-network
+
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "10m"
+        max-file: "3"
 
   front:
     container_name: smtpy-front
