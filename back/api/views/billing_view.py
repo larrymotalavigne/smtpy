@@ -10,6 +10,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 from ..controllers import billing_controller
 from shared.core.db import get_db
+from shared.core.logging_config import get_logger
 from ..schemas.common import ErrorResponse
 from ..views.auth_view import get_current_user
 from ..schemas.billing import (
@@ -19,6 +20,8 @@ from ..schemas.billing import (
     OrganizationBilling,
     SubscriptionResponse,
 )
+
+logger = get_logger(__name__)
 
 # Router for billing
 router = APIRouter(prefix="/billing", tags=["billing"])
@@ -54,14 +57,32 @@ async def create_checkout_session(
             checkout_request=checkout_request,
         )
     except ValueError as e:
+        error_msg = str(e)
+        logger.error(
+            "Bad request creating checkout session",
+            extra={
+                "organization_id": organization_id,
+                "price_id": checkout_request.price_id,
+                "error": error_msg
+            }
+        )
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST,
-            detail=str(e),
+            detail=error_msg,
         )
-    except Exception:
+    except Exception as e:
+        logger.exception(
+            "Unexpected error creating checkout session",
+            extra={
+                "organization_id": organization_id,
+                "price_id": checkout_request.price_id,
+                "error_type": type(e).__name__,
+                "error": str(e)
+            }
+        )
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail="Failed to create checkout session",
+            detail=f"Failed to create checkout session: {str(e)}",
         )
 
 
@@ -93,19 +114,35 @@ async def get_customer_portal(
             organization_id=organization_id,
         )
     except ValueError as e:
-        if "not found" in str(e).lower():
+        error_msg = str(e)
+        logger.error(
+            "Error creating customer portal session",
+            extra={
+                "organization_id": organization_id,
+                "error": error_msg
+            }
+        )
+        if "not found" in error_msg.lower():
             raise HTTPException(
                 status_code=status.HTTP_404_NOT_FOUND,
-                detail=str(e),
+                detail=error_msg,
             )
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST,
-            detail=str(e),
+            detail=error_msg,
         )
-    except Exception:
+    except Exception as e:
+        logger.exception(
+            "Unexpected error creating customer portal session",
+            extra={
+                "organization_id": organization_id,
+                "error_type": type(e).__name__,
+                "error": str(e)
+            }
+        )
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail="Failed to create customer portal session",
+            detail=f"Failed to create customer portal session: {str(e)}",
         )
 
 
@@ -145,10 +182,18 @@ async def get_organization_billing(
         return billing_info
     except HTTPException:
         raise
-    except Exception:
+    except Exception as e:
+        logger.exception(
+            "Unexpected error fetching billing information",
+            extra={
+                "organization_id": organization_id,
+                "error_type": type(e).__name__,
+                "error": str(e)
+            }
+        )
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail="Failed to fetch billing information",
+            detail=f"Failed to fetch billing information: {str(e)}",
         )
 
 
@@ -186,14 +231,30 @@ async def get_subscription(
     except HTTPException:
         raise
     except ValueError as e:
+        error_msg = str(e)
+        logger.error(
+            "Error fetching subscription",
+            extra={
+                "organization_id": organization_id,
+                "error": error_msg
+            }
+        )
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND,
-            detail=str(e),
+            detail=error_msg,
         )
-    except Exception:
+    except Exception as e:
+        logger.exception(
+            "Unexpected error fetching subscription",
+            extra={
+                "organization_id": organization_id,
+                "error_type": type(e).__name__,
+                "error": str(e)
+            }
+        )
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail="Failed to fetch subscription",
+            detail=f"Failed to fetch subscription: {str(e)}",
         )
 
 
@@ -338,6 +399,14 @@ async def get_usage_limits(
     except HTTPException:
         raise
     except Exception as e:
+        logger.exception(
+            "Unexpected error fetching usage limits",
+            extra={
+                "organization_id": organization_id,
+                "error_type": type(e).__name__,
+                "error": str(e)
+            }
+        )
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
             detail=f"Failed to fetch usage limits: {str(e)}",
