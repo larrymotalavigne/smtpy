@@ -1,5 +1,6 @@
 """Authentication views for SMTPy v2."""
 
+import os
 from typing import Optional
 
 from fastapi import APIRouter, Depends, HTTPException, Response, Request
@@ -18,6 +19,11 @@ router = APIRouter(prefix="/auth", tags=["authentication"])
 serializer = URLSafeTimedSerializer(SETTINGS.SECRET_KEY)
 SESSION_COOKIE_NAME = "session"
 SESSION_MAX_AGE = 7 * 24 * 60 * 60  # 7 days in seconds
+
+# Cookie security settings (adjust for test environment)
+IS_TESTING = os.getenv("TESTING", "False").lower() == "true"
+COOKIE_SECURE = not IS_TESTING  # Disable secure flag in tests (uses HTTP not HTTPS)
+COOKIE_SAMESITE = "lax" if IS_TESTING else "none"  # Use 'lax' for tests, 'none' for production
 
 
 # Pydantic models for request/response
@@ -172,8 +178,8 @@ async def get_current_user(
             key=SESSION_COOKIE_NAME,
             value=new_session_token,
             httponly=True,
-            secure=True,  # Required for samesite="none"
-            samesite="none",  # Allow cross-origin cookies
+            secure=COOKIE_SECURE,
+            samesite=COOKIE_SAMESITE,
             max_age=SESSION_MAX_AGE
         )
 
@@ -331,8 +337,8 @@ async def register(
             key=SESSION_COOKIE_NAME,
             value=session_token,
             httponly=True,
-            secure=True,  # Required for samesite="none"
-            samesite="none",  # Allow cross-origin cookies
+            secure=COOKIE_SECURE,
+            samesite=COOKIE_SAMESITE,
             max_age=SESSION_MAX_AGE
         )
 
@@ -436,8 +442,8 @@ async def login(
             key=SESSION_COOKIE_NAME,
             value=session_token,
             httponly=True,
-            secure=True,  # Required for samesite="none"
-            samesite="none",  # Allow cross-origin cookies
+            secure=COOKIE_SECURE,
+            samesite=COOKIE_SAMESITE,
             max_age=SESSION_MAX_AGE
         )
 
