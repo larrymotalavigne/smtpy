@@ -172,8 +172,8 @@ async def get_current_user(
             key=SESSION_COOKIE_NAME,
             value=new_session_token,
             httponly=True,
-            secure=SETTINGS.is_production,
-            samesite="lax",
+            secure=True,  # Required for samesite="none"
+            samesite="none",  # Allow cross-origin cookies
             max_age=SESSION_MAX_AGE
         )
 
@@ -331,8 +331,8 @@ async def register(
             key=SESSION_COOKIE_NAME,
             value=session_token,
             httponly=True,
-            secure=SETTINGS.is_production,
-            samesite="lax",
+            secure=True,  # Required for samesite="none"
+            samesite="none",  # Allow cross-origin cookies
             max_age=SESSION_MAX_AGE
         )
 
@@ -436,8 +436,8 @@ async def login(
             key=SESSION_COOKIE_NAME,
             value=session_token,
             httponly=True,
-            secure=SETTINGS.is_production,
-            samesite="lax",
+            secure=True,  # Required for samesite="none"
+            samesite="none",  # Allow cross-origin cookies
             max_age=SESSION_MAX_AGE
         )
 
