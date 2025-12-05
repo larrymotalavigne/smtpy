@@ -25,22 +25,6 @@ class Settings(BaseSettings):
     API_PORT: int = Field(default=8000, description="API port")
     DEBUG: bool = Field(default=False, description="Debug mode")
 
-    # SMTP Forwarding Settings (for smtp/forwarding/forwarder.py and relay service)
-    SMTP_HOST: str = Field(default="localhost", description="SMTP relay host for forwarding")
-    SMTP_PORT: int = Field(default=25, description="SMTP relay port for forwarding")
-    SMTP_USER: str = Field(default="", description="SMTP relay username for authentication")
-    SMTP_PASSWORD: str = Field(default="", description="SMTP relay password for authentication")
-    SMTP_USE_TLS: bool = Field(default=True, description="Use STARTTLS for SMTP relay")
-    SMTP_USE_SSL: bool = Field(default=False, description="Use SSL for SMTP relay")
-
-    # Self-hosted SMTP Settings
-    SMTP_HOSTNAME: str = Field(default="mail.smtpy.fr", description="Our sending hostname (FQDN)")
-    SMTP_DELIVERY_MODE: str = Field(
-        default="direct",
-        description="Email delivery mode: 'direct' (self-hosted only), 'relay' (external only), 'hybrid' (direct with fallback)"
-    )
-    SMTP_ENABLE_DKIM: bool = Field(default=True, description="Enable DKIM signing for outbound emails")
-
     # Security
     SECRET_KEY: str = Field(
         default="change-this-secret-key-in-production",
@@ -71,14 +55,6 @@ class Settings(BaseSettings):
     EMAIL_BACKEND: str = Field(default="smtp", description="Email backend (smtp, sendgrid, ses)")
     EMAIL_FROM: str = Field(default="noreply@smtpy.local", description="Default from email address")
     EMAIL_FROM_NAME: str = Field(default="SMTPy", description="Default from name")
-
-    # SMTP Email Settings (for transactional emails like password reset)
-    EMAIL_SMTP_HOST: str = Field(default="localhost", description="SMTP host for sending emails")
-    EMAIL_SMTP_PORT: int = Field(default=1025, description="SMTP port for sending emails")
-    EMAIL_SMTP_USERNAME: str = Field(default="", description="SMTP username")
-    EMAIL_SMTP_PASSWORD: str = Field(default="", description="SMTP password")
-    EMAIL_SMTP_USE_TLS: bool = Field(default=False, description="Use TLS for SMTP")
-    EMAIL_SMTP_USE_SSL: bool = Field(default=False, description="Use SSL for SMTP")
 
     # Application URLs
     APP_URL: str = Field(default="http://localhost:4200", description="Frontend application URL")

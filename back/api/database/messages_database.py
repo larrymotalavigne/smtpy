@@ -168,16 +168,13 @@ async def update_message_status(
     db: AsyncSession,
     message_id: int,
     status: MessageStatus,
-    forwarded_to: Optional[str] = None,
     error_message: Optional[str] = None
 ) -> Optional[Message]:
     """Update message processing status."""
     updates = {"status": status}
-    if forwarded_to:
-        updates["forwarded_to"] = forwarded_to.lower().strip()
     if error_message:
         updates["error_message"] = error_message
-    
+
     stmt = (
         update(Message)
         .where(Message.id == message_id)

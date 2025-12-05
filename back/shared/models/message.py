@@ -21,7 +21,7 @@ class MessageStatus(enum.Enum):
 
 
 class Message(Base, TimestampMixin):
-    """Email message model for tracking forwarded messages."""
+    """Email message model for tracking received messages."""
     
     __tablename__ = "messages"
     
@@ -48,10 +48,7 @@ class Message(Base, TimestampMixin):
     recipient_email: Mapped[str] = Column(
         String(320), nullable=False, doc="Original recipient email address"
     )
-    forwarded_to: Mapped[Optional[str]] = Column(
-        String(320), nullable=True, doc="Email address message was forwarded to"
-    )
-    
+
     # Message content
     subject: Mapped[Optional[str]] = Column(
         String(500), nullable=True, doc="Email subject line"

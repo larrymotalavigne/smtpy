@@ -316,7 +316,6 @@ async def get_messages_by_thread(
 async def update_message_status(
     message_id: int,
     new_status: MessageStatus = Query(..., description="New message status"),
-    forwarded_to: Optional[str] = Query(None, description="Email address message was forwarded to"),
     error_message: Optional[str] = Query(None, description="Error message if processing failed"),
     db: AsyncSession = Depends(get_db)
 ):
@@ -327,10 +326,9 @@ async def update_message_status(
             message_id=message_id,
             organization_id=MOCK_ORGANIZATION_ID,
             status=new_status,
-            forwarded_to=forwarded_to,
             error_message=error_message
         )
-        
+
         if not updated_message:
             raise HTTPException(
                 status_code=status.HTTP_404_NOT_FOUND,

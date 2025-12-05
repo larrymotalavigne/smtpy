@@ -1,6 +1,0 @@
-domains:
-  example.com:
-    catch_all: user@gmail.com
-    aliases:
-      contact: user@gmail.com
-      sales: sales@gmail.com 

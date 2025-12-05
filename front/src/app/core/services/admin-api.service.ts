@@ -54,10 +54,6 @@ interface SystemHealth {
     status: string;
     memory_used: string;
   };
-  smtp: {
-    status: string;
-    queue_size: number;
-  };
 }
 
 @Injectable({
@@ -122,26 +118,5 @@ export class AdminApiService {
    */
   getAllMessages(page: number = 1, pageSize: number = 50): Observable<ApiResponse<any>> {
     return this.http.get<ApiResponse<any>>(`${this.apiUrl}/messages?page=${page}&page_size=${pageSize}`);
-  }
-
-  /**
-   * Get SMTP configuration (admin only)
-   */
-  getSMTPConfig(): Observable<ApiResponse<any>> {
-    return this.http.get<ApiResponse<any>>(`${this.apiUrl}/smtp/config`);
-  }
-
-  /**
-   * Run SMTP diagnostics (admin only)
-   */
-  runSMTPDiagnostics(): Observable<ApiResponse<any>> {
-    return this.http.get<ApiResponse<any>>(`${this.apiUrl}/smtp/diagnostics`);
-  }
-
-  /**
-   * Send test email (admin only)
-   */
-  sendTestEmail(recipient: string): Observable<ApiResponse<any>> {
-    return this.http.post<ApiResponse<any>>(`${this.apiUrl}/smtp/test`, { recipient });
   }
 }

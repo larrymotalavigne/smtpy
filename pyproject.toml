@@ -8,10 +8,7 @@ authors = [
 requires-python = ">=3.14"
 
 dependencies = [
-    "aiosmtpd",
-    "aiosmtplib",
     "fastapi",
-    "dkimpy",
     "uvicorn[standard]",
     "aiohttp",
     "python-multipart",
@@ -96,8 +93,6 @@ strict_equality = true
 
 [[tool.mypy.overrides]]
 module = [
-    "aiosmtpd.*",
-    "dkimpy.*",
     "dns.*",
     "stripe.*",
 ]
@@ -144,9 +139,6 @@ packages = [
     "controllers",
     "services",
     "utils",
-    "smtp_server",
-    "forwarding",
-    "config_dns",
     "templates",
     "static"
 ]
