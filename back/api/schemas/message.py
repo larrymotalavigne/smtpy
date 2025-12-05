@@ -21,8 +21,7 @@ class MessageResponse(TimestampSchema):
     # Email addresses
     sender_email: str = Field(..., description="Original sender email address")
     recipient_email: str = Field(..., description="Original recipient email address")
-    forwarded_to: Optional[str] = Field(None, description="Email address message was forwarded to")
-    
+
     # Message content
     subject: Optional[str] = Field(None, description="Email subject line")
     body_preview: Optional[str] = Field(None, description="Preview of email body content")

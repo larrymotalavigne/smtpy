@@ -118,12 +118,6 @@
                   <span class="email-label">À:</span>
                   <span class="email-value">{{ message.recipient_email }}</span>
                 </div>
-                @if (message.forwarded_to) {
-                  <div class="email-line forwarded">
-                    <i class="pi pi-arrow-right"></i>
-                    <span class="email-value">{{ truncateText(message.forwarded_to, 30) }}</span>
-                  </div>
-                }
               </div>
             </td>
 
@@ -279,12 +273,6 @@
               <span class="detail-label">À:</span>
               <span class="detail-value email">{{ selectedMessage.recipient_email }}</span>
             </div>
-            @if (selectedMessage.forwarded_to) {
-              <div class="detail-item full-width">
-                <span class="detail-label">Transféré à:</span>
-                <span class="detail-value email">{{ selectedMessage.forwarded_to }}</span>
-              </div>
-            }
             <div class="detail-item full-width">
               <span class="detail-label">Sujet:</span>
               <span class="detail-value">{{ selectedMessage.subject }}</span>

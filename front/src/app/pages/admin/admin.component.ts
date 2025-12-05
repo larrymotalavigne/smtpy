@@ -63,10 +63,6 @@ interface SystemHealth {
     status: string;
     memory_used: string;
   };
-  smtp: {
-    status: string;
-    queue_size: number;
-  };
 }
 
 @Component({
@@ -98,14 +94,6 @@ export class AdminComponent implements OnInit {
   stats: DatabaseStats | null | undefined = null;
   recentActivity: RecentActivity[] = [];
   systemHealth: SystemHealth | null | undefined = null;
-
-  // SMTP Testing
-  smtpConfig: any = null;
-  smtpDiagnostics: any = null;
-  smtpTestLoading = false;
-  smtpDiagnosticsLoading = false;
-  smtpConfigLoading = false;
-  testEmailRecipient = '';
 
   // Chart data
   userGrowthData: any;
@@ -300,95 +288,6 @@ export class AdminComponent implements OnInit {
 
   refreshData(): void {
     this.loadAdminData();
-  }
-
-  // SMTP Testing Methods
-  loadSMTPConfig(): void {
-    this.smtpConfigLoading = true;
-    this.adminApiService.getSMTPConfig().subscribe({
-      next: (response) => {
-        if (response?.success) {
-          this.smtpConfig = response.data;
-        }
-        this.smtpConfigLoading = false;
-      },
-      error: (error) => {
-        console.error('Error loading SMTP config:', error);
-        this.messageService.add({
-          severity: 'error',
-          summary: 'Erreur',
-          detail: 'Impossible de charger la configuration SMTP'
-        });
-        this.smtpConfigLoading = false;
-      }
-    });
-  }
-
-  runDiagnostics(): void {
-    this.smtpDiagnosticsLoading = true;
-    this.smtpDiagnostics = null;
-    this.adminApiService.runSMTPDiagnostics().subscribe({
-      next: (response) => {
-        if (response?.success) {
-          this.smtpDiagnostics = response.data;
-          this.messageService.add({
-            severity: 'success',
-            summary: 'Diagnostics terminés',
-            detail: 'Les tests SMTP ont été exécutés'
-          });
-        }
-        this.smtpDiagnosticsLoading = false;
-      },
-      error: (error) => {
-        console.error('Error running diagnostics:', error);
-        this.messageService.add({
-          severity: 'error',
-          summary: 'Erreur',
-          detail: 'Impossible d\'exécuter les diagnostics SMTP'
-        });
-        this.smtpDiagnosticsLoading = false;
-      }
-    });
-  }
-
-  sendTestEmail(): void {
-    if (!this.testEmailRecipient || !this.isValidEmail(this.testEmailRecipient)) {
-      this.messageService.add({
-        severity: 'warn',
-        summary: 'Email invalide',
-        detail: 'Veuillez entrer une adresse email valide'
-      });
-      return;
-    }
-
-    this.smtpTestLoading = true;
-    this.adminApiService.sendTestEmail(this.testEmailRecipient).subscribe({
-      next: (response) => {
-        if (response?.success) {
-          this.messageService.add({
-            severity: 'success',
-            summary: 'Email envoyé',
-            detail: `Email de test envoyé à ${this.testEmailRecipient}`
-          });
-          this.testEmailRecipient = '';
-        }
-        this.smtpTestLoading = false;
-      },
-      error: (error) => {
-        console.error('Error sending test email:', error);
-        this.messageService.add({
-          severity: 'error',
-          summary: 'Erreur',
-          detail: 'Impossible d\'envoyer l\'email de test'
-        });
-        this.smtpTestLoading = false;
-      }
-    });
-  }
-
-  isValidEmail(email: string): boolean {
-    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-    return emailRegex.test(email);
   }
 
   getStatusSeverity(status: string): string {

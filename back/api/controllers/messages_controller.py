@@ -241,7 +241,6 @@ async def update_message_status(
     message_id: int,
     organization_id: int,
     status: MessageStatus,
-    forwarded_to: Optional[str] = None,
     error_message: Optional[str] = None
 ) -> Optional[MessageResponse]:
     """Update message status if the message belongs to the organization."""
@@ -249,19 +248,18 @@ async def update_message_status(
     message = await messages_database.get_message_by_id(db, message_id)
     if not message or message.domain.organization_id != organization_id:
         return None
-    
+
     # Update the message
     updated_message = await messages_database.update_message_status(
         db=db,
         message_id=message_id,
         status=status,
-        forwarded_to=forwarded_to,
         error_message=error_message
     )
-    
+
     if not updated_message:
         return None
-    
+
     return MessageResponse.model_validate(updated_message)
 
 

@@ -307,7 +307,7 @@ async def register(
 
         await session.commit()
 
-        # Send verification email (async, don't wait for it)
+        # Send verification email via Docker mailserver
         from ..services.email_service import EmailService
         import logging
         logger = logging.getLogger(__name__)
@@ -322,7 +322,7 @@ async def register(
             await session.commit()
 
             # Send verification email
-            EmailService.send_email_verification(
+            await EmailService.send_email_verification(
                 to=user.email,
                 username=user.username,
                 verification_token=verification_token.token
@@ -521,20 +521,23 @@ async def request_password_reset(
 
         await session.commit()
 
-        # Send password reset email
+        # Send password reset email via Docker mailserver
         from ..services.email_service import EmailService
+        import logging
+        logger = logging.getLogger(__name__)
 
-        email_sent = EmailService.send_password_reset_email(
-            to=user.email,
-            username=user.username,
-            reset_token=reset_token.token
-        )
+        try:
+            email_sent = await EmailService.send_password_reset_email(
+                to=user.email,
+                username=user.username,
+                reset_token=reset_token.token
+            )
 
-        if not email_sent:
-            # Log error but still return success (don't reveal if email exists)
-            import logging
-            logger = logging.getLogger(__name__)
-            logger.error(f"Failed to send password reset email to {user.email}")
+            if not email_sent:
+                # Log error but still return success (don't reveal if email exists)
+                logger.error(f"Failed to send password reset email to {user.email}")
+        except Exception as e:
+            logger.error(f"Error sending password reset email: {str(e)}")
 
         return {
             "success": True,

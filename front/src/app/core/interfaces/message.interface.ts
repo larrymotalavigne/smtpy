@@ -16,7 +16,6 @@ export interface MessageResponse {
     // Email addresses
     sender_email: string;
     recipient_email: string;
-    forwarded_to?: string;
 
     // Message content
     subject?: string;

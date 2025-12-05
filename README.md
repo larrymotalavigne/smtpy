@@ -8,21 +8,19 @@
 [![Code style: black](https://img.shields.io/badge/code%20style-black-000000.svg)](https://github.com/psf/black)
 [![PRs Welcome](https://img.shields.io/badge/PRs-welcome-brightgreen.svg)](CONTRIBUTING.md)
 
-A self-hosted email aliasing and forwarding service built with FastAPI, SQLAlchemy, and aiosmtpd. SMTPy provides a comprehensive solution for managing email domains, aliases, and forwarding rules with DKIM/SPF/DMARC support and Stripe billing integration.
+A self-hosted email aliasing service built with FastAPI and SQLAlchemy. SMTPy provides a comprehensive solution for managing email domains, aliases, and DNS configuration with DKIM/SPF/DMARC support and Stripe billing integration.
 
-**Project Status**: 🚀 **DEPLOYED IN PRODUCTION** (98% Complete) - Fully deployed at https://smtpy.fr with Nginx Proxy Manager, Docker Mail Server integration, CI/CD pipeline, and automated deployments. Core features complete with self-hosted SMTP, Stripe billing, comprehensive monitoring, and production infrastructure.
+**Project Status**: 🚀 **DEPLOYED IN PRODUCTION** (98% Complete) - Fully deployed at https://smtpy.fr with Nginx Proxy Manager, Docker Mail Server integration, CI/CD pipeline, and automated deployments. Core features complete with Stripe billing, comprehensive monitoring, and production infrastructure.
 
 ## Features
 
 ### Backend (97% Complete)
-- **Email Aliasing & Forwarding**: Create and manage email aliases with automatic forwarding
+- **Email Aliasing**: Create and manage email aliases
 - **Domain Management**: CRUD operations for email domains with DNS verification
-- **SMTP Server**: Built-in SMTP server for receiving and processing emails
-- **Message Processing**: Track and manage forwarded email messages
+- **Message Tracking**: Track and manage email messages
 - **DNS Configuration**: Automatic DNS record generation and verification (MX, SPF, DKIM, DMARC)
 - **Billing Integration**: Stripe-powered subscription management
 - **Async Architecture**: Built with async/await for high performance
-- **DKIM Signing**: Email signing support for enhanced deliverability
 - **Security**: Rate limiting, security headers (CSP, HSTS), CORS configuration
 - **Logging**: JSON structured logging for production monitoring
 - **Testing**: Comprehensive test suite with 97% pass rate (96/99 tests passing)
@@ -45,8 +43,7 @@ A self-hosted email aliasing and forwarding service built with FastAPI, SQLAlche
 - **Framework**: FastAPI with async/await support
 - **Database**: PostgreSQL (production) / SQLite (development)
 - **ORM**: SQLAlchemy v2 with async support
-- **SMTP Server**: aiosmtpd for email processing
-- **Email Processing**: dkimpy for DKIM signing, dnspython for DNS operations
+- **DNS Operations**: dnspython for DNS verification
 - **Authentication**: Session-based with bcrypt password hashing
 - **Billing**: Stripe integration for subscription management
 - **Package Manager**: uv (modern Python package manager)
