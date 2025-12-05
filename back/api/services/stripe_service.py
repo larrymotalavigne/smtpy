@@ -2,11 +2,27 @@
 
 import stripe
 from typing import Dict, Any, Optional
+import logging
 
 from shared.core.config import SETTINGS
 
+logger = logging.getLogger(__name__)
+
 # Initialize Stripe with API key
 stripe.api_key = SETTINGS.STRIPE_API_KEY
+
+# Log warning if Stripe API key is not configured
+if not SETTINGS.STRIPE_API_KEY:
+    logger.warning(
+        "STRIPE_API_KEY is not configured. Billing features will not work. "
+        "Set the STRIPE_API_KEY environment variable to enable Stripe integration."
+    )
+elif SETTINGS.STRIPE_API_KEY.startswith("sk_test_"):
+    logger.info("Using Stripe TEST mode API key")
+elif SETTINGS.STRIPE_API_KEY.startswith("sk_live_"):
+    logger.info("Using Stripe LIVE mode API key")
+else:
+    logger.warning("Stripe API key format is unexpected. Expected key to start with 'sk_test_' or 'sk_live_'")
 
 
 async def create_or_get_customer(email: str, name: str) -> str:
@@ -51,17 +67,23 @@ async def create_checkout_session(
 ) -> Dict[str, Any]:
     """
     Create a Stripe checkout session.
-    
+
     Args:
         customer_id: Stripe customer ID
         price_id: Stripe price ID
         success_url: URL to redirect to on successful payment
         cancel_url: URL to redirect to on cancelled payment
         metadata: Optional metadata to attach to the session
-        
+
     Returns:
         Dictionary containing session URL and ID
     """
+    if not SETTINGS.STRIPE_API_KEY:
+        raise ValueError(
+            "Stripe is not configured. Please set STRIPE_API_KEY environment variable. "
+            "Contact your administrator for assistance."
+        )
+
     try:
         session_metadata = metadata or {}
         session_metadata.update({
