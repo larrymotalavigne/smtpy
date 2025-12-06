@@ -4,14 +4,14 @@ import { Router, RouterModule } from '@angular/router';
 import { RippleModule } from 'primeng/ripple';
 import { ButtonModule } from 'primeng/button';
 import { AppFloatingConfigurator } from "@/layout/component/app.floatingconfigurator";
-import { AuthService } from '../../../core/services/auth.service';
+import { AuthService } from '@/core/services/auth.service';
 import { AsyncPipe } from '@angular/common';
 
 @Component({
     selector: 'topbar-widget',
     imports: [RouterModule, StyleClassModule, ButtonModule, RippleModule, AppFloatingConfigurator, AsyncPipe],
     template: `<a class="flex items-center" href="#">
-            <i class="pi pi-envelope" style="font-size: 2.5rem; color: var(--primary-color); margin-right: 0.75rem;"></i>
+            <img src="/logo.svg" alt="SMTPy Logo" style="height: 2.5rem; width: auto;" />
             <span class="text-surface-900 dark:text-surface-0 font-medium text-2xl leading-normal mr-20">SMTPy</span>
         </a>
 
