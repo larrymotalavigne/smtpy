@@ -284,11 +284,13 @@ async def register(
 
     try:
         # Create organization for the new user
-        from shared.models.organization import Organization
+        from shared.models.organization import Organization, SubscriptionStatus
 
         organization = Organization(
             name=f"{data.username}'s Organization",
-            email=data.email
+            email=data.email,
+            plan_price_id="free",  # Assign free plan by default
+            subscription_status=SubscriptionStatus.ACTIVE  # Activate free subscription
         )
         session.add(organization)
         await session.flush()
