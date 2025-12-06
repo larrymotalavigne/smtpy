@@ -18,7 +18,7 @@ import {AuthService} from '@/core/services/auth.service';
                     <i class="pi pi-bars"></i>
                 </button>
                 <a class="layout-topbar-logo" routerLink="/dashboard">
-                    <i class="pi pi-envelope" style="font-size: 2rem; color: var(--primary-color);"></i>
+                    <img src="/logo.svg" alt="SMTPy Logo" style="height: 2.5rem; width: auto;" />
                     <span>SMTPy</span>
                 </a>
             </div>
