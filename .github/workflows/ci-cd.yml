@@ -315,7 +315,7 @@ jobs:
           port: 2345
           username: ${{ secrets.UNRAID_SSH_USER }}
           key: ${{ secrets.UNRAID_SSH_KEY }}
-          source: "scripts/verify-deployment.sh"
+          source: "scripts/"
           target: "/srv/smtpy/"
 
       - name: Run health checks

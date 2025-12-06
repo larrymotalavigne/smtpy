@@ -1,4 +1,4 @@
-version = 1
+ version = 1
 revision = 3
 requires-python = ">=3.11"
 
@@ -1745,6 +1745,7 @@ dependencies = [
     { name = "python-multipart" },
     { name = "sqlalchemy", extra = ["asyncio"] },
     { name = "stripe" },
+    { name = "testcontainers" },
     { name = "uvicorn", extra = ["standard"] },
 ]
 
@@ -1797,6 +1798,7 @@ requires-dist = [
     { name = "ruff", marker = "extra == 'dev'" },
     { name = "sqlalchemy", extras = ["asyncio"] },
     { name = "stripe" },
+    { name = "testcontainers", specifier = ">=4.13.2" },
     { name = "testcontainers", marker = "extra == 'dev'" },
     { name = "uvicorn", extras = ["standard"] },
 ]
