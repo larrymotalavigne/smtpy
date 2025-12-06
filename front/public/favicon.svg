@@ -1,0 +1,14 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 32 32" width="32" height="32">
+  <!-- Background -->
+  <rect width="32" height="32" rx="6" fill="#4F46E5" />
+
+  <!-- Envelope -->
+  <rect x="6" y="10" width="20" height="14" rx="1" fill="white" />
+
+  <!-- Envelope Flap -->
+  <path d="M 6 10 L 16 17 L 26 10 Z" fill="white" stroke="#4F46E5" stroke-width="1" />
+
+  <!-- Py Badge -->
+  <circle cx="24" cy="22" r="4" fill="#FFD700" />
+  <text x="24" y="24" font-family="Arial" font-size="4" font-weight="bold" text-anchor="middle" fill="#4F46E5">Py</text>
+</svg>

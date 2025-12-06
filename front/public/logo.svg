@@ -1,0 +1,20 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 200 200" width="200" height="200">
+  <!-- Background Circle -->
+  <circle cx="100" cy="100" r="95" fill="#4F46E5" />
+
+  <!-- Envelope Base -->
+  <rect x="45" y="70" width="110" height="75" rx="5" fill="white" />
+
+  <!-- Envelope Flap Shadow -->
+  <path d="M 45 70 L 100 110 L 155 70 L 100 95 Z" fill="#E0E7FF" opacity="0.6" />
+
+  <!-- Envelope Flap -->
+  <path d="M 45 70 L 100 110 L 155 70 Z" fill="white" stroke="#4F46E5" stroke-width="2" />
+
+  <!-- Python "Py" Badge -->
+  <circle cx="145" cy="130" r="18" fill="#FFD700" stroke="#4F46E5" stroke-width="2" />
+  <text x="145" y="137" font-family="Arial, sans-serif" font-size="16" font-weight="bold" text-anchor="middle" fill="#4F46E5">Py</text>
+
+  <!-- Envelope Border -->
+  <rect x="45" y="70" width="110" height="75" rx="5" fill="none" stroke="#4F46E5" stroke-width="2" />
+</svg>
