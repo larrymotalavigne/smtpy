@@ -223,11 +223,13 @@ export class ProfileComponent implements OnInit, OnDestroy {
   }
 
   isFieldInvalid(formGroup: FormGroup, fieldName: string): boolean {
+    if (!formGroup) return false;
     const field = formGroup.get(fieldName);
     return !!(field && field.invalid && (field.dirty || field.touched));
   }
 
   getFieldError(formGroup: FormGroup, fieldName: string): string {
+    if (!formGroup) return '';
     const field = formGroup.get(fieldName);
 
     if (field?.hasError('required')) {

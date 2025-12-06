@@ -125,11 +125,13 @@ export class LoginComponent implements OnInit, OnDestroy {
   }
 
   isFieldInvalid(fieldName: string): boolean {
+    if (!this.loginForm) return false;
     const field = this.loginForm.get(fieldName);
     return !!(field && field.invalid && (field.dirty || field.touched));
   }
 
   getFieldError(fieldName: string): string {
+    if (!this.loginForm) return '';
     const field = this.loginForm.get(fieldName);
     if (field?.hasError('required')) {
       return 'Ce champ est requis';

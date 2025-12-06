@@ -164,11 +164,13 @@ export class RegisterComponent implements OnInit, OnDestroy {
   }
 
   isFieldInvalid(fieldName: string): boolean {
+    if (!this.registerForm) return false;
     const field = this.registerForm.get(fieldName);
     return !!(field && field.invalid && (field.dirty || field.touched));
   }
 
   getFieldError(fieldName: string): string {
+    if (!this.registerForm) return '';
     const field = this.registerForm.get(fieldName);
 
     if (field?.hasError('required')) {
@@ -199,6 +201,7 @@ export class RegisterComponent implements OnInit, OnDestroy {
   }
 
   getPasswordMatchError(): string {
+    if (!this.registerForm) return '';
     if (this.registerForm.hasError('passwordMismatch')) {
       const confirmPassword = this.registerForm.get('confirmPassword');
       if (confirmPassword?.touched || confirmPassword?.dirty) {

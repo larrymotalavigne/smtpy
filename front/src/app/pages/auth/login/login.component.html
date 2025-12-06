@@ -12,6 +12,7 @@
     <!-- Login Form Card -->
     <p-card class="auth-card">
       <ng-template #content>
+        @if (loginForm) {
         <form [formGroup]="loginForm" (ngSubmit)="onSubmit()" class="auth-form">
           <!-- Error Message -->
           @if (errorMessage) {
@@ -108,6 +109,7 @@
             </p>
           </div>
         </form>
+        }
       </ng-template>
     </p-card>
 

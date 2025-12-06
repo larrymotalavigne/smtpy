@@ -12,6 +12,7 @@
     <!-- Register Form Card -->
     <p-card class="auth-card">
       <ng-template #content>
+        @if (registerForm) {
         <form [formGroup]="registerForm" (ngSubmit)="onSubmit()" class="auth-form">
           <!-- Error Message -->
           @if (errorMessage) {
@@ -183,6 +184,7 @@
             </p>
           </div>
         </form>
+        }
       </ng-template>
     </p-card>
 
