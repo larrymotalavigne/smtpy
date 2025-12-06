@@ -128,11 +128,13 @@ export class ForgotPasswordComponent implements OnInit, OnDestroy {
   }
 
   isFieldInvalid(fieldName: string): boolean {
+    if (!this.forgotPasswordForm) return false;
     const field = this.forgotPasswordForm.get(fieldName);
     return !!(field && field.invalid && (field.dirty || field.touched));
   }
 
   getFieldError(fieldName: string): string {
+    if (!this.forgotPasswordForm) return '';
     const field = this.forgotPasswordForm.get(fieldName);
 
     if (field?.hasError('required')) {

@@ -170,11 +170,13 @@ export class ResetPasswordComponent implements OnInit, OnDestroy {
   }
 
   isFieldInvalid(fieldName: string): boolean {
+    if (!this.resetPasswordForm) return false;
     const field = this.resetPasswordForm.get(fieldName);
     return !!(field && field.invalid && (field.dirty || field.touched));
   }
 
   getFieldError(fieldName: string): string {
+    if (!this.resetPasswordForm) return '';
     const field = this.resetPasswordForm.get(fieldName);
 
     if (field?.hasError('required')) {
@@ -192,6 +194,7 @@ export class ResetPasswordComponent implements OnInit, OnDestroy {
   }
 
   getPasswordMatchError(): string {
+    if (!this.resetPasswordForm) return '';
     if (this.resetPasswordForm.hasError('passwordMismatch')) {
       const confirmPassword = this.resetPasswordForm.get('confirmPassword');
       if (confirmPassword?.touched || confirmPassword?.dirty) {
