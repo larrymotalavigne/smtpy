@@ -7,6 +7,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy import select, func, and_
 from datetime import datetime, timedelta
 from pydantic import BaseModel, EmailStr
+import stripe
 
 from shared.core.db import get_db
 from shared.core.config import SETTINGS
@@ -313,4 +314,130 @@ async def get_all_users(
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
             detail=f"Failed to fetch users: {str(e)}"
+        )
+
+
+@router.get(
+    "/stripe-config",
+    summary="Get Stripe configuration status",
+    responses={
+        403: {"model": ErrorResponse, "description": "Admin access required"},
+        500: {"model": ErrorResponse, "description": "Internal server error"}
+    }
+)
+async def get_stripe_config(
+    db: AsyncSession = Depends(get_db),
+    admin_user: dict = Depends(require_admin)
+):
+    """Get Stripe configuration status and health check (admin only)."""
+    try:
+        # Check API Key
+        api_key = SETTINGS.STRIPE_API_KEY
+        api_key_configured = bool(api_key)
+
+        # Determine mode
+        if api_key and api_key.startswith("sk_test_"):
+            mode = "test"
+            mode_valid = True
+        elif api_key and api_key.startswith("sk_live_"):
+            mode = "live"
+            mode_valid = True
+        elif api_key:
+            mode = "unknown"
+            mode_valid = False
+        else:
+            mode = "not_configured"
+            mode_valid = False
+
+        # Check webhook secret
+        webhook_secret = SETTINGS.STRIPE_WEBHOOK_SECRET
+        webhook_secret_configured = bool(webhook_secret)
+
+        # Check URLs
+        success_url = SETTINGS.STRIPE_SUCCESS_URL
+        cancel_url = SETTINGS.STRIPE_CANCEL_URL
+        portal_url = SETTINGS.STRIPE_PORTAL_RETURN_URL
+
+        # Test API connection
+        connection_status = "not_tested"
+        connection_message = ""
+
+        if api_key_configured and mode_valid:
+            try:
+                # Initialize Stripe with the API key
+                stripe.api_key = api_key
+
+                # Make a simple API call to test connectivity
+                # This will raise an error if the key is invalid
+                account = stripe.Account.retrieve()
+
+                connection_status = "success"
+                connection_message = f"Connected to Stripe account: {account.get('business_profile', {}).get('name', account.id)}"
+            except stripe.error.AuthenticationError as e:
+                connection_status = "error"
+                connection_message = f"Authentication failed: {str(e)}"
+            except stripe.error.StripeError as e:
+                connection_status = "error"
+                connection_message = f"Stripe API error: {str(e)}"
+            except Exception as e:
+                connection_status = "error"
+                connection_message = f"Connection test failed: {str(e)}"
+        else:
+            connection_status = "skipped"
+            connection_message = "API key not configured or invalid"
+
+        # Get recent webhook events count (if configured)
+        recent_events_count = 0
+        if api_key_configured and mode_valid:
+            try:
+                # Get events from last 24 hours
+                events = stripe.Event.list(limit=100)
+                recent_events_count = len(events.data)
+            except:
+                recent_events_count = 0
+
+        # Count organizations with Stripe customers
+        orgs_with_stripe = await db.scalar(
+            select(func.count(Organization.id)).where(Organization.stripe_customer_id.isnot(None))
+        )
+
+        # Count active subscriptions
+        orgs_with_subscriptions = await db.scalar(
+            select(func.count(Organization.id)).where(Organization.stripe_subscription_id.isnot(None))
+        )
+
+        return {
+            "success": True,
+            "data": {
+                "api_key": {
+                    "configured": api_key_configured,
+                    "mode": mode,
+                    "valid_format": mode_valid,
+                    "masked_value": f"{api_key[:10]}...{api_key[-4:]}" if api_key and len(api_key) > 14 else None
+                },
+                "webhook": {
+                    "secret_configured": webhook_secret_configured,
+                    "masked_value": f"{webhook_secret[:10]}...{webhook_secret[-4:]}" if webhook_secret and len(webhook_secret) > 14 else None
+                },
+                "urls": {
+                    "success_url": success_url,
+                    "cancel_url": cancel_url,
+                    "portal_return_url": portal_url
+                },
+                "connection": {
+                    "status": connection_status,
+                    "message": connection_message
+                },
+                "statistics": {
+                    "organizations_with_stripe": orgs_with_stripe or 0,
+                    "active_subscriptions": orgs_with_subscriptions or 0,
+                    "recent_events": recent_events_count
+                }
+            }
+        }
+
+    except Exception as e:
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail=f"Failed to fetch Stripe configuration: {str(e)}"
         )

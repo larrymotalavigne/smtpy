@@ -8,7 +8,7 @@ import {Tag} from 'primeng/tag';
 import {UIChart} from 'primeng/chart';
 import {MessageService, SharedModule} from 'primeng/api';
 import {Toast} from 'primeng/toast';
-import {AdminApiService} from '../../core/services/admin-api.service';
+import {AdminApiService, StripeConfig} from '../../core/services/admin-api.service';
 import {Skeleton} from 'primeng/skeleton';
 
 interface DatabaseStats {
@@ -87,6 +87,7 @@ export class AdminComponent implements OnInit {
     stats: DatabaseStats | null | undefined = null;
     recentActivity: RecentActivity[] = [];
     systemHealth: SystemHealth | null | undefined = null;
+    stripeConfig: StripeConfig | null | undefined = null;
 
     // Chart data
     userGrowthData: any;
@@ -115,9 +116,10 @@ export class AdminComponent implements OnInit {
         Promise.all([
             this.adminApiService.getDatabaseStats().toPromise(),
             this.adminApiService.getRecentActivity().toPromise(),
-            this.adminApiService.getSystemHealth().toPromise()
+            this.adminApiService.getSystemHealth().toPromise(),
+            this.adminApiService.getStripeConfig().toPromise()
         ])
-            .then(([statsResponse, activityResponse, healthResponse]) => {
+            .then(([statsResponse, activityResponse, healthResponse, stripeResponse]) => {
                 if (statsResponse?.success) {
                     this.stats = statsResponse.data;
                     this.updateCharts();
@@ -127,6 +129,9 @@ export class AdminComponent implements OnInit {
                 }
                 if (healthResponse?.success) {
                     this.systemHealth = healthResponse.data;
+                }
+                if (stripeResponse?.success) {
+                    this.stripeConfig = stripeResponse.data;
                 }
                 this.loading = false;
             })
@@ -313,6 +318,25 @@ export class AdminComponent implements OnInit {
                 return 'secondary';
             default:
                 return 'info';
+        }
+    }
+
+    getConfigStatusIcon(configured: boolean): string {
+        return configured ? 'pi-check-circle' : 'pi-times-circle';
+    }
+
+    getConfigStatusSeverity(configured: boolean): string {
+        return configured ? 'success' : 'danger';
+    }
+
+    getModeTagSeverity(mode: string): string {
+        switch (mode) {
+            case 'live':
+                return 'success';
+            case 'test':
+                return 'warn';
+            default:
+                return 'danger';
         }
     }
 }

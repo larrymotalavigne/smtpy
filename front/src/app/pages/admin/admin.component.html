@@ -61,6 +61,138 @@
     </div>
   }
 
+  <!-- Stripe Configuration Panel -->
+  @if (stripeConfig) {
+    <div class="stripe-config-section">
+      <p-card class="stripe-config-card">
+        <ng-template #title>
+          <div class="card-header">
+            <i class="pi pi-credit-card"></i>
+            <h3>Configuration Stripe</h3>
+          </div>
+        </ng-template>
+        <ng-template pTemplate="content">
+          <div class="stripe-config-content">
+            <!-- API Key Section -->
+            <div class="config-section">
+              <h4>
+                <i class="pi pi-key"></i>
+                Clé API
+              </h4>
+              <div class="config-items">
+                <div class="config-item">
+                  <span class="config-label">Statut:</span>
+                  <p-tag
+                    [icon]="'pi ' + getConfigStatusIcon(stripeConfig.api_key.configured)"
+                    [value]="stripeConfig.api_key.configured ? 'Configurée' : 'Non configurée'"
+                    [severity]="getConfigStatusSeverity(stripeConfig.api_key.configured)" />
+                </div>
+                @if (stripeConfig.api_key.configured) {
+                  <div class="config-item">
+                    <span class="config-label">Mode:</span>
+                    <p-tag
+                      [value]="stripeConfig.api_key.mode === 'live' ? 'Production' : stripeConfig.api_key.mode === 'test' ? 'Test' : 'Invalide'"
+                      [severity]="getModeTagSeverity(stripeConfig.api_key.mode)" />
+                  </div>
+                  <div class="config-item">
+                    <span class="config-label">Clé (masquée):</span>
+                    <code class="masked-value">{{ stripeConfig.api_key.masked_value || 'N/A' }}</code>
+                  </div>
+                }
+              </div>
+            </div>
+
+            <!-- Webhook Section -->
+            <div class="config-section">
+              <h4>
+                <i class="pi pi-bolt"></i>
+                Webhook
+              </h4>
+              <div class="config-items">
+                <div class="config-item">
+                  <span class="config-label">Secret:</span>
+                  <p-tag
+                    [icon]="'pi ' + getConfigStatusIcon(stripeConfig.webhook.secret_configured)"
+                    [value]="stripeConfig.webhook.secret_configured ? 'Configuré' : 'Non configuré'"
+                    [severity]="getConfigStatusSeverity(stripeConfig.webhook.secret_configured)" />
+                </div>
+                @if (stripeConfig.webhook.secret_configured) {
+                  <div class="config-item">
+                    <span class="config-label">Secret (masqué):</span>
+                    <code class="masked-value">{{ stripeConfig.webhook.masked_value || 'N/A' }}</code>
+                  </div>
+                }
+              </div>
+            </div>
+
+            <!-- URLs Section -->
+            <div class="config-section">
+              <h4>
+                <i class="pi pi-link"></i>
+                URLs de redirection
+              </h4>
+              <div class="config-items">
+                <div class="config-item">
+                  <span class="config-label">Succès:</span>
+                  <span class="url-value">{{ stripeConfig.urls.success_url }}</span>
+                </div>
+                <div class="config-item">
+                  <span class="config-label">Annulation:</span>
+                  <span class="url-value">{{ stripeConfig.urls.cancel_url }}</span>
+                </div>
+                <div class="config-item">
+                  <span class="config-label">Portail:</span>
+                  <span class="url-value">{{ stripeConfig.urls.portal_return_url }}</span>
+                </div>
+              </div>
+            </div>
+
+            <!-- Connection Test Section -->
+            <div class="config-section">
+              <h4>
+                <i class="pi pi-globe"></i>
+                Test de connexion
+              </h4>
+              <div class="config-items">
+                <div class="config-item">
+                  <span class="config-label">Statut:</span>
+                  <p-tag
+                    [value]="stripeConfig.connection.status"
+                    [severity]="getStatusSeverity(stripeConfig.connection.status)" />
+                </div>
+                <div class="config-item full-width">
+                  <span class="connection-message">{{ stripeConfig.connection.message }}</span>
+                </div>
+              </div>
+            </div>
+
+            <!-- Statistics Section -->
+            <div class="config-section">
+              <h4>
+                <i class="pi pi-chart-bar"></i>
+                Statistiques
+              </h4>
+              <div class="config-items stats-grid-stripe">
+                <div class="stat-box">
+                  <span class="stat-value">{{ stripeConfig.statistics.organizations_with_stripe }}</span>
+                  <span class="stat-label">Organisations avec Stripe</span>
+                </div>
+                <div class="stat-box">
+                  <span class="stat-value">{{ stripeConfig.statistics.active_subscriptions }}</span>
+                  <span class="stat-label">Abonnements actifs</span>
+                </div>
+                <div class="stat-box">
+                  <span class="stat-value">{{ stripeConfig.statistics.recent_events }}</span>
+                  <span class="stat-label">Événements récents</span>
+                </div>
+              </div>
+            </div>
+          </div>
+        </ng-template>
+      </p-card>
+    </div>
+  }
+
   <!-- Statistics Overview -->
   @if (!loading && stats) {
     <div class="stats-grid">
