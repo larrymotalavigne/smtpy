@@ -372,10 +372,13 @@ async def get_stripe_config(
                 account = stripe.Account.retrieve()
 
                 connection_status = "success"
-                # Stripe objects use attribute or dict-style access, not .get()
+                # Safely extract account name with fallback to account ID
                 account_name = account.id
-                if hasattr(account, 'business_profile') and account.business_profile:
-                    account_name = account.business_profile.get('name', account.id) if isinstance(account.business_profile, dict) else getattr(account.business_profile, 'name', account.id)
+                try:
+                    if account.business_profile and account.business_profile.name:
+                        account_name = account.business_profile.name
+                except (AttributeError, TypeError, KeyError):
+                    pass  # Keep using account.id as fallback
                 connection_message = f"Connected to Stripe account: {account_name}"
             except stripe.error.AuthenticationError as e:
                 connection_status = "error"
