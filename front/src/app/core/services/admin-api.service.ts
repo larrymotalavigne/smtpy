@@ -56,6 +56,33 @@ interface SystemHealth {
   };
 }
 
+interface StripeConfig {
+  api_key: {
+    configured: boolean;
+    mode: string;
+    valid_format: boolean;
+    masked_value: string | null;
+  };
+  webhook: {
+    secret_configured: boolean;
+    masked_value: string | null;
+  };
+  urls: {
+    success_url: string;
+    cancel_url: string;
+    portal_return_url: string;
+  };
+  connection: {
+    status: string;
+    message: string;
+  };
+  statistics: {
+    organizations_with_stripe: number;
+    active_subscriptions: number;
+    recent_events: number;
+  };
+}
+
 @Injectable({
   providedIn: 'root'
 })
@@ -119,4 +146,14 @@ export class AdminApiService {
   getAllMessages(page: number = 1, pageSize: number = 50): Observable<ApiResponse<any>> {
     return this.http.get<ApiResponse<any>>(`${this.apiUrl}/messages?page=${page}&page_size=${pageSize}`);
   }
+
+  /**
+   * Get Stripe configuration status (admin only)
+   */
+  getStripeConfig(): Observable<ApiResponse<StripeConfig>> {
+    return this.http.get<ApiResponse<StripeConfig>>(`${this.apiUrl}/stripe-config`);
+  }
 }
+
+// Export interfaces for use in components
+export type { DatabaseStats, RecentActivity, SystemHealth, StripeConfig };
