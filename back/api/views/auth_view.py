@@ -155,38 +155,56 @@ async def get_current_user(
         response: Response,
         session: AsyncSession = Depends(get_async_session)
 ) -> Optional[dict]:
-    """Get current user from session cookie and refresh it (sliding window)."""
+    """
+    Get current user from session cookie OR API key and refresh session (sliding window).
+
+    Authentication methods (in order of precedence):
+    1. Session cookie (for web browser sessions)
+    2. API key via Authorization header (for programmatic access)
+    """
+    # First, try session cookie authentication
     session_cookie = request.cookies.get(SESSION_COOKIE_NAME)
 
-    if not session_cookie:
-        return None
+    if session_cookie:
+        try:
+            # Deserialize and verify session (max age: 7 days)
+            user_id = serializer.loads(session_cookie, max_age=SESSION_MAX_AGE)
 
-    try:
-        # Deserialize and verify session (max age: 7 days)
-        user_id = serializer.loads(session_cookie, max_age=SESSION_MAX_AGE)
+            # Get user from database
+            user = await UsersDatabase.get_user_by_id(session, user_id)
 
-        # Get user from database
-        user = await UsersDatabase.get_user_by_id(session, user_id)
+            if user and user.is_active:
+                # Refresh session cookie with new expiration (sliding window)
+                # This keeps the user logged in as long as they're active
+                new_session_token = serializer.dumps(user.id)
+                response.set_cookie(
+                    key=SESSION_COOKIE_NAME,
+                    value=new_session_token,
+                    httponly=True,
+                    secure=COOKIE_SECURE,
+                    samesite=COOKIE_SAMESITE,
+                    max_age=SESSION_MAX_AGE
+                )
 
-        if not user or not user.is_active:
-            return None
+                return user.to_dict()
 
-        # Refresh session cookie with new expiration (sliding window)
-        # This keeps the user logged in as long as they're active
-        new_session_token = serializer.dumps(user.id)
-        response.set_cookie(
-            key=SESSION_COOKIE_NAME,
-            value=new_session_token,
-            httponly=True,
-            secure=COOKIE_SECURE,
-            samesite=COOKIE_SAMESITE,
-            max_age=SESSION_MAX_AGE
-        )
+        except (BadSignature, SignatureExpired):
+            pass  # Fall through to try API key auth
 
-        return user.to_dict()
+    # Second, try API key authentication
+    auth_header = request.headers.get("Authorization")
 
-    except (BadSignature, SignatureExpired):
-        return None
+    if auth_header and auth_header.startswith("Bearer "):
+        api_key = auth_header.replace("Bearer ", "").strip()
+
+        # Verify API key
+        user = await UsersDatabase.verify_api_key(session, api_key)
+
+        if user and user.is_active:
+            # Don't set session cookie for API key auth
+            return user.to_dict()
+
+    return None
 
 
 async def require_auth(current_user: Optional[dict] = Depends(get_current_user)):

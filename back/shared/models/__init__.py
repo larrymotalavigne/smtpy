@@ -3,6 +3,9 @@
 from .base import Base, TimestampMixin
 from .organization import Organization
 from .user import User, UserRole, PasswordResetToken, EmailVerificationToken
+from .user_preferences import UserPreferences
+from .api_key import APIKey
+from .session import Session
 from .domain import Domain
 from .message import Message, MessageStatus
 from .event import Event
@@ -17,6 +20,9 @@ __all__ = [
     "UserRole",
     "PasswordResetToken",
     "EmailVerificationToken",
+    "UserPreferences",
+    "APIKey",
+    "Session",
     "Domain",
     "Message",
     "MessageStatus",

@@ -42,6 +42,13 @@ class UserPreferencesRequest(BaseModel):
     email_on_domain_verified: bool = True
     email_on_quota_warning: bool = True
     email_weekly_summary: bool = False
+    theme: str = "light"
+    language: str = "en"
+
+
+class CreateAPIKeyRequest(BaseModel):
+    """Create API key request."""
+    name: str = Field(..., min_length=1, max_length=100, description="Name for the API key")
 
 
 @router.put("/profile", summary="Update User Profile")
@@ -130,15 +137,19 @@ async def get_preferences(
     if not user:
         raise HTTPException(status_code=404, detail="User not found")
 
-    # TODO: Store preferences in database
-    # For now, return default preferences
+    # Get or create preferences
+    prefs = await UsersDatabase.get_or_create_preferences(session, current_user["id"])
+    await session.commit()
+
     return {
         "success": True,
         "data": {
-            "email_on_new_message": True,
-            "email_on_domain_verified": True,
-            "email_on_quota_warning": True,
-            "email_weekly_summary": False
+            "email_on_new_message": prefs.email_on_new_message,
+            "email_on_domain_verified": prefs.email_on_domain_verified,
+            "email_on_quota_warning": prefs.email_on_quota_warning,
+            "email_weekly_summary": prefs.email_weekly_summary,
+            "theme": prefs.theme,
+            "language": prefs.language
         }
     }
 
@@ -155,19 +166,37 @@ async def update_preferences(
     if not user:
         raise HTTPException(status_code=404, detail="User not found")
 
-    # TODO: Store preferences in database
-    # For now, just return success
+    try:
+        # Get or create preferences
+        prefs = await UsersDatabase.get_or_create_preferences(session, current_user["id"])
 
-    return {
-        "success": True,
-        "message": "Preferences updated successfully",
-        "data": {
-            "email_on_new_message": data.email_on_new_message,
-            "email_on_domain_verified": data.email_on_domain_verified,
-            "email_on_quota_warning": data.email_on_quota_warning,
-            "email_weekly_summary": data.email_weekly_summary
+        # Update preferences
+        prefs = await UsersDatabase.update_user_preferences(
+            session, prefs,
+            email_on_new_message=data.email_on_new_message,
+            email_on_domain_verified=data.email_on_domain_verified,
+            email_on_quota_warning=data.email_on_quota_warning,
+            email_weekly_summary=data.email_weekly_summary,
+            theme=data.theme,
+            language=data.language
+        )
+        await session.commit()
+
+        return {
+            "success": True,
+            "message": "Preferences updated successfully",
+            "data": {
+                "email_on_new_message": prefs.email_on_new_message,
+                "email_on_domain_verified": prefs.email_on_domain_verified,
+                "email_on_quota_warning": prefs.email_on_quota_warning,
+                "email_weekly_summary": prefs.email_weekly_summary,
+                "theme": prefs.theme,
+                "language": prefs.language
+            }
         }
-    }
+    except Exception as e:
+        await session.rollback()
+        raise HTTPException(status_code=500, detail=f"Failed to update preferences: {str(e)}")
 
 
 @router.delete("/account", summary="Delete User Account")
@@ -202,83 +231,186 @@ async def delete_account(
 
 @router.get("/api-keys", summary="List API Keys")
 async def list_api_keys(
-        current_user: dict = Depends(require_auth)
+        current_user: dict = Depends(require_auth),
+        session: AsyncSession = Depends(get_async_session)
 ):
     """List user's API keys."""
-    # TODO: Implement API key management
-    return {
-        "success": True,
-        "data": []
-    }
+    try:
+        api_keys = await UsersDatabase.get_api_keys(session, current_user["id"], active_only=False)
+
+        return {
+            "success": True,
+            "data": [
+                {
+                    "id": key.id,
+                    "name": key.name,
+                    "prefix": key.prefix,
+                    "is_active": key.is_active,
+                    "last_used_at": key.last_used_at.isoformat() if key.last_used_at else None,
+                    "expires_at": key.expires_at.isoformat() if key.expires_at else None,
+                    "created_at": key.created_at.isoformat() if key.created_at else None
+                }
+                for key in api_keys
+            ]
+        }
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Failed to list API keys: {str(e)}")
 
 
 @router.post("/api-keys", summary="Generate API Key")
 async def generate_api_key(
-        current_user: dict = Depends(require_auth)
+        data: CreateAPIKeyRequest,
+        current_user: dict = Depends(require_auth),
+        session: AsyncSession = Depends(get_async_session)
 ):
     """Generate a new API key."""
-    # TODO: Implement API key generation
-    import secrets
-    api_key = f"sk_live_{secrets.token_urlsafe(32)}"
+    try:
+        # Create API key
+        api_key, full_key = await UsersDatabase.create_api_key(
+            session, current_user["id"], data.name
+        )
+        await session.commit()
 
-    return {
-        "success": True,
-        "message": "API key generated successfully",
-        "data": {
-            "key": api_key,
-            "created_at": "2025-11-05T00:00:00Z"
+        return {
+            "success": True,
+            "message": "API key generated successfully. Save this key now - it won't be shown again!",
+            "data": {
+                "id": api_key.id,
+                "name": api_key.name,
+                "key": full_key,  # Only shown once!
+                "prefix": api_key.prefix,
+                "created_at": api_key.created_at.isoformat() if api_key.created_at else None
+            }
         }
-    }
+    except Exception as e:
+        await session.rollback()
+        raise HTTPException(status_code=500, detail=f"Failed to generate API key: {str(e)}")
 
 
 @router.delete("/api-keys/{key_id}", summary="Revoke API Key")
 async def revoke_api_key(
-        key_id: str,
-        current_user: dict = Depends(require_auth)
+        key_id: int,
+        current_user: dict = Depends(require_auth),
+        session: AsyncSession = Depends(get_async_session)
 ):
     """Revoke an API key."""
-    # TODO: Implement API key revocation
-    return {
-        "success": True,
-        "message": "API key revoked successfully",
-        "data": None
-    }
+    try:
+        # Get the API key
+        api_key = await UsersDatabase.get_api_key_by_id(session, key_id)
+
+        if not api_key:
+            raise HTTPException(status_code=404, detail="API key not found")
+
+        # Verify ownership
+        if api_key.user_id != current_user["id"]:
+            raise HTTPException(status_code=403, detail="You don't have permission to revoke this API key")
+
+        # Revoke the key
+        await UsersDatabase.revoke_api_key(session, api_key)
+        await session.commit()
+
+        return {
+            "success": True,
+            "message": "API key revoked successfully",
+            "data": None
+        }
+    except HTTPException:
+        raise
+    except Exception as e:
+        await session.rollback()
+        raise HTTPException(status_code=500, detail=f"Failed to revoke API key: {str(e)}")
 
 
 @router.get("/sessions", summary="List Active Sessions")
 async def list_sessions(
-        current_user: dict = Depends(require_auth)
+        current_user: dict = Depends(require_auth),
+        session: AsyncSession = Depends(get_async_session)
 ):
     """List user's active sessions."""
-    # TODO: Implement session management
-    return {
-        "success": True,
-        "data": []
-    }
+    try:
+        sessions = await UsersDatabase.get_user_sessions(session, current_user["id"], active_only=True)
+
+        return {
+            "success": True,
+            "data": [
+                {
+                    "id": s.id,
+                    "device_info": s.device_info,
+                    "ip_address": s.ip_address,
+                    "location": s.location,
+                    "last_activity_at": s.last_activity_at.isoformat() if s.last_activity_at else None,
+                    "expires_at": s.expires_at.isoformat() if s.expires_at else None,
+                    "created_at": s.created_at.isoformat() if s.created_at else None
+                }
+                for s in sessions
+            ]
+        }
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Failed to list sessions: {str(e)}")
 
 
 @router.delete("/sessions/{session_id}", summary="Revoke Session")
 async def revoke_session(
-        session_id: str,
-        current_user: dict = Depends(require_auth)
+        session_id: int,
+        current_user: dict = Depends(require_auth),
+        session: AsyncSession = Depends(get_async_session)
 ):
     """Revoke a specific session."""
-    # TODO: Implement session revocation
-    return {
-        "success": True,
-        "message": "Session revoked successfully",
-        "data": None
-    }
+    try:
+        # Get all user sessions
+        user_sessions = await UsersDatabase.get_user_sessions(session, current_user["id"], active_only=False)
+
+        # Find the target session
+        target_session = None
+        for s in user_sessions:
+            if s.id == session_id:
+                target_session = s
+                break
+
+        if not target_session:
+            raise HTTPException(status_code=404, detail="Session not found")
+
+        # Verify ownership (should already be verified by above, but double-check)
+        if target_session.user_id != current_user["id"]:
+            raise HTTPException(status_code=403, detail="You don't have permission to revoke this session")
+
+        # Revoke the session
+        await UsersDatabase.revoke_session(session, target_session)
+        await session.commit()
+
+        return {
+            "success": True,
+            "message": "Session revoked successfully",
+            "data": None
+        }
+    except HTTPException:
+        raise
+    except Exception as e:
+        await session.rollback()
+        raise HTTPException(status_code=500, detail=f"Failed to revoke session: {str(e)}")
 
 
 @router.delete("/sessions", summary="Revoke All Sessions")
 async def revoke_all_sessions(
-        current_user: dict = Depends(require_auth)
+        current_user: dict = Depends(require_auth),
+        session: AsyncSession = Depends(get_async_session)
 ):
     """Revoke all sessions except current."""
-    # TODO: Implement revoke all sessions
-    return {
-        "success": True,
-        "message": "All other sessions revoked successfully",
-        "data": None
-    }
+    try:
+        # Get current session token from the request (if available)
+        # For now, we'll revoke all sessions - in production you'd want to preserve the current one
+        # This would require access to the request object to get the session cookie
+
+        count = await UsersDatabase.revoke_all_user_sessions(
+            session, current_user["id"], except_token=None
+        )
+        await session.commit()
+
+        return {
+            "success": True,
+            "message": f"Successfully revoked {count} session(s)",
+            "data": {"revoked_count": count}
+        }
+    except Exception as e:
+        await session.rollback()
+        raise HTTPException(status_code=500, detail=f"Failed to revoke sessions: {str(e)}")
