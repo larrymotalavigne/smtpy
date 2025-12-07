@@ -110,6 +110,20 @@ async def get_overall_stats(
     # Calculate success rate
     success_rate = (emails_sent / total_emails * 100) if total_emails > 0 else 0
 
+    # Total size in MB
+    size_result = await session.execute(
+        select(func.sum(Message.size_bytes)).select_from(Message).join(Domain).where(
+            Domain.organization_id == organization_id
+        ).where(
+            and_(
+                Message.created_at >= start_date,
+                Message.created_at <= end_date
+            )
+        )
+    )
+    total_size_bytes = size_result.scalar() or 0
+    total_size_mb = round(total_size_bytes / (1024 * 1024), 2)
+
     return {
         "success": True,
         "data": {
@@ -119,7 +133,7 @@ async def get_overall_stats(
             "active_domains": active_domains,
             "active_aliases": active_aliases,
             "success_rate": round(success_rate, 2),
-            "total_size_mb": 0  # TODO: implement if tracking message sizes
+            "total_size_mb": total_size_mb
         }
     }
 

@@ -12,6 +12,9 @@ from .base import Base, TimestampMixin
 
 if TYPE_CHECKING:
     from .organization import Organization
+    from .user_preferences import UserPreferences
+    from .api_key import APIKey
+    from .session import Session
 
 
 class UserRole(enum.Enum):
@@ -66,6 +69,15 @@ class User(Base, TimestampMixin):
     # Relationships
     organization: Mapped[Optional["Organization"]] = relationship(
         "Organization", back_populates="users", lazy="selectin"
+    )
+    preferences: Mapped[Optional["UserPreferences"]] = relationship(
+        "UserPreferences", back_populates="user", uselist=False, lazy="selectin", cascade="all, delete-orphan"
+    )
+    api_keys: Mapped[list["APIKey"]] = relationship(
+        "APIKey", back_populates="user", lazy="selectin", cascade="all, delete-orphan"
+    )
+    sessions: Mapped[list["Session"]] = relationship(
+        "Session", back_populates="user", lazy="selectin", cascade="all, delete-orphan"
     )
 
     def set_password(self, password: str) -> None:
