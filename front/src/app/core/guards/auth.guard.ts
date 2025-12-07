@@ -7,7 +7,7 @@ import {of} from 'rxjs';
 /**
  * Auth guard to protect routes that require authentication
  * Revalidates session with backend before allowing access
- * Redirects to login page if user is not authenticated or session expired
+ * Redirects to landing page if user is not authenticated or session expired
  */
 export const authGuard: CanActivateFn = (route, state) => {
     const authService = inject(AuthService);
@@ -21,26 +21,20 @@ export const authGuard: CanActivateFn = (route, state) => {
                     // Session is valid, allow access
                     return true;
                 } else {
-                    // Session invalid, redirect to login
-                    router.navigate(['/auth/login'], {
-                        queryParams: {returnUrl: state.url}
-                    });
+                    // Session invalid, redirect to landing page
+                    router.navigate(['/']);
                     return false;
                 }
             }),
             catchError(() => {
-                // Error checking auth status, redirect to login
-                router.navigate(['/auth/login'], {
-                    queryParams: {returnUrl: state.url}
-                });
+                // Error checking auth status, redirect to landing page
+                router.navigate(['/']);
                 return of(false);
             })
         );
     } else {
-        // User is not authenticated, redirect to login immediately
-        router.navigate(['/auth/login'], {
-            queryParams: {returnUrl: state.url}
-        });
+        // User is not authenticated, redirect to landing page immediately
+        router.navigate(['/']);
         return of(false);
     }
 };
@@ -71,7 +65,7 @@ export const guestGuard: CanActivateFn = (route, state) => {
 /**
  * Admin guard to protect routes that require admin role
  * Revalidates session with backend and checks admin role before allowing access
- * Redirects to dashboard if user is not an admin
+ * Redirects to landing page if user is not authenticated
  */
 export const adminGuard: CanActivateFn = (route, state) => {
     const authService = inject(AuthService);
@@ -91,26 +85,20 @@ export const adminGuard: CanActivateFn = (route, state) => {
                     router.navigate(['/dashboard']);
                     return false;
                 } else {
-                    // Session invalid, redirect to login
-                    router.navigate(['/auth/login'], {
-                        queryParams: {returnUrl: state.url}
-                    });
+                    // Session invalid, redirect to landing page
+                    router.navigate(['/']);
                     return false;
                 }
             }),
             catchError(() => {
-                // Error checking auth status, redirect to login
-                router.navigate(['/auth/login'], {
-                    queryParams: {returnUrl: state.url}
-                });
+                // Error checking auth status, redirect to landing page
+                router.navigate(['/']);
                 return of(false);
             })
         );
     } else {
-        // User is not authenticated, redirect to login immediately
-        router.navigate(['/auth/login'], {
-            queryParams: {returnUrl: state.url}
-        });
+        // User is not authenticated, redirect to landing page immediately
+        router.navigate(['/']);
         return of(false);
     }
 };
