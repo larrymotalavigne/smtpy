@@ -1,7 +1,7 @@
 """Add user preferences, API keys, and sessions tables
 
 Revision ID: 006
-Revises: 005
+Revises: 005_remove_forwarded_to
 Create Date: 2025-12-07 12:00:00.000000
 
 """
@@ -13,7 +13,7 @@ from sqlalchemy.dialects import postgresql
 
 # revision identifiers, used by Alembic.
 revision: str = '006'
-down_revision: Union[str, None] = '005'
+down_revision: Union[str, None] = '005_remove_forwarded_to'
 branch_labels: Union[str, Sequence[str], None] = None
 depends_on: Union[str, Sequence[str], None] = None
 
