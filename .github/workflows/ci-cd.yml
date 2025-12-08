@@ -345,19 +345,19 @@ jobs:
 
             # Check API health endpoint
             echo "Checking API health..."
-            if curl -f -s https://smtpy.fr/health > /dev/null; then
+            if curl -f -s https://api.smtpy.fr/health > /dev/null; then
               echo "✅ API is running and responding"
             else
               echo "❌ API health check failed"
               exit 1
             fi
 
-            # Check front
-            echo "Checking front..."
+            # Check Front
+            echo "Checking Front..."
             if curl -f -s https://smtpy.fr/ > /dev/null; then
               echo "✅ front is running and responding"
             else
-              echo "❌ front health check failed"
+              echo "❌ Front health check failed"
               exit 1
             fi
 
