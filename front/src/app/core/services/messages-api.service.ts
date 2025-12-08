@@ -156,12 +156,12 @@ export class MessagesApiService {
    * Search messages by content
    */
   searchMessages(
-    query: string, 
-    params?: PaginationParams, 
+    query: string,
+    params?: PaginationParams,
     filter?: MessageFilter
   ): Observable<ApiResponse<PaginatedResponse<MessageList>>> {
     let httpParams = new HttpParams().set('q', query);
-    
+
     // Add pagination and filter parameters
     if (params?.page) {
       httpParams = httpParams.set('page', params.page.toString());
@@ -177,5 +177,46 @@ export class MessagesApiService {
     }
 
     return this.http.get<ApiResponse<PaginatedResponse<MessageList>>>(`${this.apiUrl}/search`, { params: httpParams });
+  }
+
+  /**
+   * Get messages for a specific email address (both sent and received)
+   */
+  getMessagesByEmail(
+    email: string,
+    params?: PaginationParams,
+    filter?: MessageFilter
+  ): Observable<ApiResponse<PaginatedResponse<MessageList>>> {
+    let httpParams = new HttpParams();
+
+    // Pagination parameters
+    if (params?.page) {
+      httpParams = httpParams.set('page', params.page.toString());
+    }
+    if (params?.size) {
+      httpParams = httpParams.set('size', params.size.toString());
+    }
+    if (params?.sort) {
+      httpParams = httpParams.set('sort', params.sort);
+    }
+    if (params?.order) {
+      httpParams = httpParams.set('order', params.order);
+    }
+
+    // Filter parameters
+    if (filter?.status) {
+      httpParams = httpParams.set('status', filter.status);
+    }
+    if (filter?.date_from) {
+      httpParams = httpParams.set('date_from', filter.date_from);
+    }
+    if (filter?.date_to) {
+      httpParams = httpParams.set('date_to', filter.date_to);
+    }
+
+    return this.http.get<ApiResponse<PaginatedResponse<MessageList>>>(
+      `${this.apiUrl}/email/${encodeURIComponent(email)}`,
+      { params: httpParams }
+    );
   }
 }

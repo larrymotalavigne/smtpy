@@ -1,0 +1,342 @@
+<div class="mail-history-container">
+  <!-- Header -->
+  <div class="mail-history-header">
+    <div class="header-content">
+      <p-button
+        icon="pi pi-arrow-left"
+        [text]="true"
+        [rounded]="true"
+        (onClick)="goBack()"
+        styleClass="back-button" />
+      <div>
+        <h1 class="page-title">Historique des messages</h1>
+        <p class="page-subtitle">{{ email }}</p>
+      </div>
+    </div>
+
+    <!-- Stats Cards -->
+    <div class="stats-row">
+      <div class="stat-card">
+        <div class="stat-icon sent">
+          <i class="pi pi-send"></i>
+        </div>
+        <div class="stat-content">
+          <div class="stat-value">{{ sentCount }}</div>
+          <div class="stat-label">Envoyés</div>
+        </div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-icon received">
+          <i class="pi pi-inbox"></i>
+        </div>
+        <div class="stat-content">
+          <div class="stat-value">{{ receivedCount }}</div>
+          <div class="stat-label">Reçus</div>
+        </div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-icon total">
+          <i class="pi pi-envelope"></i>
+        </div>
+        <div class="stat-content">
+          <div class="stat-value">{{ totalRecords }}</div>
+          <div class="stat-label">Total</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Filters -->
+  <p-card class="filters-card">
+    <ng-template #content>
+      <form [formGroup]="filterForm" class="filters-form">
+        <div class="filter-row">
+          <div class="filter-field">
+            <label for="status">Statut</label>
+            <p-select id="status"
+              formControlName="status"
+              [options]="statusOptions"
+              placeholder="Tous les statuts"
+              styleClass="w-full" />
+          </div>
+
+          <div class="filter-field">
+            <label for="direction">Direction</label>
+            <p-select id="direction"
+              formControlName="direction"
+              [options]="directionOptions"
+              placeholder="Tous"
+              styleClass="w-full" />
+          </div>
+
+          <div class="filter-field">
+            <label for="dateRange">Période</label>
+            <p-datepicker id="dateRange"
+              formControlName="dateRange"
+              selectionMode="range"
+              [showIcon]="true"
+              dateFormat="dd/mm/yy"
+              placeholder="Sélectionner une période"
+              styleClass="w-full" />
+          </div>
+        </div>
+
+        <div class="filter-actions">
+          <p-button label="Appliquer"
+            icon="pi pi-check"
+            (onClick)="applyFilters()" />
+          <p-button label="Réinitialiser"
+            icon="pi pi-times"
+            severity="secondary"
+            [text]="true"
+            (onClick)="clearFilters()" />
+        </div>
+      </form>
+    </ng-template>
+  </p-card>
+
+  <!-- Messages Table -->
+  <p-card class="messages-card">
+    <ng-template #content>
+      <p-table
+        [value]="getFilteredMessages()"
+        [loading]="loading"
+        [paginator]="true"
+        [rows]="pageSize"
+        [totalRecords]="totalRecords"
+        [lazy]="true"
+        (onLazyLoad)="onPageChange($event)"
+        [showCurrentPageReport]="true"
+        currentPageReportTemplate="Affichage de {first} à {last} sur {totalRecords} messages"
+        [rowsPerPageOptions]="[10, 25, 50]"
+        styleClass="p-datatable-sm"
+        [globalFilterFields]="['sender_email', 'recipient_email', 'subject']">
+
+        <ng-template #header>
+          <tr>
+            <th style="width: 60px"></th>
+            <th style="width: 100px">Direction</th>
+            <th>De / À</th>
+            <th>Sujet</th>
+            <th>Statut</th>
+            <th>Taille</th>
+            <th>Date</th>
+            <th style="width: 150px">Actions</th>
+          </tr>
+        </ng-template>
+
+        <ng-template #body let-message>
+          <tr [class.message-row-clickable]="true" (click)="viewMessageDetails(message)">
+            <!-- Avatar -->
+            <td>
+              <p-avatar [label]="message.senderInitials"
+                size="normal"
+                shape="circle"
+                [style]="{'background-color': getAvatarColor(message), 'color': '#ffffff'}" />
+            </td>
+
+            <!-- Direction -->
+            <td>
+              <div class="direction-cell">
+                <p-tag
+                  [value]="getDirectionLabel(message)"
+                  [severity]="message.direction === 'sent' ? 'info' : 'success'"
+                  [icon]="getDirectionIcon(message)" />
+              </div>
+            </td>
+
+            <!-- From / To -->
+            <td>
+              <div class="email-cell">
+                <div class="email-line">
+                  <span class="email-label">De:</span>
+                  <span class="email-value">{{ message.sender_email }}</span>
+                </div>
+                <div class="email-line">
+                  <span class="email-label">À:</span>
+                  <span class="email-value">{{ message.recipient_email }}</span>
+                </div>
+              </div>
+            </td>
+
+            <!-- Subject -->
+            <td>
+              <div class="subject-cell">
+                <div class="subject-title">
+                  <span class="subject-text">{{ truncateText(message.subject, 40) }}</span>
+                  @if (message.has_attachments) {
+                    <i
+                      class="pi pi-paperclip attachment-icon"
+                      pTooltip="Contient des pièces jointes"
+                      tooltipPosition="top">
+                    </i>
+                  }
+                </div>
+                <div class="subject-preview">{{ truncateText(message.body_preview, 60) }}</div>
+              </div>
+            </td>
+
+            <!-- Status -->
+            <td>
+              <div class="status-cell">
+                <p-tag [value]="getStatusLabel(message.status)"
+                  [severity]="getStatusSeverity(message.status)" />
+                @if (message.error_message) {
+                  <div class="error-hint">
+                    <i class="pi pi-exclamation-circle"></i>
+                    <span>{{ message.error_message }}</span>
+                  </div>
+                }
+              </div>
+            </td>
+
+            <!-- Size -->
+            <td>
+              <span class="size-text">{{ formatSize(message.size_bytes) }}</span>
+            </td>
+
+            <!-- Date -->
+            <td>
+              <div class="date-cell">
+                <span class="date-text">{{ message.timeAgo }}</span>
+              </div>
+            </td>
+
+            <!-- Actions -->
+            <td (click)="$event.stopPropagation()">
+              <div class="action-buttons">
+                <p-button icon="pi pi-eye"
+                  [text]="true"
+                  [rounded]="true"
+                  severity="secondary"
+                  size="small"
+                  pTooltip="Voir les détails"
+                  tooltipPosition="top"
+                  (onClick)="viewMessageDetails(message)" />
+                <p-button icon="pi pi-trash"
+                  [text]="true"
+                  [rounded]="true"
+                  severity="danger"
+                  size="small"
+                  pTooltip="Supprimer"
+                  tooltipPosition="top"
+                  (onClick)="deleteMessage(message)" />
+              </div>
+            </td>
+          </tr>
+        </ng-template>
+
+        <ng-template #emptymessage>
+          <tr>
+            <td colspan="8" class="empty-message">
+              <div class="empty-state">
+                <i class="pi pi-inbox"></i>
+                <h3>Aucun message</h3>
+                <p>Aucun message n'a été envoyé ou reçu pour cette adresse email.</p>
+              </div>
+            </td>
+          </tr>
+        </ng-template>
+      </p-table>
+    </ng-template>
+  </p-card>
+</div>
+
+<!-- Message Detail Dialog -->
+<p-dialog
+  [header]="'Détails du message'"
+  [(visible)]="displayDetailDialog"
+  [modal]="true"
+  [style]="{width: '700px'}"
+  [draggable]="false"
+  [resizable]="false">
+  <ng-template #content>
+    @if (selectedMessage) {
+      <div class="message-detail">
+        <!-- Direction Badge -->
+        <div class="detail-direction-badge">
+          <p-tag
+            [value]="getDirectionLabel(selectedMessage)"
+            [severity]="selectedMessage.direction === 'sent' ? 'info' : 'success'"
+            [icon]="getDirectionIcon(selectedMessage)"
+            styleClass="detail-tag" />
+        </div>
+
+        <!-- Status Banner -->
+        <div class="detail-status-banner" [class]="'status-' + selectedMessage.status">
+          <div class="status-info">
+            <i class="pi" [class]="selectedMessage.status === 'DELIVERED' ? 'pi-check-circle' : selectedMessage.status === 'PENDING' ? 'pi-clock' : 'pi-exclamation-triangle'"></i>
+            <div>
+              <h4>{{ getStatusLabel(selectedMessage.status) }}</h4>
+              @if (selectedMessage.error_message) {
+                <p>{{ selectedMessage.error_message }}</p>
+              }
+            </div>
+          </div>
+          <p-tag [value]="getStatusLabel(selectedMessage.status)"
+            [severity]="getStatusSeverity(selectedMessage.status)" />
+        </div>
+
+        <!-- Message Info -->
+        <div class="detail-section">
+          <h4>Informations générales</h4>
+          <div class="detail-grid">
+            <div class="detail-item">
+              <span class="detail-label">ID du message:</span>
+              <span class="detail-value">{{ selectedMessage.message_id }}</span>
+            </div>
+            <div class="detail-item">
+              <span class="detail-label">Date de réception:</span>
+              <span class="detail-value">{{ formatDate(selectedMessage.created_at) }}</span>
+            </div>
+            <div class="detail-item">
+              <span class="detail-label">Taille:</span>
+              <span class="detail-value">{{ formatSize(selectedMessage.size_bytes) }}</span>
+            </div>
+            <div class="detail-item">
+              <span class="detail-label">Pièces jointes:</span>
+              <span class="detail-value">{{ selectedMessage.has_attachments ? 'Oui' : 'Non' }}</span>
+            </div>
+          </div>
+        </div>
+
+        <!-- Email Details -->
+        <div class="detail-section">
+          <h4>Détails de l'email</h4>
+          <div class="detail-grid">
+            <div class="detail-item full-width">
+              <span class="detail-label">De:</span>
+              <span class="detail-value email">{{ selectedMessage.sender_email }}</span>
+            </div>
+            <div class="detail-item full-width">
+              <span class="detail-label">À:</span>
+              <span class="detail-value email">{{ selectedMessage.recipient_email }}</span>
+            </div>
+            <div class="detail-item full-width">
+              <span class="detail-label">Sujet:</span>
+              <span class="detail-value">{{ selectedMessage.subject }}</span>
+            </div>
+          </div>
+        </div>
+
+        <!-- Message Preview -->
+        @if (selectedMessage.body_preview) {
+          <div class="detail-section">
+            <h4>Aperçu du message</h4>
+            <div class="message-preview">
+              {{ selectedMessage.body_preview }}
+            </div>
+          </div>
+        }
+      </div>
+    }
+  </ng-template>
+  <ng-template #footer>
+    <p-button label="Fermer"
+      severity="secondary"
+      (onClick)="displayDetailDialog = false" />
+  </ng-template>
+</p-dialog>
+
+<!-- Toast Notifications -->
+<p-toast position="top-right" />

@@ -51,7 +51,7 @@
             <th>Destinations</th>
             <th>Domaine</th>
             <th>Date de création</th>
-            <th style="width: 150px">Actions</th>
+            <th style="width: 200px">Actions</th>
           </tr>
         </ng-template>
 
@@ -90,6 +90,14 @@
             <!-- Actions -->
             <td>
               <div class="action-buttons">
+                <p-button icon="pi pi-envelope"
+                  [text]="true"
+                  [rounded]="true"
+                  severity="secondary"
+                  size="small"
+                  pTooltip="Historique des messages"
+                  tooltipPosition="top"
+                  (onClick)="viewMailHistory(alias)" />
                 <p-button icon="pi pi-copy"
                   [text]="true"
                   [rounded]="true"
