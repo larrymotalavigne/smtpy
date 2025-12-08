@@ -9,6 +9,8 @@ from sqlalchemy import select, func
 
 from shared.models.domain import Domain, DomainStatus
 from shared.models.message import Message, MessageStatus
+from shared.models.user import User
+from shared.models.user_preferences import UserPreferences
 from ..database import domains_database
 from ..schemas.common import PaginatedResponse
 from ..schemas.domain import (
@@ -22,6 +24,7 @@ from ..schemas.domain import (
 )
 from ..services.dns_service import DNSService
 from ..services.dkim_service import DKIMService
+from ..services.email_service import EmailService
 
 logger = logging.getLogger(__name__)
 
@@ -221,6 +224,37 @@ async def verify_domain(
             failed_records.append("DMARC record")
 
         message = f"DNS verification incomplete. Missing or incorrect: {', '.join(failed_records)}. Please check your DNS configuration."
+
+    # Send notification if domain is now fully verified
+    if success and updated_domain:
+        try:
+            # Get user for notification
+            user_result = await db.execute(
+                select(User).where(User.organization_id == updated_domain.organization_id)
+            )
+            user = user_result.scalar_one_or_none()
+
+            if user:
+                # Check user preferences
+                prefs_result = await db.execute(
+                    select(UserPreferences).where(UserPreferences.user_id == user.id)
+                )
+                prefs = prefs_result.scalar_one_or_none()
+
+                # Send notification if enabled (default to True)
+                should_notify = True
+                if prefs:
+                    should_notify = prefs.email_on_domain_verified
+
+                if should_notify:
+                    await EmailService.send_domain_verified_notification(
+                        to=user.email,
+                        username=user.username,
+                        domain_name=updated_domain.name
+                    )
+                    logger.info(f"Sent domain verification notification to {user.email}")
+        except Exception as e:
+            logger.error(f"Failed to send domain verification notification: {str(e)}")
 
     return DomainVerificationResponse(
         success=success,

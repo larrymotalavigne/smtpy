@@ -4,7 +4,7 @@ from contextlib import asynccontextmanager
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 
-from api.views import auth_view, billing_view, domains_view, messages_view, subscriptions_view, webhooks_view, statistics_view, aliases_view, admin_view, users_view
+from api.views import auth_view, billing_view, domains_view, messages_view, subscriptions_view, webhooks_view, statistics_view, aliases_view, admin_view, users_view, rules_view
 from api.views import utils_view
 from shared.core.config import SETTINGS
 from shared.core.db import create_tables
@@ -207,6 +207,7 @@ Success responses follow this structure:
     app.include_router(admin_view.router)
     app.include_router(utils_view.router)
     app.include_router(webhooks_view.router)
+    app.include_router(rules_view.router)
 
     return app
 

@@ -4,15 +4,20 @@ import logging
 import email
 from email import policy
 from email.parser import BytesParser
-from typing import Optional
+from typing import Optional, List, Tuple
 from aiosmtpd.smtp import SMTP as SMTPServer, Envelope, Session
 import aiosmtplib
 from sqlalchemy.ext.asyncio import AsyncSession, async_sessionmaker, create_async_engine
+from sqlalchemy import select
 
 from shared.core.config import SETTINGS
 from shared.models.message import Message, MessageStatus
 from shared.models.alias import Alias
 from shared.models.domain import Domain
+from shared.models.user import User
+from shared.models.user_preferences import UserPreferences
+from shared.models.forwarding_rule import ForwardingRule, RuleConditionType, RuleActionType
+from api.services.email_service import EmailService
 
 logger = logging.getLogger(__name__)
 
@@ -27,6 +32,139 @@ class SMTPHandler:
         self.async_session = async_sessionmaker(
             self.engine, class_=AsyncSession, expire_on_commit=False
         )
+
+    async def _evaluate_rule(
+        self,
+        rule: ForwardingRule,
+        sender: str,
+        subject: str,
+        message_size: int,
+        has_attachments: bool
+    ) -> bool:
+        """
+        Evaluate if a forwarding rule matches the current message.
+
+        Args:
+            rule: The forwarding rule to evaluate
+            sender: Sender email address
+            subject: Email subject
+            message_size: Size of message in bytes
+            has_attachments: Whether message has attachments
+
+        Returns:
+            True if rule matches, False otherwise
+        """
+        try:
+            condition_value = rule.condition_value.lower() if rule.condition_value else ""
+
+            if rule.condition_type == RuleConditionType.SENDER_CONTAINS:
+                return condition_value in sender.lower()
+
+            elif rule.condition_type == RuleConditionType.SENDER_EQUALS:
+                return sender.lower() == condition_value
+
+            elif rule.condition_type == RuleConditionType.SENDER_DOMAIN:
+                sender_domain = sender.split('@')[-1].lower() if '@' in sender else ''
+                return sender_domain == condition_value
+
+            elif rule.condition_type == RuleConditionType.SUBJECT_CONTAINS:
+                return condition_value in subject.lower()
+
+            elif rule.condition_type == RuleConditionType.SUBJECT_EQUALS:
+                return subject.lower() == condition_value
+
+            elif rule.condition_type == RuleConditionType.SIZE_GREATER_THAN:
+                try:
+                    threshold = int(rule.condition_value)
+                    return message_size > threshold
+                except ValueError:
+                    logger.error(f"Invalid size threshold: {rule.condition_value}")
+                    return False
+
+            elif rule.condition_type == RuleConditionType.SIZE_LESS_THAN:
+                try:
+                    threshold = int(rule.condition_value)
+                    return message_size < threshold
+                except ValueError:
+                    logger.error(f"Invalid size threshold: {rule.condition_value}")
+                    return False
+
+            elif rule.condition_type == RuleConditionType.HAS_ATTACHMENTS:
+                expected = rule.condition_value.lower() in ('true', '1', 'yes')
+                return has_attachments == expected
+
+            return False
+
+        except Exception as e:
+            logger.error(f"Error evaluating rule {rule.id}: {str(e)}")
+            return False
+
+    async def _apply_forwarding_rules(
+        self,
+        session: AsyncSession,
+        alias: Alias,
+        sender: str,
+        subject: str,
+        message_size: int,
+        has_attachments: bool
+    ) -> Tuple[Optional[str], bool]:
+        """
+        Apply forwarding rules to determine target address(es).
+
+        Args:
+            session: Database session
+            alias: The alias receiving the email
+            sender: Sender email address
+            subject: Email subject
+            message_size: Size of message in bytes
+            has_attachments: Whether message has attachments
+
+        Returns:
+            Tuple of (target_addresses, should_block)
+            - target_addresses: Comma-separated email addresses or None if using default
+            - should_block: True if email should be blocked
+        """
+        # Fetch active rules for this alias, ordered by priority
+        rules_result = await session.execute(
+            select(ForwardingRule)
+            .where(
+                ForwardingRule.alias_id == alias.id,
+                ForwardingRule.is_active == True
+            )
+            .order_by(ForwardingRule.priority.asc())
+        )
+        rules = rules_result.scalars().all()
+
+        if not rules:
+            # No rules, use default alias targets
+            return (alias.targets, False)
+
+        # Evaluate rules in priority order
+        for rule in rules:
+            if await self._evaluate_rule(rule, sender, subject, message_size, has_attachments):
+                # Rule matched! Increment match counter
+                rule.match_count += 1
+                await session.commit()
+
+                logger.info(f"Rule '{rule.name}' matched for alias {alias.id}")
+
+                if rule.action_type == RuleActionType.BLOCK:
+                    return (None, True)
+
+                elif rule.action_type == RuleActionType.FORWARD:
+                    # Use default alias targets
+                    return (alias.targets, False)
+
+                elif rule.action_type == RuleActionType.REDIRECT:
+                    # Use rule's custom targets
+                    if rule.action_value:
+                        return (rule.action_value, False)
+                    else:
+                        logger.warning(f"Rule {rule.id} has REDIRECT action but no action_value")
+                        return (alias.targets, False)
+
+        # No rules matched, use default targets
+        return (alias.targets, False)
 
     async def handle_DATA(self, server: SMTPServer, session: Session, envelope: Envelope):
         """
@@ -61,7 +199,7 @@ class SMTPHandler:
 
     async def _process_recipient(self, sender: str, recipient: str, raw_content: bytes):
         """
-        Process email for a specific recipient (check aliases and forward).
+        Process email for a specific recipient (check aliases, apply rules, and forward).
 
         Args:
             sender: Sender email address
@@ -70,6 +208,15 @@ class SMTPHandler:
         """
         async with self.async_session() as session:
             try:
+                # Parse message early to extract metadata
+                parsed_message = BytesParser(policy=policy.default).parsebytes(raw_content)
+                subject = str(parsed_message.get("Subject", ""))[:500]
+                message_size = len(raw_content)
+                has_attachments = any(
+                    part.get_content_disposition() == "attachment"
+                    for part in parsed_message.walk()
+                )
+
                 # Extract domain from recipient
                 if "@" not in recipient:
                     logger.warning(f"Invalid recipient format: {recipient}")
@@ -78,7 +225,6 @@ class SMTPHandler:
                 local_part, domain_name = recipient.split("@", 1)
 
                 # Check if domain exists in our system
-                from sqlalchemy import select
                 domain_result = await session.execute(
                     select(Domain).where(Domain.name == domain_name.lower())
                 )
@@ -88,11 +234,20 @@ class SMTPHandler:
                     logger.info(f"Domain {domain_name} not found in system, skipping")
                     return
 
+                # Get domain owner's user info for notifications
+                user_result = await session.execute(
+                    select(User).where(User.organization_id == domain.organization_id)
+                )
+                user = user_result.scalar_one_or_none()
+
                 # Check for catch-all first
-                forward_to = None
+                forward_targets = None
+                should_block = False
+                alias = None
+
                 if domain.catch_all_email:
-                    forward_to = domain.catch_all_email
-                    logger.info(f"Using catch-all address: {forward_to}")
+                    forward_targets = domain.catch_all_email
+                    logger.info(f"Using catch-all address: {forward_targets}")
                 else:
                     # Look up alias
                     alias_result = await session.execute(
@@ -105,27 +260,56 @@ class SMTPHandler:
                     alias = alias_result.scalar_one_or_none()
 
                     if alias:
-                        forward_to = alias.forward_to
-                        logger.info(f"Found alias: {recipient} -> {forward_to}")
+                        # Apply forwarding rules
+                        forward_targets, should_block = await self._apply_forwarding_rules(
+                            session, alias, sender, subject, message_size, has_attachments
+                        )
+
+                        if should_block:
+                            logger.info(f"Email blocked by forwarding rule for {recipient}")
+                            await self._store_message(
+                                session, sender, recipient, raw_content, None,
+                                MessageStatus.REJECTED, "Blocked by forwarding rule"
+                            )
+                            return
+
+                        logger.info(f"Found alias: {recipient} -> {forward_targets}")
                     else:
                         logger.info(f"No alias found for {recipient}")
-                        # Store as received but not forwarded
                         await self._store_message(
                             session, sender, recipient, raw_content, None,
                             MessageStatus.REJECTED, "No alias found"
                         )
                         return
 
-                # Forward the email
-                if forward_to:
-                    success = await self._forward_email(sender, forward_to, raw_content)
+                # Forward the email to all targets
+                if forward_targets:
+                    # Split comma-separated targets
+                    target_list = [t.strip() for t in forward_targets.split(',') if t.strip()]
 
-                    # Store message
+                    all_success = True
+                    failed_targets = []
+
+                    for target in target_list:
+                        success = await self._forward_email(sender, target, raw_content)
+                        if not success:
+                            all_success = False
+                            failed_targets.append(target)
+
+                    # Store message with appropriate status
+                    status = MessageStatus.DELIVERED if all_success else MessageStatus.FAILED
+                    error_msg = None if all_success else f"Failed to forward to: {', '.join(failed_targets)}"
+
                     await self._store_message(
-                        session, sender, recipient, raw_content, forward_to,
-                        MessageStatus.DELIVERED if success else MessageStatus.FAILED,
-                        None if success else "Failed to forward email"
+                        session, sender, recipient, raw_content, forward_targets,
+                        status, error_msg
                     )
+
+                    # Send notification if forwarding failed and user wants notifications
+                    if not all_success and user:
+                        await self._send_failed_forward_notification(
+                            session, user, recipient, sender, subject, error_msg
+                        )
 
             except Exception as e:
                 logger.error(f"Error processing recipient {recipient}: {str(e)}")
@@ -225,3 +409,52 @@ class SMTPHandler:
         except Exception as e:
             logger.error(f"Failed to store message: {str(e)}")
             await session.rollback()
+
+    async def _send_failed_forward_notification(
+        self,
+        session: AsyncSession,
+        user: User,
+        alias: str,
+        sender: str,
+        subject: str,
+        error: str
+    ):
+        """
+        Send notification when email forwarding fails.
+
+        Args:
+            session: Database session
+            user: User to notify
+            alias: Alias that received the email
+            sender: Original sender email
+            subject: Email subject
+            error: Error message
+        """
+        try:
+            # Check if user wants forwarding failure notifications
+            prefs_result = await session.execute(
+                select(UserPreferences).where(UserPreferences.user_id == user.id)
+            )
+            prefs = prefs_result.scalar_one_or_none()
+
+            # Default to sending notifications if preferences don't exist
+            should_notify = True
+            if prefs:
+                # Check if user has email_on_new_message enabled (closest match for forward failures)
+                should_notify = prefs.email_on_new_message
+
+            if should_notify:
+                await EmailService.send_failed_forward_notification(
+                    to=user.email,
+                    username=user.username,
+                    alias=alias,
+                    sender=sender,
+                    subject=subject,
+                    error=error or "Unknown error"
+                )
+                logger.info(f"Sent failed forward notification to {user.email}")
+            else:
+                logger.info(f"Skipping notification for {user.email} (disabled in preferences)")
+
+        except Exception as e:
+            logger.error(f"Failed to send notification: {str(e)}")

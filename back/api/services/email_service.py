@@ -229,3 +229,239 @@ class EmailService:
             html_content=html_content,
             text_content=text_content
         )
+
+    @staticmethod
+    async def send_failed_forward_notification(
+        to: str,
+        username: str,
+        alias: str,
+        sender: str,
+        subject: str,
+        error: str,
+    ) -> bool:
+        """
+        Send notification when email forwarding fails.
+
+        Args:
+            to: User's email address
+            username: Username
+            alias: Alias that received the email
+            sender: Original sender email
+            subject: Email subject
+            error: Error message
+
+        Returns:
+            True if sent successfully
+        """
+        html_content = f"""
+        <!DOCTYPE html>
+        <html>
+        <head>
+            <meta charset="utf-8">
+            <title>Email Forwarding Failed</title>
+        </head>
+        <body style="font-family: Arial, sans-serif; line-height: 1.6; color: #333;">
+            <div style="max-width: 600px; margin: 0 auto; padding: 20px;">
+                <h2 style="color: #e74c3c;">Email Forwarding Failed</h2>
+                <p>Hello {username},</p>
+                <p>We were unable to forward an email received at your alias.</p>
+                <div style="background-color: #f8f9fa; padding: 15px; border-radius: 5px; margin: 20px 0;">
+                    <p style="margin: 5px 0;"><strong>Alias:</strong> {alias}</p>
+                    <p style="margin: 5px 0;"><strong>From:</strong> {sender}</p>
+                    <p style="margin: 5px 0;"><strong>Subject:</strong> {subject}</p>
+                    <p style="margin: 5px 0;"><strong>Error:</strong> {error}</p>
+                </div>
+                <p>Please check your target email address settings and ensure they're correct.</p>
+                <div style="text-align: center; margin: 30px 0;">
+                    <a href="{SETTINGS.APP_URL}/aliases"
+                       style="background-color: #3498db; color: white; padding: 12px 30px;
+                              text-decoration: none; border-radius: 5px; display: inline-block;">
+                        View Aliases
+                    </a>
+                </div>
+                <hr style="border: none; border-top: 1px solid #ecf0f1; margin: 30px 0;">
+                <p style="color: #95a5a6; font-size: 12px;">
+                    SMTPy - Email Aliasing Service
+                </p>
+            </div>
+        </body>
+        </html>
+        """
+
+        text_content = f"""
+        Email Forwarding Failed
+
+        Hello {username},
+
+        We were unable to forward an email received at your alias.
+
+        Alias: {alias}
+        From: {sender}
+        Subject: {subject}
+        Error: {error}
+
+        Please check your target email address settings and ensure they're correct.
+
+        View your aliases: {SETTINGS.APP_URL}/aliases
+
+        ---
+        SMTPy - Email Aliasing Service
+        """
+
+        return await EmailService._send_email(
+            to=to,
+            subject="Email Forwarding Failed - SMTPy",
+            html_content=html_content,
+            text_content=text_content
+        )
+
+    @staticmethod
+    async def send_quota_warning_notification(
+        to: str,
+        username: str,
+        current_count: int,
+        quota_limit: int,
+        percentage: int,
+    ) -> bool:
+        """
+        Send notification when quota threshold is reached.
+
+        Args:
+            to: User's email address
+            username: Username
+            current_count: Current message count
+            quota_limit: Total quota limit
+            percentage: Percentage used (80 or 90)
+
+        Returns:
+            True if sent successfully
+        """
+        remaining = quota_limit - current_count
+
+        html_content = f"""
+        <!DOCTYPE html>
+        <html>
+        <head>
+            <meta charset="utf-8">
+            <title>Quota Warning</title>
+        </head>
+        <body style="font-family: Arial, sans-serif; line-height: 1.6; color: #333;">
+            <div style="max-width: 600px; margin: 0 auto; padding: 20px;">
+                <h2 style="color: #f39c12;">Quota Warning</h2>
+                <p>Hello {username},</p>
+                <p>Your account has reached <strong>{percentage}%</strong> of your monthly email quota.</p>
+                <div style="background-color: #fff3cd; padding: 15px; border-radius: 5px; margin: 20px 0; border-left: 4px solid #f39c12;">
+                    <p style="margin: 5px 0;"><strong>Current Usage:</strong> {current_count:,} / {quota_limit:,} emails</p>
+                    <p style="margin: 5px 0;"><strong>Remaining:</strong> {remaining:,} emails</p>
+                </div>
+                <p>Consider upgrading your plan to avoid service interruption.</p>
+                <div style="text-align: center; margin: 30px 0;">
+                    <a href="{SETTINGS.APP_URL}/billing"
+                       style="background-color: #3498db; color: white; padding: 12px 30px;
+                              text-decoration: none; border-radius: 5px; display: inline-block;">
+                        Upgrade Plan
+                    </a>
+                </div>
+                <hr style="border: none; border-top: 1px solid #ecf0f1; margin: 30px 0;">
+                <p style="color: #95a5a6; font-size: 12px;">
+                    SMTPy - Email Aliasing Service
+                </p>
+            </div>
+        </body>
+        </html>
+        """
+
+        text_content = f"""
+        Quota Warning
+
+        Hello {username},
+
+        Your account has reached {percentage}% of your monthly email quota.
+
+        Current Usage: {current_count:,} / {quota_limit:,} emails
+        Remaining: {remaining:,} emails
+
+        Consider upgrading your plan to avoid service interruption.
+
+        Upgrade your plan: {SETTINGS.APP_URL}/billing
+
+        ---
+        SMTPy - Email Aliasing Service
+        """
+
+        return await EmailService._send_email(
+            to=to,
+            subject=f"Quota Warning ({percentage}% Used) - SMTPy",
+            html_content=html_content,
+            text_content=text_content
+        )
+
+    @staticmethod
+    async def send_domain_verified_notification(
+        to: str,
+        username: str,
+        domain_name: str,
+    ) -> bool:
+        """
+        Send notification when domain is successfully verified.
+
+        Args:
+            to: User's email address
+            username: Username
+            domain_name: Verified domain name
+
+        Returns:
+            True if sent successfully
+        """
+        html_content = f"""
+        <!DOCTYPE html>
+        <html>
+        <head>
+            <meta charset="utf-8">
+            <title>Domain Verified</title>
+        </head>
+        <body style="font-family: Arial, sans-serif; line-height: 1.6; color: #333;">
+            <div style="max-width: 600px; margin: 0 auto; padding: 20px;">
+                <h2 style="color: #27ae60;">Domain Verified Successfully!</h2>
+                <p>Hello {username},</p>
+                <p>Your domain <strong>{domain_name}</strong> has been successfully verified.</p>
+                <div style="background-color: #d4edda; padding: 15px; border-radius: 5px; margin: 20px 0; border-left: 4px solid #27ae60;">
+                    <p style="margin: 5px 0;">You can now create email aliases for this domain.</p>
+                </div>
+                <div style="text-align: center; margin: 30px 0;">
+                    <a href="{SETTINGS.APP_URL}/aliases/new?domain={domain_name}"
+                       style="background-color: #27ae60; color: white; padding: 12px 30px;
+                              text-decoration: none; border-radius: 5px; display: inline-block;">
+                        Create Alias
+                    </a>
+                </div>
+                <hr style="border: none; border-top: 1px solid #ecf0f1; margin: 30px 0;">
+                <p style="color: #95a5a6; font-size: 12px;">
+                    SMTPy - Email Aliasing Service
+                </p>
+            </div>
+        </body>
+        </html>
+        """
+
+        text_content = f"""
+        Domain Verified Successfully!
+
+        Hello {username},
+
+        Your domain {domain_name} has been successfully verified.
+
+        You can now create email aliases for this domain.
+
+        Create an alias: {SETTINGS.APP_URL}/aliases/new?domain={domain_name}
+
+        ---
+        SMTPy - Email Aliasing Service
+        """
+
+        return await EmailService._send_email(
+            to=to,
+            subject=f"Domain {domain_name} Verified - SMTPy",
+            html_content=html_content,
+            text_content=text_content
+        )
