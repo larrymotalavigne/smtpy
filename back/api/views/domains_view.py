@@ -12,7 +12,8 @@ from ..schemas.domain import (
     DomainResponse,
     DomainVerificationResponse,
     DNSRecords,
-    DomainStats
+    DomainStats,
+    DKIMRegenerationResponse
 )
 
 # Create router
@@ -287,13 +288,13 @@ async def get_dns_records(
             domain_id=domain_id,
             organization_id=MOCK_ORGANIZATION_ID
         )
-        
+
         if not dns_records:
             raise HTTPException(
                 status_code=status.HTTP_404_NOT_FOUND,
                 detail="Domain not found"
             )
-        
+
         return dns_records
     except HTTPException:
         raise
@@ -301,4 +302,50 @@ async def get_dns_records(
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
             detail="Failed to fetch DNS records"
+        )
+
+
+@router.post(
+    "/{domain_id}/regenerate-dkim-keys",
+    response_model=DKIMRegenerationResponse,
+    summary="Regenerate DKIM keys for a domain",
+    responses={
+        404: {"model": ErrorResponse, "description": "Domain not found"},
+        500: {"model": ErrorResponse, "description": "Internal server error"}
+    }
+)
+async def regenerate_dkim_keys(
+    domain_id: int,
+    db: AsyncSession = Depends(get_db)
+):
+    """Regenerate DKIM keys for an existing domain.
+
+    This is useful for:
+    - Domains created before DKIM functionality was added
+    - Key rotation for security best practices
+    - Recovery if keys are lost or compromised
+
+    Note: After regenerating keys, you must update your DNS TXT record
+    with the new public key. The DKIM verification status will be reset.
+    """
+    try:
+        result = await domains_controller.regenerate_dkim_keys(
+            db=db,
+            domain_id=domain_id,
+            organization_id=MOCK_ORGANIZATION_ID
+        )
+
+        if not result:
+            raise HTTPException(
+                status_code=status.HTTP_404_NOT_FOUND,
+                detail="Domain not found"
+            )
+
+        return result
+    except HTTPException:
+        raise
+    except Exception as e:
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail="Failed to regenerate DKIM keys"
         )
