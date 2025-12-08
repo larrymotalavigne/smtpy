@@ -461,6 +461,23 @@
               <p class="dns-description">
                 DKIM signe cryptographiquement vos emails pour prouver qu'ils proviennent bien de votre domaine.
               </p>
+              <div class="dkim-actions-section" style="margin: 1rem 0; padding: 1rem; background: #f8f9fa; border-radius: 8px; border-left: 4px solid #f59e0b;">
+                <div style="display: flex; align-items: center; gap: 1rem;">
+                  <i class="pi pi-info-circle" style="color: #f59e0b; font-size: 1.5rem;"></i>
+                  <div style="flex: 1;">
+                    <strong>Besoin de regénérer vos clés DKIM ?</strong>
+                    <p style="margin: 0.5rem 0 0 0; font-size: 0.9rem; color: #64748b;">
+                      Si vos clés ont été compromises ou si vous souhaitez les renouveler, vous pouvez générer de nouvelles clés DKIM.
+                    </p>
+                  </div>
+                  <p-button
+                    label="Régénérer les clés"
+                    icon="pi pi-refresh"
+                    severity="secondary"
+                    [loading]="regeneratingDKIM"
+                    (onClick)="regenerateDKIMKeys(selectedDomain!)" />
+                </div>
+              </div>
               <div class="dns-fields-table">
                 <table class="dns-config-table">
                   <thead>
@@ -478,14 +495,14 @@
                     </tr>
                     <tr>
                       <td><strong>Nom/Host</strong></td>
-                      <td><code>smtpy._domainkey</code></td>
+                      <td><code>default._domainkey</code></td>
                       <td>
                         <p-button icon="pi pi-copy"
                           [text]="true"
                           size="small"
                           severity="secondary"
                           pTooltip="Copier"
-                          (onClick)="copyToClipboard('smtpy._domainkey', 'Nom DKIM')" />
+                          (onClick)="copyToClipboard('default._domainkey', 'Nom DKIM')" />
                       </td>
                     </tr>
                     <tr>

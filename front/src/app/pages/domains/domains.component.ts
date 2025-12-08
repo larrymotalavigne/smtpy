@@ -71,6 +71,7 @@ export class DomainsComponent implements OnInit {
     // Loading states
     verifying = false;
     savingDomain = false;
+    regeneratingDKIM = false;
 
     constructor(
         private fb: FormBuilder,
@@ -238,6 +239,69 @@ export class DomainsComponent implements OnInit {
                     detail: error.error?.detail || 'Impossible de vérifier les enregistrements DNS. Veuillez réessayer.'
                 });
                 this.verifying = false;
+            }
+        });
+    }
+
+    regenerateDKIMKeys(domain: DomainWithStats): void {
+        this.confirmationService.confirm({
+            message: `Êtes-vous sûr de vouloir regénérer les clés DKIM pour ${domain.name} ? Vous devrez mettre à jour l'enregistrement DNS avec la nouvelle clé publique.`,
+            header: 'Confirmer la régénération DKIM',
+            icon: 'pi pi-exclamation-triangle',
+            acceptLabel: 'Oui, régénérer',
+            rejectLabel: 'Annuler',
+            accept: () => {
+                this.regeneratingDKIM = true;
+                this.messageService.add({
+                    severity: 'info',
+                    summary: 'Régénération en cours',
+                    detail: `Génération de nouvelles clés DKIM pour ${domain.name}...`
+                });
+
+                this.domainsApiService.regenerateDKIMKeys(domain.id).subscribe({
+                    next: (response) => {
+                        // Update the domain's DKIM verification status
+                        domain.dkim_record_verified = false;
+                        domain.is_fully_verified = false;
+
+                        // If this is the selected domain in the dialog, update it too
+                        if (this.selectedDomain && this.selectedDomain.id === domain.id) {
+                            this.selectedDomain.dkim_record_verified = false;
+                            this.selectedDomain.is_fully_verified = false;
+                        }
+
+                        // Reload DNS records to show the new DKIM key
+                        this.domainsApiService.getDNSRecords(domain.id).subscribe({
+                            next: (dnsResponse) => {
+                                this.dnsRecords = dnsResponse;
+                                this.messageService.add({
+                                    severity: 'success',
+                                    summary: 'Clés DKIM régénérées',
+                                    detail: 'Les nouvelles clés DKIM ont été générées. Mettez à jour votre enregistrement DNS avec la nouvelle valeur.'
+                                });
+                                this.regeneratingDKIM = false;
+                            },
+                            error: (error) => {
+                                console.error('Error loading DNS records after regeneration:', error);
+                                this.messageService.add({
+                                    severity: 'warning',
+                                    summary: 'Clés DKIM régénérées',
+                                    detail: 'Les clés ont été régénérées mais impossible de charger les nouveaux enregistrements. Rechargez la page.'
+                                });
+                                this.regeneratingDKIM = false;
+                            }
+                        });
+                    },
+                    error: (error) => {
+                        console.error('Error regenerating DKIM keys:', error);
+                        this.messageService.add({
+                            severity: 'error',
+                            summary: 'Erreur de régénération',
+                            detail: error.error?.detail || 'Impossible de régénérer les clés DKIM. Veuillez réessayer.'
+                        });
+                        this.regeneratingDKIM = false;
+                    }
+                });
             }
         });
     }
