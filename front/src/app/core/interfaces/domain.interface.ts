@@ -69,3 +69,12 @@ export interface DNSRecords {
     dmarc_record: string;
     verification_record?: string;
 }
+
+export interface DKIMRegenerationResponse {
+    success: boolean;
+    message: string;
+    dkim_public_key: string;
+    dkim_selector: string;
+    dkim_dns_hostname: string;
+    dkim_dns_value: string;
+}

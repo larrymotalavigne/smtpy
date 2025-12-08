@@ -8,7 +8,8 @@ import {
   DomainCreate,
   DomainUpdate,
   DomainVerificationResponse,
-  DNSRecords
+  DNSRecords,
+  DKIMRegenerationResponse
 } from '../../core/interfaces/domain.interface';
 import {
   PaginatedResponse,
@@ -114,5 +115,12 @@ export class DomainsApiService {
     last_message_at?: string;
   }> {
     return this.http.get<any>(`${this.apiUrl}/${id}/stats`);
+  }
+
+  /**
+   * Regenerate DKIM keys for a domain
+   */
+  regenerateDKIMKeys(id: number): Observable<DKIMRegenerationResponse> {
+    return this.http.post<DKIMRegenerationResponse>(`${this.apiUrl}/${id}/regenerate-dkim-keys`, {});
   }
 }
