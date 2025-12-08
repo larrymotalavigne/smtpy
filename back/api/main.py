@@ -194,6 +194,7 @@ Success responses follow this structure:
             "version": "2.0.0"
         }
 
+
     # Include routers
     app.include_router(auth_view.router)
     app.include_router(users_view.router)
