@@ -313,3 +313,75 @@ async def get_domain_stats(
         messages_forwarded=messages_forwarded,
         last_message_at=last_message_at,
     )
+
+
+async def regenerate_dkim_keys(
+    db: AsyncSession,
+    domain_id: int,
+    organization_id: int,
+    key_size: int = 2048
+) -> Optional[dict]:
+    """Regenerate DKIM keys for an existing domain.
+
+    Args:
+        db: Database session
+        domain_id: Domain ID
+        organization_id: Organization ID
+        key_size: RSA key size (default: 2048)
+
+    Returns:
+        Dictionary containing new DKIM keys and DNS configuration, or None if domain not found
+    """
+    # Check if domain exists and belongs to organization
+    domain = await domains_database.get_domain_by_id(db, domain_id)
+    if not domain or domain.organization_id != organization_id:
+        return None
+
+    logger.info(f"Regenerating DKIM keys for domain: {domain.name}")
+
+    try:
+        # Generate new DKIM keypair
+        dkim_service = DKIMService()
+        private_key_pem, public_key_base64 = dkim_service.generate_dkim_keypair(key_size=key_size)
+        dkim_selector = dkim_service.get_dkim_selector()
+
+        # Format DNS information
+        dkim_dns_hostname = dkim_service.format_dns_hostname(dkim_selector, domain.name)
+        dkim_dns_value = dkim_service.format_dkim_public_key_for_dns(public_key_base64)
+
+        logger.info(f"DKIM keys regenerated successfully for {domain.name}")
+
+        # Update domain with new DKIM keys
+        # Reset DKIM verification status since keys have changed
+        updated_domain = await domains_database.update_domain(
+            db=db,
+            domain_id=domain_id,
+            dkim_public_key=public_key_base64,
+            dkim_private_key=private_key_pem,
+            dkim_selector=dkim_selector,
+            dkim_record_verified=False  # Reset verification status
+        )
+
+        if not updated_domain:
+            logger.error(f"Failed to update domain {domain.name} with new DKIM keys")
+            return None
+
+        return {
+            "success": True,
+            "message": "DKIM keys regenerated successfully. Please update your DNS records.",
+            "dkim_public_key": public_key_base64,
+            "dkim_selector": dkim_selector,
+            "dkim_dns_hostname": dkim_dns_hostname,
+            "dkim_dns_value": dkim_dns_value
+        }
+
+    except Exception as e:
+        logger.error(f"Failed to regenerate DKIM keys for {domain.name}: {e}")
+        return {
+            "success": False,
+            "message": f"Failed to regenerate DKIM keys: {str(e)}",
+            "dkim_public_key": "",
+            "dkim_selector": "",
+            "dkim_dns_hostname": "",
+            "dkim_dns_value": ""
+        }

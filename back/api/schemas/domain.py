@@ -112,9 +112,20 @@ class DNSRecords(BaseSchema):
 
 class DomainStats(BaseSchema):
     """Schema for per-domain statistics used by the frontend."""
-    
+
     total_aliases: int = Field(0, description="Total number of aliases for the domain")
     active_aliases: int = Field(0, description="Number of active aliases for the domain")
     messages_received: int = Field(0, description="Total number of messages received for the domain")
     messages_forwarded: int = Field(0, description="Number of messages successfully forwarded (delivered)")
     last_message_at: Optional[str] = Field(None, description="ISO timestamp of the last message activity")
+
+
+class DKIMRegenerationResponse(BaseSchema):
+    """Schema for DKIM key regeneration response."""
+
+    success: bool = Field(..., description="Whether key regeneration succeeded")
+    message: str = Field(..., description="Result message")
+    dkim_public_key: str = Field(..., description="New DKIM public key (base64)")
+    dkim_selector: str = Field(..., description="DKIM selector")
+    dkim_dns_hostname: str = Field(..., description="DNS hostname for DKIM TXT record")
+    dkim_dns_value: str = Field(..., description="DNS TXT record value")
