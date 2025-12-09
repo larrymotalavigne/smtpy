@@ -364,4 +364,8 @@ export class AliasesComponent implements OnInit {
         const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
         return emailRegex.test(email);
     }
+
+    viewMailHistory(alias: AliasWithDomain): void {
+        this.router.navigate(['/mail-history', alias.full_address]);
+    }
 }

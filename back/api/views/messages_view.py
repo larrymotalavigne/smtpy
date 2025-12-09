@@ -334,7 +334,7 @@ async def update_message_status(
                 status_code=status.HTTP_404_NOT_FOUND,
                 detail="Message not found"
             )
-        
+
         return updated_message
     except HTTPException:
         raise
@@ -342,4 +342,54 @@ async def update_message_status(
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
             detail="Failed to update message status"
+        )
+
+
+@router.get(
+    "/email/{email}",
+    response_model=PaginatedResponse,
+    summary="Get messages for a specific email address",
+    responses={
+        400: {"model": ErrorResponse, "description": "Invalid email address"},
+        500: {"model": ErrorResponse, "description": "Internal server error"}
+    }
+)
+async def get_messages_by_email(
+    email: str,
+    pagination: PaginationParams = Depends(),
+    status_filter: Optional[MessageStatus] = Query(None, description="Filter by message status", alias="status"),
+    date_from: Optional[str] = Query(None, description="Filter from date (YYYY-MM-DD)"),
+    date_to: Optional[str] = Query(None, description="Filter to date (YYYY-MM-DD)"),
+    db: AsyncSession = Depends(get_db)
+):
+    """Get all messages where the email is either sender or recipient."""
+    try:
+        # Basic email validation
+        if not email or "@" not in email:
+            raise HTTPException(
+                status_code=status.HTTP_400_BAD_REQUEST,
+                detail="Invalid email address"
+            )
+
+        # Create filter object
+        filters = MessageFilter(
+            status=status_filter,
+            date_from=date_from,
+            date_to=date_to
+        )
+
+        return await messages_controller.get_messages_by_email(
+            db=db,
+            email=email,
+            organization_id=MOCK_ORGANIZATION_ID,
+            page=pagination.page,
+            page_size=pagination.page_size,
+            filters=filters
+        )
+    except HTTPException:
+        raise
+    except Exception as e:
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail="Failed to fetch messages for email address"
         )

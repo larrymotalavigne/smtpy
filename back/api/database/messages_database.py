@@ -289,7 +289,7 @@ async def search_messages(
 ) -> list[Message]:
     """Search messages by subject, sender, or recipient."""
     search_pattern = f"%{search_term}%"
-    
+
     stmt = (
         select(Message)
         .join(Domain, Message.domain_id == Domain.id)
@@ -299,15 +299,14 @@ async def search_messages(
             or_(
                 Message.subject.ilike(search_pattern),
                 Message.sender_email.ilike(search_pattern),
-                Message.recipient_email.ilike(search_pattern),
-                Message.forwarded_to.ilike(search_pattern)
+                Message.recipient_email.ilike(search_pattern)
             )
         )
         .order_by(Message.created_at.desc())
         .offset(skip)
         .limit(limit)
     )
-    
+
     result = await db.execute(stmt)
     return list(result.scalars().all())
 
@@ -328,3 +327,78 @@ async def get_recent_messages_by_organization(
     )
     result = await db.execute(stmt)
     return list(result.scalars().all())
+
+
+async def get_messages_by_email(
+    db: AsyncSession,
+    email: str,
+    organization_id: int,
+    skip: int = 0,
+    limit: int = 20,
+    status: Optional[MessageStatus] = None,
+    date_from: Optional[datetime] = None,
+    date_to: Optional[datetime] = None
+) -> list[Message]:
+    """Get messages where the email is either sender or recipient."""
+    normalized_email = email.lower().strip()
+
+    stmt = (
+        select(Message)
+        .join(Domain, Message.domain_id == Domain.id)
+        .options(selectinload(Message.domain))
+        .where(
+            Domain.organization_id == organization_id,
+            or_(
+                Message.sender_email == normalized_email,
+                Message.recipient_email == normalized_email
+            )
+        )
+    )
+
+    # Apply filters
+    if status:
+        stmt = stmt.where(Message.status == status)
+    if date_from:
+        stmt = stmt.where(Message.created_at >= date_from)
+    if date_to:
+        stmt = stmt.where(Message.created_at <= date_to)
+
+    stmt = stmt.order_by(Message.created_at.desc()).offset(skip).limit(limit)
+
+    result = await db.execute(stmt)
+    return list(result.scalars().all())
+
+
+async def count_messages_by_email(
+    db: AsyncSession,
+    email: str,
+    organization_id: int,
+    status: Optional[MessageStatus] = None,
+    date_from: Optional[datetime] = None,
+    date_to: Optional[datetime] = None
+) -> int:
+    """Count messages where the email is either sender or recipient."""
+    normalized_email = email.lower().strip()
+
+    stmt = (
+        select(func.count(Message.id))
+        .join(Domain, Message.domain_id == Domain.id)
+        .where(
+            Domain.organization_id == organization_id,
+            or_(
+                Message.sender_email == normalized_email,
+                Message.recipient_email == normalized_email
+            )
+        )
+    )
+
+    # Apply filters
+    if status:
+        stmt = stmt.where(Message.status == status)
+    if date_from:
+        stmt = stmt.where(Message.created_at >= date_from)
+    if date_to:
+        stmt = stmt.where(Message.created_at <= date_to)
+
+    result = await db.execute(stmt)
+    return result.scalar() or 0

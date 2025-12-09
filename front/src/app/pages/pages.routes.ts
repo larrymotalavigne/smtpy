@@ -28,6 +28,11 @@ export default [
         canActivate: [authGuard]
     },
     {
+        path: 'mail-history/:email',
+        loadComponent: () => import('./mail-history/mail-history.component').then(m => m.MailHistoryComponent),
+        canActivate: [authGuard]
+    },
+    {
         path: 'statistics',
         loadComponent: () => import('./statistics/statistics.component').then(m => m.StatisticsComponent),
         canActivate: [authGuard]

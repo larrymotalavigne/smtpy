@@ -296,12 +296,12 @@ async def create_message(
     domain = await domains_database.get_domain_by_id(db, domain_id)
     if not domain or domain.organization_id != organization_id:
         return None
-    
+
     # Check if message already exists
     existing_message = await messages_database.get_message_by_message_id(db, message_id)
     if existing_message:
         return MessageResponse.model_validate(existing_message)
-    
+
     # Create the message
     message = await messages_database.create_message(
         db=db,
@@ -315,5 +315,63 @@ async def create_message(
         has_attachments=has_attachments,
         thread_id=thread_id
     )
-    
+
     return MessageResponse.model_validate(message)
+
+
+async def get_messages_by_email(
+    db: AsyncSession,
+    email: str,
+    organization_id: int,
+    page: int = 1,
+    page_size: int = 20,
+    filters: Optional[MessageFilter] = None
+) -> PaginatedResponse:
+    """Get messages where the email is either sender or recipient."""
+    skip = (page - 1) * page_size
+
+    # Parse date filters
+    date_from = None
+    date_to = None
+    if filters:
+        if filters.date_from:
+            try:
+                date_from = datetime.fromisoformat(filters.date_from)
+            except ValueError:
+                pass  # Invalid date format, ignore
+        if filters.date_to:
+            try:
+                date_to = datetime.fromisoformat(filters.date_to)
+            except ValueError:
+                pass  # Invalid date format, ignore
+
+    # Get messages and count
+    messages = await messages_database.get_messages_by_email(
+        db=db,
+        email=email,
+        organization_id=organization_id,
+        skip=skip,
+        limit=page_size,
+        status=filters.status if filters else None,
+        date_from=date_from,
+        date_to=date_to
+    )
+
+    total = await messages_database.count_messages_by_email(
+        db=db,
+        email=email,
+        organization_id=organization_id,
+        status=filters.status if filters else None,
+        date_from=date_from,
+        date_to=date_to
+    )
+
+    # Convert to response schemas
+    message_responses = [MessageList.model_validate(message) for message in messages]
+
+    return PaginatedResponse.create(
+        items=message_responses,
+        total=total,
+        page=page,
+        page_size=page_size
+    )
