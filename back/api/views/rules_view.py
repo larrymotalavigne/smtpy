@@ -6,7 +6,8 @@ from fastapi import APIRouter, Depends, HTTPException, status
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from shared.models.user import User
-from api.core.dependencies import get_db, get_current_user
+from shared.core.db import get_db
+from .auth_view import get_current_user
 from api.controllers import rules_controller
 from api.schemas.forwarding_rule import (
     RuleCreate,
