@@ -291,7 +291,8 @@ class SMTPHandler:
                     failed_targets = []
 
                     for target in target_list:
-                        success = await self._forward_email(sender, target, raw_content)
+                        # Pass the domain name so the forward function can use it
+                        success = await self._forward_email(sender, target, raw_content, domain_name)
                         if not success:
                             all_success = False
                             failed_targets.append(target)
@@ -314,7 +315,7 @@ class SMTPHandler:
             except Exception as e:
                 logger.error(f"Error processing recipient {recipient}: {str(e)}")
 
-    async def _forward_email(self, sender: str, forward_to: str, raw_content: bytes) -> bool:
+    async def _forward_email(self, sender: str, forward_to: str, raw_content: bytes, alias_domain: str) -> bool:
         """
         Forward email via Docker mailserver.
 
@@ -322,6 +323,7 @@ class SMTPHandler:
             sender: Original sender
             forward_to: Destination address
             raw_content: Original email content
+            alias_domain: Domain of the alias (used for envelope sender)
 
         Returns:
             True if forwarded successfully
@@ -339,10 +341,12 @@ class SMTPHandler:
             del message["To"]
             message["To"] = forward_to
 
-            # Use a system sender address for the envelope (MAIL FROM)
-            # This allows relaying through the mailserver without authentication
-            # while preserving the original sender in the headers
-            envelope_sender = SETTINGS.EMAIL_FROM
+            # Use the alias's domain for the envelope sender (MAIL FROM)
+            # This ensures the mailserver recognizes it as a domain it can relay for
+            # Format: noreply@<alias_domain>
+            envelope_sender = f"noreply@{alias_domain}"
+
+            logger.info(f"Forwarding email from {sender} to {forward_to} using envelope sender {envelope_sender}")
 
             # Send via mailserver with explicit sender
             await aiosmtplib.send(

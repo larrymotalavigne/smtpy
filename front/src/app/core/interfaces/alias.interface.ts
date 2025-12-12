@@ -32,6 +32,7 @@ export interface AliasListItem {
     domain_name?: string;
     full_address?: string;
     target_count: number;
+    target_list: string[];
     is_deleted: boolean;
     expires_at?: string;
     created_at: string;
