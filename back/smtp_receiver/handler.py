@@ -330,17 +330,25 @@ class SMTPHandler:
             # Parse original message
             message = BytesParser(policy=policy.default).parsebytes(raw_content)
 
-            # Add forwarding headers
+            # Add forwarding headers to preserve original information
             message.add_header("X-Forwarded-By", "SMTPy")
             message.add_header("X-Original-To", message.get("To", ""))
+            message.add_header("X-Original-Sender", sender)
 
-            # Update To header
+            # Update To header to the forward destination
             del message["To"]
             message["To"] = forward_to
 
-            # Send via mailserver
+            # Use a system sender address for the envelope (MAIL FROM)
+            # This allows relaying through the mailserver without authentication
+            # while preserving the original sender in the headers
+            envelope_sender = SETTINGS.EMAIL_FROM
+
+            # Send via mailserver with explicit sender
             await aiosmtplib.send(
                 message,
+                sender=envelope_sender,  # Envelope sender (MAIL FROM)
+                recipients=[forward_to],  # Envelope recipients (RCPT TO)
                 hostname=SETTINGS.MAILSERVER_HOST,
                 port=SETTINGS.MAILSERVER_PORT,
                 username=SETTINGS.MAILSERVER_USER if SETTINGS.MAILSERVER_USER else None,
