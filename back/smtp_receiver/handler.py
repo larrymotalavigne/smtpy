@@ -341,16 +341,13 @@ class SMTPHandler:
             del message["To"]
             message["To"] = forward_to
 
-            # Determine envelope sender based on authentication configuration
-            # If using authenticated SMTP (e.g., SendGrid, AWS SES), use the configured sender
-            # If using a local/self-hosted mailserver without auth, try postmaster@domain
-            if SETTINGS.MAILSERVER_USER:
-                # Using authenticated SMTP relay - use the configured sender address
-                envelope_sender = SETTINGS.EMAIL_FROM
-            else:
-                # No authentication - try postmaster@domain which is more standard than noreply@
-                # Postmaster is required by RFC 5321 and more likely to exist
-                envelope_sender = f"postmaster@{alias_domain}"
+            # Use configured EMAIL_FROM as envelope sender
+            # This is the most reliable approach because:
+            # 1. With authentication: The mailserver trusts the authenticated user
+            # 2. Without authentication: The mailserver should be configured to allow
+            #    relay from EMAIL_FROM domain (or from the smtp-receiver service IP)
+            # 3. EMAIL_FROM is a controlled, known address that should be properly configured
+            envelope_sender = SETTINGS.EMAIL_FROM
 
             logger.info(f"Forwarding email from {sender} to {forward_to} using envelope sender {envelope_sender}")
 
