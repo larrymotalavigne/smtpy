@@ -167,12 +167,13 @@ async def verify_domain(
 
     logger.info(f"Starting DNS verification for domain: {domain.name}")
 
-    # Perform real DNS verification
+    # Perform real DNS verification with expected DKIM public key
     verification_results = dns_service.verify_all(
         domain=domain.name,
         expected_mx="mail.smtpy.fr",
         expected_spf_include="smtpy.fr",
-        dkim_selector="default"
+        dkim_selector=domain.dkim_selector or "default",
+        expected_dkim_public_key=domain.dkim_public_key
     )
 
     mx_verified = verification_results["mx_verified"]
