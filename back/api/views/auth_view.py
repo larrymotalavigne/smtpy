@@ -1,6 +1,8 @@
 """Authentication views for SMTPy v2."""
 
 import os
+import hashlib
+from datetime import datetime, timezone, timedelta
 from typing import Optional
 
 from fastapi import APIRouter, Depends, HTTPException, Response, Request
@@ -24,6 +26,53 @@ SESSION_MAX_AGE = 7 * 24 * 60 * 60  # 7 days in seconds
 IS_TESTING = os.getenv("TESTING", "False").lower() == "true"
 COOKIE_SECURE = not IS_TESTING  # Disable secure flag in tests (uses HTTP not HTTPS)
 COOKIE_SAMESITE = "lax" if IS_TESTING else "none"  # Use 'lax' for tests, 'none' for production
+
+
+# Helper functions
+def hash_session_token(token: str) -> str:
+    """Hash session token for secure storage."""
+    return hashlib.sha256(token.encode()).hexdigest()
+
+
+def extract_device_info(request: Request) -> dict:
+    """Extract device information from request headers."""
+    user_agent = request.headers.get("User-Agent", "Unknown")
+
+    # Simple device detection (can be enhanced with user-agents library)
+    device = "Unknown Device"
+    if "Mobile" in user_agent:
+        device = "Mobile Device"
+    elif "Tablet" in user_agent:
+        device = "Tablet"
+    elif any(browser in user_agent for browser in ["Chrome", "Firefox", "Safari", "Edge"]):
+        for browser in ["Chrome", "Firefox", "Safari", "Edge"]:
+            if browser in user_agent:
+                device = f"{browser} Browser"
+                break
+
+    return {
+        "device": device,
+        "user_agent": user_agent
+    }
+
+
+def get_client_ip(request: Request) -> str:
+    """Get client IP address from request."""
+    # Check for forwarded IP (behind proxy)
+    forwarded = request.headers.get("X-Forwarded-For")
+    if forwarded:
+        return forwarded.split(",")[0].strip()
+
+    # Check for real IP
+    real_ip = request.headers.get("X-Real-IP")
+    if real_ip:
+        return real_ip
+
+    # Fallback to direct client
+    if request.client:
+        return request.client.host
+
+    return "Unknown"
 
 
 # Pydantic models for request/response
@@ -174,19 +223,19 @@ async def get_current_user(
             user = await UsersDatabase.get_user_by_id(session, user_id)
 
             if user and user.is_active:
-                # Refresh session cookie with new expiration (sliding window)
-                # This keeps the user logged in as long as they're active
-                new_session_token = serializer.dumps(user.id)
-                response.set_cookie(
-                    key=SESSION_COOKIE_NAME,
-                    value=new_session_token,
-                    httponly=True,
-                    secure=COOKIE_SECURE,
-                    samesite=COOKIE_SAMESITE,
-                    max_age=SESSION_MAX_AGE
-                )
+                # Get session from database using hashed token
+                hashed_token = hash_session_token(session_cookie)
+                user_session = await UsersDatabase.get_session_by_token(session, hashed_token)
 
-                return user.to_dict()
+                if user_session and user_session.is_valid():
+                    # Update last activity
+                    user_session.last_activity_at = datetime.now(timezone.utc)
+                    await session.flush()
+
+                    # Include session token in user dict for session management
+                    user_dict = user.to_dict()
+                    user_dict["session_token"] = hashed_token
+                    return user_dict
 
         except (BadSignature, SignatureExpired):
             pass  # Fall through to try API key auth
@@ -202,6 +251,7 @@ async def get_current_user(
 
         if user and user.is_active:
             # Don't set session cookie for API key auth
+            # API key auth doesn't have a session token
             return user.to_dict()
 
     return None
@@ -286,6 +336,7 @@ async def require_auth(current_user: Optional[dict] = Depends(get_current_user))
 )
 async def register(
         data: RegisterRequest,
+        request: Request,
         response: Response,
         session: AsyncSession = Depends(get_async_session)
 ):
@@ -325,6 +376,25 @@ async def register(
             is_verified=False  # Email verification can be added later
         )
 
+        # Create session cookie
+        session_token = serializer.dumps(user.id)
+        hashed_token = hash_session_token(session_token)
+
+        # Create session record in database
+        device_info = extract_device_info(request)
+        ip_address = get_client_ip(request)
+        expires_at = datetime.now(timezone.utc) + timedelta(seconds=SESSION_MAX_AGE)
+
+        await UsersDatabase.create_session(
+            session=session,
+            user_id=user.id,
+            session_token=hashed_token,
+            expires_at=expires_at,
+            device_info=device_info,
+            ip_address=ip_address,
+            location=None  # Can be enhanced with geolocation service
+        )
+
         await session.commit()
 
         # Send verification email via Docker mailserver
@@ -351,8 +421,6 @@ async def register(
             logger.error(f"Failed to send verification email: {str(e)}")
             # Don't fail registration if email fails
 
-        # Create session cookie
-        session_token = serializer.dumps(user.id)
         response.set_cookie(
             key=SESSION_COOKIE_NAME,
             value=session_token,
@@ -435,6 +503,7 @@ async def register(
 )
 async def login(
         data: LoginRequest,
+        request: Request,
         response: Response,
         session: AsyncSession = Depends(get_async_session)
 ):
@@ -454,10 +523,27 @@ async def login(
         user_id = user.id
         user_dict = user.to_dict()
 
-        await session.commit()
-
         # Create session cookie
         session_token = serializer.dumps(user_id)
+        hashed_token = hash_session_token(session_token)
+
+        # Create session record in database
+        device_info = extract_device_info(request)
+        ip_address = get_client_ip(request)
+        expires_at = datetime.now(timezone.utc) + timedelta(seconds=SESSION_MAX_AGE)
+
+        await UsersDatabase.create_session(
+            session=session,
+            user_id=user_id,
+            session_token=hashed_token,
+            expires_at=expires_at,
+            device_info=device_info,
+            ip_address=ip_address,
+            location=None  # Can be enhanced with geolocation service
+        )
+
+        await session.commit()
+
         response.set_cookie(
             key=SESSION_COOKIE_NAME,
             value=session_token,
@@ -482,8 +568,30 @@ async def login(
 
 
 @router.post("/logout")
-async def logout(response: Response):
+async def logout(
+        request: Request,
+        response: Response,
+        session: AsyncSession = Depends(get_async_session)
+):
     """Logout user and clear session."""
+    # Get current session token from cookie
+    session_cookie = request.cookies.get(SESSION_COOKIE_NAME)
+
+    if session_cookie:
+        try:
+            # Hash the session token
+            hashed_token = hash_session_token(session_cookie)
+
+            # Revoke session in database
+            user_session = await UsersDatabase.get_session_by_token(session, hashed_token)
+            if user_session:
+                user_session.is_active = False
+                await session.commit()
+        except Exception:
+            # Continue with logout even if session revocation fails
+            pass
+
+    # Clear session cookie
     response.delete_cookie(key=SESSION_COOKIE_NAME)
 
     return {
