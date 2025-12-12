@@ -109,15 +109,21 @@ class DNSService:
             logger.error(f"Error verifying SPF record for {domain}: {e}")
             return False
 
-    def verify_dkim_record(self, domain: str, selector: str = "default") -> bool:
-        """Verify DKIM record exists.
+    def verify_dkim_record(
+        self,
+        domain: str,
+        selector: str = "default",
+        expected_public_key: Optional[str] = None
+    ) -> bool:
+        """Verify DKIM record exists and optionally matches expected public key.
 
         Args:
             domain: Domain name to check
             selector: DKIM selector (default: "default")
+            expected_public_key: Expected public key (base64) to match against (optional)
 
         Returns:
-            True if DKIM record exists, False otherwise
+            True if DKIM record exists and matches expected key (if provided), False otherwise
         """
         try:
             # DKIM record is at selector._domainkey.domain
@@ -131,7 +137,32 @@ class DNSService:
                 txt_value = ''.join([s.decode('utf-8') if isinstance(s, bytes) else s for s in record.strings])
 
                 if 'v=DKIM1' in txt_value:
-                    logger.info(f"Found DKIM record for {domain} (selector: {selector})")
+                    logger.info(f"Found DKIM record for {domain} (selector: {selector}): {txt_value[:100]}...")
+
+                    # If expected_public_key is provided, validate it matches
+                    if expected_public_key:
+                        # Extract public key from DKIM record
+                        # Format: v=DKIM1; k=rsa; p=<base64_key>
+                        dns_public_key = self._extract_dkim_public_key(txt_value)
+
+                        if not dns_public_key:
+                            logger.warning(f"DKIM record found but could not extract public key from: {txt_value}")
+                            return False
+
+                        # Normalize both keys (remove whitespace) for comparison
+                        dns_key_normalized = dns_public_key.replace(' ', '').replace('\n', '').replace('\r', '').replace('\t', '')
+                        expected_key_normalized = expected_public_key.replace(' ', '').replace('\n', '').replace('\r', '').replace('\t', '')
+
+                        if dns_key_normalized != expected_key_normalized:
+                            logger.warning(
+                                f"DKIM public key mismatch for {domain}. "
+                                f"DNS key (first 50 chars): {dns_key_normalized[:50]}..., "
+                                f"Expected key (first 50 chars): {expected_key_normalized[:50]}..."
+                            )
+                            return False
+
+                        logger.info(f"DKIM record verified with matching public key for {domain}")
+
                     return True
 
             logger.warning(f"No DKIM record found for {domain} (selector: {selector})")
@@ -149,6 +180,32 @@ class DNSService:
         except Exception as e:
             logger.error(f"Error verifying DKIM record for {domain}: {e}")
             return False
+
+    def _extract_dkim_public_key(self, dkim_record: str) -> Optional[str]:
+        """Extract the public key from a DKIM DNS record.
+
+        Args:
+            dkim_record: The DKIM DNS TXT record value (e.g., "v=DKIM1; k=rsa; p=MIIBIj...")
+
+        Returns:
+            The base64-encoded public key, or None if not found
+        """
+        try:
+            # DKIM records are semicolon-separated key=value pairs
+            # We need to extract the value of the 'p=' tag
+            parts = dkim_record.split(';')
+
+            for part in parts:
+                part = part.strip()
+                if part.startswith('p='):
+                    # Extract everything after 'p='
+                    public_key = part[2:].strip()
+                    return public_key
+
+            return None
+        except Exception as e:
+            logger.error(f"Error extracting public key from DKIM record: {e}")
+            return None
 
     def verify_dmarc_record(self, domain: str) -> bool:
         """Verify DMARC record exists.
@@ -195,7 +252,8 @@ class DNSService:
         domain: str,
         expected_mx: str = "mail.smtpy.fr",
         expected_spf_include: str = "smtpy.fr",
-        dkim_selector: str = "default"
+        dkim_selector: str = "default",
+        expected_dkim_public_key: Optional[str] = None
     ) -> dict[str, bool]:
         """Verify all DNS records for a domain.
 
@@ -204,6 +262,7 @@ class DNSService:
             expected_mx: Expected MX hostname
             expected_spf_include: Expected SPF include domain
             dkim_selector: DKIM selector
+            expected_dkim_public_key: Expected DKIM public key (base64) to validate against
 
         Returns:
             Dictionary with verification results for each record type
@@ -211,6 +270,6 @@ class DNSService:
         return {
             "mx_verified": self.verify_mx_record(domain, expected_mx),
             "spf_verified": self.verify_spf_record(domain, expected_spf_include),
-            "dkim_verified": self.verify_dkim_record(domain, dkim_selector),
+            "dkim_verified": self.verify_dkim_record(domain, dkim_selector, expected_dkim_public_key),
             "dmarc_verified": self.verify_dmarc_record(domain),
         }
