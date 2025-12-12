@@ -102,15 +102,35 @@ class AliasListItem(BaseModel):
         "from_attributes": True
     }
 
-    def __init__(self, **data):
-        """Initialize with computed fields."""
-        super().__init__(**data)
+    @classmethod
+    def model_validate(cls, obj, **kwargs):
+        """Validate model and compute fields from the source object."""
+        # Extract computed values from the source object before validation
+        data = {}
 
-        # Count targets
-        if 'targets' in data and data['targets']:
-            self.target_count = len([t for t in data['targets'].split(',') if t.strip()])
+        # Get basic attributes
+        if hasattr(obj, '__dict__'):
+            # It's a SQLAlchemy model
+            data['id'] = obj.id
+            data['local_part'] = obj.local_part
+            data['domain_id'] = obj.domain_id
+            data['is_deleted'] = obj.is_deleted
+            data['expires_at'] = obj.expires_at
+            data['created_at'] = obj.created_at
 
-        # Build full email address
-        if hasattr(data.get('domain'), 'name'):
-            self.domain_name = data['domain'].name
-            self.full_address = f"{self.local_part}@{self.domain_name}"
+            # Compute target_count from targets field
+            if hasattr(obj, 'targets') and obj.targets:
+                data['target_count'] = len([t for t in obj.targets.split(',') if t.strip()])
+            else:
+                data['target_count'] = 0
+
+            # Compute domain name and full address
+            if hasattr(obj, 'domain') and obj.domain and hasattr(obj.domain, 'name'):
+                data['domain_name'] = obj.domain.name
+                data['full_address'] = f"{obj.local_part}@{obj.domain.name}"
+
+        # If data is already a dict, use it directly
+        if isinstance(obj, dict):
+            data = obj
+
+        return super(cls, cls).model_validate(data, **kwargs)
