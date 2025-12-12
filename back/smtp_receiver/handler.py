@@ -341,10 +341,13 @@ class SMTPHandler:
             del message["To"]
             message["To"] = forward_to
 
-            # Use the alias's domain for the envelope sender (MAIL FROM)
-            # This ensures the mailserver recognizes it as a domain it can relay for
-            # Format: noreply@<alias_domain>
-            envelope_sender = f"noreply@{alias_domain}"
+            # Use configured EMAIL_FROM as envelope sender
+            # This is the most reliable approach because:
+            # 1. With authentication: The mailserver trusts the authenticated user
+            # 2. Without authentication: The mailserver should be configured to allow
+            #    relay from EMAIL_FROM domain (or from the smtp-receiver service IP)
+            # 3. EMAIL_FROM is a controlled, known address that should be properly configured
+            envelope_sender = SETTINGS.EMAIL_FROM
 
             logger.info(f"Forwarding email from {sender} to {forward_to} using envelope sender {envelope_sender}")
 
