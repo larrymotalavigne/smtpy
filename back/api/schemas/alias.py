@@ -94,6 +94,7 @@ class AliasListItem(BaseModel):
     domain_name: Optional[str] = None
     full_address: Optional[str] = None
     target_count: int = 0
+    target_list: list[str] = []
     is_deleted: bool
     expires_at: Optional[datetime] = None
     created_at: datetime
@@ -118,11 +119,14 @@ class AliasListItem(BaseModel):
             data['expires_at'] = obj.expires_at
             data['created_at'] = obj.created_at
 
-            # Compute target_count from targets field
+            # Compute target_count and target_list from targets field
             if hasattr(obj, 'targets') and obj.targets:
-                data['target_count'] = len([t for t in obj.targets.split(',') if t.strip()])
+                targets = [t.strip() for t in obj.targets.split(',') if t.strip()]
+                data['target_count'] = len(targets)
+                data['target_list'] = targets
             else:
                 data['target_count'] = 0
+                data['target_list'] = []
 
             # Compute domain name and full address
             if hasattr(obj, 'domain') and obj.domain and hasattr(obj.domain, 'name'):

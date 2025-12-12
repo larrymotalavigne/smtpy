@@ -71,9 +71,21 @@
             <!-- Targets -->
             <td>
               <div class="targets-cell">
-                <p-tag [value]="alias.target_count + ' destination' + (alias.target_count > 1 ? 's' : '')"
-                  severity="info"
-                  icon="pi pi-arrow-right" />
+                @if (alias.target_list && alias.target_list.length > 0) {
+                  <div class="target-emails">
+                    <span class="target-email">{{ alias.target_list[0] }}</span>
+                    @if (alias.target_list.length > 1) {
+                      <p-tag [value]="'+' + (alias.target_list.length - 1)"
+                        severity="info"
+                        size="small"
+                        styleClass="ml-2" />
+                    }
+                  </div>
+                } @else {
+                  <p-tag [value]="alias.target_count + ' destination' + (alias.target_count > 1 ? 's' : '')"
+                    severity="info"
+                    icon="pi pi-arrow-right" />
+                }
               </div>
             </td>
 

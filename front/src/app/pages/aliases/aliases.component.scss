@@ -98,6 +98,18 @@
 .targets-cell {
   display: flex;
   align-items: center;
+
+  .target-emails {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+
+    .target-email {
+      color: #3b82f6;
+      font-weight: 500;
+      font-size: 0.875rem;
+    }
+  }
 }
 
 .domain-badge {
