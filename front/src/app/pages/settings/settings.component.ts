@@ -66,44 +66,12 @@ export class SettingsComponent implements OnInit, OnDestroy {
     notificationsForm: FormGroup;
     loading = false;
     // API Keys
-    apiKeys: ApiKey[] = [
-        {
-            id: '1',
-            name: 'Production API',
-            key: 'sk_live_*********************abc123',
-            created_at: '2025-01-15T10:30:00Z',
-            last_used: '2025-10-19T14:22:00Z'
-        },
-        {
-            id: '2',
-            name: 'Development API',
-            key: 'sk_test_*********************def456',
-            created_at: '2025-02-01T09:15:00Z',
-            last_used: null
-        }
-    ];
+    apiKeys: ApiKey[] = [];
     showApiKeyDialog = false;
     newApiKeyName = '';
     generatedApiKey = '';
     // Sessions
-    sessions: Session[] = [
-        {
-            id: '1',
-            device: 'Chrome on macOS',
-            location: 'Paris, France',
-            ip_address: '192.168.1.100',
-            last_active: '2025-10-20T16:45:00Z',
-            is_current: true
-        },
-        {
-            id: '2',
-            device: 'Firefox on Windows',
-            location: 'Lyon, France',
-            ip_address: '192.168.1.101',
-            last_active: '2025-10-18T09:30:00Z',
-            is_current: false
-        }
-    ];
+    sessions: Session[] = [];
     private destroy$ = new Subject<void>();
 
     constructor(
@@ -140,6 +108,10 @@ export class SettingsComponent implements OnInit, OnDestroy {
                     this.updateFormWithUserPreferences();
                 }
             });
+
+        // Load API keys and sessions
+        this.loadApiKeys();
+        this.loadSessions();
     }
 
     ngOnDestroy(): void {
@@ -177,6 +149,44 @@ export class SettingsComponent implements OnInit, OnDestroy {
         });
     }
 
+    // Load API Keys from backend
+    loadApiKeys(): void {
+        this.usersApi.listApiKeys().subscribe({
+            next: (response) => {
+                if (response.success && response.data) {
+                    this.apiKeys = response.data;
+                }
+            },
+            error: (error) => {
+                console.error('Error loading API keys:', error);
+                this.messageService.add({
+                    severity: 'error',
+                    summary: 'Erreur',
+                    detail: 'Impossible de charger les clés API'
+                });
+            }
+        });
+    }
+
+    // Load Sessions from backend
+    loadSessions(): void {
+        this.usersApi.listSessions().subscribe({
+            next: (response) => {
+                if (response.success && response.data) {
+                    this.sessions = response.data;
+                }
+            },
+            error: (error) => {
+                console.error('Error loading sessions:', error);
+                this.messageService.add({
+                    severity: 'error',
+                    summary: 'Erreur',
+                    detail: 'Impossible de charger les sessions'
+                });
+            }
+        });
+    }
+
     // API Keys Management
     generateApiKey(): void {
         if (!this.newApiKeyName.trim()) {
@@ -197,6 +207,8 @@ export class SettingsComponent implements OnInit, OnDestroy {
                         summary: 'Clé API générée',
                         detail: 'Copiez cette clé maintenant, elle ne sera plus affichée'
                     });
+                    // Reload API keys list to show the new key
+                    this.loadApiKeys();
                 }
             },
             error: (error) => {
@@ -230,12 +242,13 @@ export class SettingsComponent implements OnInit, OnDestroy {
                 this.usersApi.revokeApiKey(apiKey.id).subscribe({
                     next: (response) => {
                         if (response.success) {
-                            this.apiKeys = this.apiKeys.filter(k => k.id !== apiKey.id);
                             this.messageService.add({
                                 severity: 'success',
                                 summary: 'Clé révoquée',
                                 detail: 'La clé API a été révoquée avec succès'
                             });
+                            // Reload API keys list
+                            this.loadApiKeys();
                         }
                     },
                     error: (error) => {
@@ -278,12 +291,13 @@ export class SettingsComponent implements OnInit, OnDestroy {
                 this.usersApi.revokeSession(session.id).subscribe({
                     next: (response) => {
                         if (response.success) {
-                            this.sessions = this.sessions.filter(s => s.id !== session.id);
                             this.messageService.add({
                                 severity: 'success',
                                 summary: 'Session révoquée',
                                 detail: 'La session a été révoquée avec succès'
                             });
+                            // Reload sessions list
+                            this.loadSessions();
                         }
                     },
                     error: (error) => {
@@ -310,12 +324,13 @@ export class SettingsComponent implements OnInit, OnDestroy {
                 this.usersApi.revokeAllSessions().subscribe({
                     next: (response) => {
                         if (response.success) {
-                            this.sessions = this.sessions.filter(s => s.is_current);
                             this.messageService.add({
                                 severity: 'success',
                                 summary: 'Sessions révoquées',
                                 detail: 'Toutes les autres sessions ont été révoquées'
                             });
+                            // Reload sessions list
+                            this.loadSessions();
                         }
                     },
                     error: (error) => {

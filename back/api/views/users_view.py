@@ -236,19 +236,17 @@ async def list_api_keys(
 ):
     """List user's API keys."""
     try:
-        api_keys = await UsersDatabase.get_api_keys(session, current_user["id"], active_only=False)
+        api_keys = await UsersDatabase.get_api_keys(session, current_user["id"], active_only=True)
 
         return {
             "success": True,
             "data": [
                 {
-                    "id": key.id,
+                    "id": str(key.id),
                     "name": key.name,
-                    "prefix": key.prefix,
-                    "is_active": key.is_active,
-                    "last_used_at": key.last_used_at.isoformat() if key.last_used_at else None,
-                    "expires_at": key.expires_at.isoformat() if key.expires_at else None,
-                    "created_at": key.created_at.isoformat() if key.created_at else None
+                    "key": f"{key.prefix}_{'*' * 24}",  # Masked key for display
+                    "created_at": key.created_at.isoformat() if key.created_at else None,
+                    "last_used": key.last_used_at.isoformat() if key.last_used_at else None
                 }
                 for key in api_keys
             ]
@@ -330,17 +328,19 @@ async def list_sessions(
     try:
         sessions = await UsersDatabase.get_user_sessions(session, current_user["id"], active_only=True)
 
+        # Get current session token from auth
+        current_session_token = current_user.get("session_token")
+
         return {
             "success": True,
             "data": [
                 {
-                    "id": s.id,
-                    "device_info": s.device_info,
-                    "ip_address": s.ip_address,
-                    "location": s.location,
-                    "last_activity_at": s.last_activity_at.isoformat() if s.last_activity_at else None,
-                    "expires_at": s.expires_at.isoformat() if s.expires_at else None,
-                    "created_at": s.created_at.isoformat() if s.created_at else None
+                    "id": str(s.id),
+                    "device": s.device_info.get("device", "Unknown Device") if isinstance(s.device_info, dict) else str(s.device_info or "Unknown Device"),
+                    "location": s.location or "Unknown Location",
+                    "ip_address": s.ip_address or "Unknown IP",
+                    "last_active": s.last_activity_at.isoformat() if s.last_activity_at else None,
+                    "is_current": s.session_token == current_session_token if current_session_token else False
                 }
                 for s in sessions
             ]
