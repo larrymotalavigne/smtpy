@@ -341,10 +341,16 @@ class SMTPHandler:
             del message["To"]
             message["To"] = forward_to
 
-            # Use the alias's domain for the envelope sender (MAIL FROM)
-            # This ensures the mailserver recognizes it as a domain it can relay for
-            # Format: noreply@<alias_domain>
-            envelope_sender = f"noreply@{alias_domain}"
+            # Determine envelope sender based on authentication configuration
+            # If using authenticated SMTP (e.g., SendGrid, AWS SES), use the configured sender
+            # If using a local/self-hosted mailserver without auth, try postmaster@domain
+            if SETTINGS.MAILSERVER_USER:
+                # Using authenticated SMTP relay - use the configured sender address
+                envelope_sender = SETTINGS.EMAIL_FROM
+            else:
+                # No authentication - try postmaster@domain which is more standard than noreply@
+                # Postmaster is required by RFC 5321 and more likely to exist
+                envelope_sender = f"postmaster@{alias_domain}"
 
             logger.info(f"Forwarding email from {sender} to {forward_to} using envelope sender {envelope_sender}")
 
