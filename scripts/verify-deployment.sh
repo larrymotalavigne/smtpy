@@ -160,7 +160,7 @@ echo ""
 # Step 4: Check if services are running
 log_info "Step 4: Checking service status..."
 
-SERVICES=("db" "redis" "smtp" "api" "frontend")
+SERVICES=("db" "redis" "smtp-receiver" "api" "front" "mailserver")
 
 for service in "${SERVICES[@]}"; do
     if docker compose -f "$COMPOSE_FILE" ps "$service" 2>/dev/null | grep -q "Up"; then
@@ -216,11 +216,37 @@ else
     log_error "Cannot connect to Frontend"
 fi
 
-# Test SMTP server
-if timeout 2 bash -c "echo -n | telnet localhost 1025" &> /dev/null; then
-    log_success "SMTP server accepting connections on port 1025"
+# Test SMTP Receiver (SMTPy)
+if timeout 2 bash -c "echo > /dev/tcp/localhost/2525" 2>/dev/null; then
+    log_success "SMTP Receiver accepting connections on port 2525"
 else
-    log_error "Cannot connect to SMTP server on port 1025"
+    log_error "Cannot connect to SMTP Receiver on port 2525"
+fi
+
+# Test Mailserver SMTP ports
+if timeout 2 bash -c "echo > /dev/tcp/localhost/25" 2>/dev/null; then
+    log_success "Mailserver SMTP port 25 accepting connections"
+else
+    log_warning "Cannot connect to Mailserver SMTP port 25 (may require root privileges)"
+fi
+
+if timeout 2 bash -c "echo > /dev/tcp/localhost/587" 2>/dev/null; then
+    log_success "Mailserver SMTP submission port 587 accepting connections"
+else
+    log_error "Cannot connect to Mailserver SMTP port 587"
+fi
+
+# Test Mailserver IMAP ports
+if timeout 2 bash -c "echo > /dev/tcp/localhost/143" 2>/dev/null; then
+    log_success "Mailserver IMAP port 143 accepting connections"
+else
+    log_warning "Cannot connect to Mailserver IMAP port 143"
+fi
+
+if timeout 2 bash -c "echo > /dev/tcp/localhost/993" 2>/dev/null; then
+    log_success "Mailserver IMAPS port 993 accepting connections"
+else
+    log_warning "Cannot connect to Mailserver IMAPS port 993"
 fi
 
 # Test PostgreSQL
@@ -235,6 +261,21 @@ if docker exec smtpy-redis redis-cli --raw incr ping &> /dev/null; then
     log_success "Redis is responding"
 else
     log_error "Redis is not responding"
+fi
+
+# Test Mailserver health
+if docker exec mailserver bash /usr/local/bin/healthcheck.sh &> /dev/null; then
+    log_success "Mailserver health check passed"
+    if [ "$VERBOSE" = true ]; then
+        verbose "Running detailed mailserver health check..."
+        docker exec mailserver bash /usr/local/bin/healthcheck.sh
+    fi
+else
+    log_error "Mailserver health check failed"
+    if [ "$VERBOSE" = true ]; then
+        verbose "Mailserver health check output:"
+        docker exec mailserver bash /usr/local/bin/healthcheck.sh || true
+    fi
 fi
 
 # Cleanup
