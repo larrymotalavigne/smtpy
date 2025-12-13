@@ -345,6 +345,7 @@ services:
       - ./config/mailserver/postfix-virtual.cf:/tmp/docker-mailserver/postfix-virtual.cf:ro
       - ./config/mailserver/postfix-transport:/tmp/docker-mailserver/postfix-transport:ro
     networks:
+      - smtpy-network
       - mailserver-network
       - proxy-network
     cap_add:
