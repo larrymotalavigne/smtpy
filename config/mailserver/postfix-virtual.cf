@@ -1,0 +1,27 @@
+# Virtual Domain Aliases for Postfix
+# This file defines virtual domain email aliases
+#
+# Format: virtual_email_address real_email_address
+#
+# Examples:
+#   admin@atomdev.fr          postmaster@atomdev.fr
+#   support@atomdev.fr        postmaster@atomdev.fr
+#   noreply@atomdev.fr        postmaster@atomdev.fr
+#   contact@atomdev.fr        user@atomdev.fr
+#
+# After editing, run:
+#   docker exec mailserver postmap /tmp/docker-mailserver/postfix-virtual.cf
+#   docker exec mailserver postfix reload
+#
+# Documentation: http://www.postfix.org/virtual.5.html
+
+# Default catch-all aliases
+postmaster@atomdev.fr     postmaster@atomdev.fr
+abuse@atomdev.fr          postmaster@atomdev.fr
+hostmaster@atomdev.fr     postmaster@atomdev.fr
+
+# SMTPy service accounts
+noreply@atomdev.fr        postmaster@atomdev.fr
+
+# Add your custom aliases below
+# user@atomdev.fr          real-user@atomdev.fr

@@ -1,0 +1,28 @@
+# Postfix Transport Maps for SMTPy Integration
+# This file routes specific email addresses to the SMTPy SMTP receiver
+#
+# Format: pattern transport:nexthop
+#
+# Examples:
+#   # Route all mail for a specific address to SMTPy
+#   alias@atomdev.fr         smtp:[smtpy-smtp-receiver]:2525
+#
+#   # Route all mail for a subdomain to SMTPy
+#   .aliases.atomdev.fr      smtp:[smtpy-smtp-receiver]:2525
+#
+#   # Route specific addresses to SMTPy
+#   test@atomdev.fr          smtp:[smtpy-smtp-receiver]:2525
+#   demo@atomdev.fr          smtp:[smtpy-smtp-receiver]:2525
+#
+# After editing, run:
+#   docker exec mailserver postmap /tmp/docker-mailserver/postfix-transport
+#   docker exec mailserver postfix reload
+#
+# Documentation: http://www.postfix.org/transport.5.html
+
+# SMTPy-managed aliases
+# Add your alias addresses here to route them to SMTPy for processing
+# Format: email_address smtp:[smtpy-smtp-receiver]:2525
+#
+# Example:
+# myalias@atomdev.fr       smtp:[smtpy-smtp-receiver]:2525
