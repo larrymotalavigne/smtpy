@@ -124,13 +124,19 @@ The mailserver supports Let's Encrypt SSL certificates:
    docker compose -f docker-compose.prod.yml restart mailserver
    ```
 
-### Integration with SMTPy
+### Network Integration
 
 The mailserver is fully integrated with SMTPy's production stack in `docker-compose.prod.yml`:
 
-- **Network Integration**: The `smtp-receiver` service is automatically connected to the `mailserver-network`, allowing seamless communication between SMTPy and the mailserver.
+- **Unified Network**: The mailserver is connected to the `smtpy-network`, allowing all SMTPy services (api, smtp-receiver, front) to communicate directly with it.
+
+- **Dedicated Networks**:
+  - `mailserver-network`: For mail-specific operations and isolation
+  - `proxy-network`: For nginx reverse proxy integration and SSL/TLS termination
 
 - **Automatic Startup**: The mailserver starts automatically when you run `docker compose -f docker-compose.prod.yml up -d`, alongside all other SMTPy services.
+
+- **Service Discovery**: All services can reach the mailserver using the hostname `mailserver` (e.g., `smtp://mailserver:587`)
 
 - **Environment Variables**: Configure mailserver connection settings in `.env.production`:
    ```bash
@@ -140,24 +146,6 @@ The mailserver is fully integrated with SMTPy's production stack in `docker-comp
    MAILSERVER_PASSWORD=your-password
    MAILSERVER_USE_TLS=true
    ```
-
-### Using docker-compose.mail.yml (Alternative)
-
-For standalone mailserver deployment (without the full SMTPy stack), you can use `docker-compose.mail.yml`:
-
-```bash
-# Create required networks
-docker network create mailserver-network
-docker network create proxy-network
-
-# Start only the mailserver
-docker compose -f docker-compose.mail.yml up -d
-```
-
-This is useful for:
-- Testing mailserver configuration independently
-- Running mailserver on a separate server
-- Development environments where you don't need the full stack
 
 ---
 
