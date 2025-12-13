@@ -263,18 +263,18 @@
         </div>
 
         <!-- Status Banner -->
-        <div class="detail-status-banner" [class]="'status-' + selectedMessage.status">
+        <div class="detail-status-banner" [class]="'status-' + selectedMessage!.status">
           <div class="status-info">
-            <i class="pi" [class]="selectedMessage.status === 'DELIVERED' ? 'pi-check-circle' : selectedMessage.status === 'PENDING' ? 'pi-clock' : 'pi-exclamation-triangle'"></i>
+            <i class="pi" [class]="selectedMessage!.status === 'delivered' ? 'pi-check-circle' : selectedMessage!.status === 'pending' ? 'pi-clock' : 'pi-exclamation-triangle'"></i>
             <div>
-              <h4>{{ getStatusLabel(selectedMessage.status) }}</h4>
+              <h4>{{ getStatusLabel(selectedMessage!.status) }}</h4>
               @if (selectedMessage.error_message) {
                 <p>{{ selectedMessage.error_message }}</p>
               }
             </div>
           </div>
-          <p-tag [value]="getStatusLabel(selectedMessage.status)"
-            [severity]="getStatusSeverity(selectedMessage.status)" />
+          <p-tag [value]="getStatusLabel(selectedMessage!.status)"
+            [severity]="getStatusSeverity(selectedMessage!.status)" />
         </div>
 
         <!-- Message Info -->
