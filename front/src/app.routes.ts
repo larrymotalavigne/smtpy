@@ -19,6 +19,7 @@ export const appRoutes: Routes = [
             {path: 'domains', loadComponent: () => import('./app/pages/domains/domains.component').then(m => m.DomainsComponent)},
             {path: 'aliases', loadComponent: () => import('./app/pages/aliases/aliases.component').then(m => m.AliasesComponent)},
             {path: 'messages', loadComponent: () => import('./app/pages/messages/messages.component').then(m => m.MessagesComponent)},
+            {path: 'mail-history/:email', loadComponent: () => import('./app/pages/mail-history/mail-history.component').then(m => m.MailHistoryComponent)},
             {
                 path: 'statistics',
                 loadComponent: () => import('./app/pages/statistics/statistics.component').then(m => m.StatisticsComponent)
