@@ -1,20 +1,22 @@
 # Mailserver Configuration Guide for SMTPy
 
 This guide explains how to set up and configure a mailserver for SMTPy, including:
-1. Running a complete Docker Mailserver with `docker-compose.mail.yml`
+1. Running a complete Docker Mailserver integrated with the production stack
 2. Configuring email forwarding to avoid "relay access denied" errors
 
 ## Running Docker Mailserver with SMTPy
 
-SMTPy includes a complete Docker Mailserver configuration in `docker-compose.mail.yml`. This provides a production-ready mail server with SMTP, IMAP, anti-spam, and anti-virus capabilities.
+SMTPy includes a complete Docker Mailserver configuration integrated into `docker-compose.prod.yml`. This provides a production-ready mail server with SMTP, IMAP, anti-spam, and anti-virus capabilities that works seamlessly with the SMTPy application stack.
 
 ### Quick Start
 
 1. **Create required Docker networks** (if not already created):
    ```bash
-   docker network create mailserver-network
+   # Create proxy network for nginx integration (if using nginx-proxy-manager)
    docker network create proxy-network
-   docker network create npm_letsencrypt  # For Let's Encrypt certificates
+
+   # Create volume for Let's Encrypt certificates (if using nginx-proxy-manager)
+   docker volume create npm_letsencrypt
    ```
 
 2. **Configure environment variables**:
@@ -26,10 +28,12 @@ SMTPy includes a complete Docker Mailserver configuration in `docker-compose.mai
    nano .env.production
    ```
 
-3. **Start the mailserver**:
+3. **Start the complete stack** (including mailserver):
    ```bash
-   docker compose -f docker-compose.mail.yml up -d
+   docker compose -f docker-compose.prod.yml up -d
    ```
+
+   The mailserver service is now integrated into the main production stack and will start automatically alongside other SMTPy services.
 
 4. **Create email accounts**:
    ```bash
@@ -83,7 +87,7 @@ To route specific email addresses to SMTPy for alias processing:
 3. **Verify the configuration**:
    ```bash
    # Check logs
-   docker compose -f docker-compose.mail.yml logs -f mailserver
+   docker compose -f docker-compose.prod.yml logs -f mailserver
    ```
 
 ### Health Checks
@@ -100,7 +104,7 @@ The mailserver includes a comprehensive health check script that monitors:
 Check the health status:
 ```bash
 # View container status
-docker compose -f docker-compose.mail.yml ps
+docker compose -f docker-compose.prod.yml ps
 
 # Run health check manually
 docker exec mailserver bash /usr/local/bin/healthcheck.sh
@@ -117,31 +121,18 @@ The mailserver supports Let's Encrypt SSL certificates:
    ```
 3. **Restart the mailserver**:
    ```bash
-   docker compose -f docker-compose.mail.yml restart mailserver
+   docker compose -f docker-compose.prod.yml restart mailserver
    ```
 
-### Integrating with SMTPy
+### Integration with SMTPy
 
-To integrate the mailserver with SMTPy's main stack:
+The mailserver is fully integrated with SMTPy's production stack in `docker-compose.prod.yml`:
 
-1. **Ensure both networks are connected**:
-   - The mailserver uses `mailserver-network`
-   - SMTPy's `smtp-receiver` should also be on `mailserver-network`
+- **Network Integration**: The `smtp-receiver` service is automatically connected to the `mailserver-network`, allowing seamless communication between SMTPy and the mailserver.
 
-2. **Update `docker-compose.prod.yml`** (if needed):
-   ```yaml
-   services:
-     smtp-receiver:
-       networks:
-         - smtpy-network
-         - mailserver-network  # Add this
+- **Automatic Startup**: The mailserver starts automatically when you run `docker compose -f docker-compose.prod.yml up -d`, alongside all other SMTPy services.
 
-   networks:
-     mailserver-network:
-       external: true
-   ```
-
-3. **Configure environment variables** in `.env.production`:
+- **Environment Variables**: Configure mailserver connection settings in `.env.production`:
    ```bash
    MAILSERVER_HOST=mailserver
    MAILSERVER_PORT=587
@@ -149,6 +140,24 @@ To integrate the mailserver with SMTPy's main stack:
    MAILSERVER_PASSWORD=your-password
    MAILSERVER_USE_TLS=true
    ```
+
+### Using docker-compose.mail.yml (Alternative)
+
+For standalone mailserver deployment (without the full SMTPy stack), you can use `docker-compose.mail.yml`:
+
+```bash
+# Create required networks
+docker network create mailserver-network
+docker network create proxy-network
+
+# Start only the mailserver
+docker compose -f docker-compose.mail.yml up -d
+```
+
+This is useful for:
+- Testing mailserver configuration independently
+- Running mailserver on a separate server
+- Development environments where you don't need the full stack
 
 ---
 
