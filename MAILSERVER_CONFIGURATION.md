@@ -1,6 +1,155 @@
-# Mailserver Configuration Guide for Email Forwarding
+# Mailserver Configuration Guide for SMTPy
 
-This guide explains how to configure your mailserver to avoid "relay access denied" errors when forwarding emails through SMTPy.
+This guide explains how to set up and configure a mailserver for SMTPy, including:
+1. Running a complete Docker Mailserver integrated with the production stack
+2. Configuring email forwarding to avoid "relay access denied" errors
+
+## Running Docker Mailserver with SMTPy
+
+SMTPy includes a complete Docker Mailserver configuration integrated into `docker-compose.prod.yml`. This provides a production-ready mail server with SMTP, IMAP, anti-spam, and anti-virus capabilities that works seamlessly with the SMTPy application stack.
+
+### Quick Start
+
+1. **Create required Docker networks** (if not already created):
+   ```bash
+   # Create proxy network for nginx integration (if using nginx-proxy-manager)
+   docker network create proxy-network
+
+   # Create volume for Let's Encrypt certificates (if using nginx-proxy-manager)
+   docker volume create npm_letsencrypt
+   ```
+
+2. **Configure environment variables**:
+   ```bash
+   # Copy the template
+   cp .env.production.template .env.production
+
+   # Edit .env.production and configure the MAILSERVER_* variables
+   nano .env.production
+   ```
+
+3. **Start the complete stack** (including mailserver):
+   ```bash
+   docker compose -f docker-compose.prod.yml up -d
+   ```
+
+   The mailserver service is now integrated into the main production stack and will start automatically alongside other SMTPy services.
+
+4. **Create email accounts**:
+   ```bash
+   # Add a user account
+   docker exec mailserver setup email add user@atomdev.fr
+
+   # List all accounts
+   docker exec mailserver setup email list
+   ```
+
+5. **Configure DKIM** (for better deliverability):
+   ```bash
+   # Generate DKIM keys
+   docker exec mailserver setup config dkim
+
+   # Show DKIM public key to add to DNS
+   docker exec mailserver cat /tmp/docker-mailserver/opendkim/keys/atomdev.fr/mail.txt
+   ```
+
+6. **Configure DNS records**:
+   - **MX Record**: `mail.atomdev.fr` (priority 10)
+   - **A Record**: `mail.atomdev.fr` → Your server IP
+   - **SPF Record**: `v=spf1 mx ~all`
+   - **DKIM Record**: Copy from step 5
+   - **DMARC Record**: `v=DMARC1; p=quarantine; rua=mailto:postmaster@atomdev.fr`
+
+### Configuration Files
+
+The mailserver uses several configuration files in the `config/mailserver/` directory:
+
+- **`postfix-main.cf`**: Custom Postfix configuration settings
+- **`postfix-virtual.cf`**: Virtual domain aliases
+- **`postfix-transport`**: Transport maps for routing to SMTPy
+
+### Routing Emails to SMTPy
+
+To route specific email addresses to SMTPy for alias processing:
+
+1. **Edit `config/mailserver/postfix-transport`**:
+   ```
+   # Route an alias to SMTPy
+   myalias@atomdev.fr    smtp:[smtpy-smtp-receiver]:2525
+   ```
+
+2. **Update the transport map**:
+   ```bash
+   docker exec mailserver postmap /tmp/docker-mailserver/postfix-transport
+   docker exec mailserver postfix reload
+   ```
+
+3. **Verify the configuration**:
+   ```bash
+   # Check logs
+   docker compose -f docker-compose.prod.yml logs -f mailserver
+   ```
+
+### Health Checks
+
+The mailserver includes a comprehensive health check script that monitors:
+- Postfix (SMTP) status
+- Dovecot (IMAP) status
+- Rspamd (anti-spam) status
+- ClamAV (anti-virus) status
+- Port availability (25, 587, 465, 143, 993)
+- Mail queue status
+- Disk space usage
+
+Check the health status:
+```bash
+# View container status
+docker compose -f docker-compose.prod.yml ps
+
+# Run health check manually
+docker exec mailserver bash /usr/local/bin/healthcheck.sh
+```
+
+### SSL/TLS Configuration
+
+The mailserver supports Let's Encrypt SSL certificates:
+
+1. **Set up certificates** using nginx-proxy-manager or certbot
+2. **Update `.env.production`**:
+   ```bash
+   MAILSERVER_SSL_TYPE=letsencrypt
+   ```
+3. **Restart the mailserver**:
+   ```bash
+   docker compose -f docker-compose.prod.yml restart mailserver
+   ```
+
+### Network Integration
+
+The mailserver is fully integrated with SMTPy's production stack in `docker-compose.prod.yml`:
+
+- **Unified Network**: The mailserver is connected to the `smtpy-network`, allowing all SMTPy services (api, smtp-receiver, front) to communicate directly with it.
+
+- **Dedicated Networks**:
+  - `mailserver-network`: For mail-specific operations and isolation
+  - `proxy-network`: For nginx reverse proxy integration and SSL/TLS termination
+
+- **Automatic Startup**: The mailserver starts automatically when you run `docker compose -f docker-compose.prod.yml up -d`, alongside all other SMTPy services.
+
+- **Service Discovery**: All services can reach the mailserver using the hostname `mailserver` (e.g., `smtp://mailserver:587`)
+
+- **Environment Variables**: Configure mailserver connection settings in `.env.production`:
+   ```bash
+   MAILSERVER_HOST=mailserver
+   MAILSERVER_PORT=587
+   MAILSERVER_USER=noreply@atomdev.fr
+   MAILSERVER_PASSWORD=your-password
+   MAILSERVER_USE_TLS=true
+   ```
+
+---
+
+## Email Forwarding Configuration
 
 ## Understanding the Issue
 

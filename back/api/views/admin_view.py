@@ -8,6 +8,8 @@ from sqlalchemy import select, func, and_
 from datetime import datetime, timedelta
 from pydantic import BaseModel, EmailStr
 import stripe
+import asyncio
+import socket
 
 from shared.core.db import get_db
 from shared.core.config import SETTINGS
@@ -213,6 +215,21 @@ async def get_recent_activity(
         )
 
 
+async def check_mailserver_port(host: str, port: int, timeout: float = 2.0) -> bool:
+    """Check if a mailserver port is accessible."""
+    try:
+        # Create a socket connection to test the port
+        reader, writer = await asyncio.wait_for(
+            asyncio.open_connection(host, port),
+            timeout=timeout
+        )
+        writer.close()
+        await writer.wait_closed()
+        return True
+    except (asyncio.TimeoutError, ConnectionRefusedError, OSError):
+        return False
+
+
 @router.get(
     "/health",
     summary="Get system health",
@@ -226,8 +243,10 @@ async def get_system_health(
     admin_user: dict = Depends(require_admin)
 ):
     """Get system health status (admin only)."""
+    health_data = {}
+
+    # Check database connection
     try:
-        # Check database connection
         await db.execute(select(1))
 
         # Get database size (PostgreSQL specific)
@@ -245,28 +264,42 @@ async def get_system_health(
         )
         conn_count = conn_count_result.scalar() or 0
 
-        return {
-            "success": True,
-            "data": {
-                "database": {
-                    "status": "healthy",
-                    "connections": conn_count,
-                    "size": f"{db_size_mb:.2f} MB"
-                }
-            }
+        health_data["database"] = {
+            "status": "healthy",
+            "connections": conn_count,
+            "size": f"{db_size_mb:.2f} MB"
+        }
+    except Exception as e:
+        health_data["database"] = {
+            "status": "error",
+            "connections": 0,
+            "size": "unknown",
+            "error": str(e)
         }
 
-    except Exception as e:
-        return {
-            "success": False,
-            "data": {
-                "database": {
-                    "status": "error",
-                    "connections": 0,
-                    "size": "unknown"
-                }
-            }
+    # Check mailserver ports
+    mailserver_host = SETTINGS.mailserver_host or "mailserver"
+    smtp_port_25 = await check_mailserver_port(mailserver_host, 25)
+    smtp_port_587 = await check_mailserver_port(mailserver_host, 587)
+    imap_port_143 = await check_mailserver_port(mailserver_host, 143)
+    imap_port_993 = await check_mailserver_port(mailserver_host, 993)
+
+    mailserver_healthy = smtp_port_587 and imap_port_143
+
+    health_data["mailserver"] = {
+        "status": "healthy" if mailserver_healthy else "degraded",
+        "ports": {
+            "smtp_25": "up" if smtp_port_25 else "down",
+            "smtp_587": "up" if smtp_port_587 else "down",
+            "imap_143": "up" if imap_port_143 else "down",
+            "imaps_993": "up" if imap_port_993 else "down"
         }
+    }
+
+    return {
+        "success": True,
+        "data": health_data
+    }
 
 
 @router.get(
