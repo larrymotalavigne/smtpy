@@ -4,12 +4,13 @@ Provides admin-only endpoints for system statistics and management.
 """
 from fastapi import APIRouter, Depends, HTTPException, Query, status, Body
 from sqlalchemy.ext.asyncio import AsyncSession
-from sqlalchemy import select, func, and_
+from sqlalchemy import select, func, and_, desc
 from datetime import datetime, timedelta
 from pydantic import BaseModel, EmailStr
 import stripe
 import asyncio
 import socket
+from typing import Optional
 
 from shared.core.db import get_db
 from shared.core.config import SETTINGS
@@ -20,6 +21,8 @@ from shared.models.organization import Organization
 from shared.models.domain import Domain
 from shared.models.alias import Alias
 from shared.models.message import Message, MessageStatus
+from shared.models.security_event import SecurityEvent
+from ..services.postfix_log_parser import analyze_postfix_logs
 
 # Create router
 router = APIRouter(prefix="/admin", tags=["admin"])
@@ -480,4 +483,216 @@ async def get_stripe_config(
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
             detail=f"Failed to fetch Stripe configuration: {str(e)}"
+        )
+
+
+@router.get(
+    "/security/logs/analyze",
+    summary="Analyze Postfix mail server logs",
+    responses={
+        403: {"model": ErrorResponse, "description": "Admin access required"},
+        500: {"model": ErrorResponse, "description": "Internal server error"}
+    }
+)
+async def analyze_mail_logs(
+    hours: int = Query(24, ge=1, le=168, description="Hours to analyze (1-168)"),
+    max_lines: Optional[int] = Query(None, ge=100, le=100000, description="Max log lines to process"),
+    admin_user: dict = Depends(require_admin)
+):
+    """Analyze Postfix mail server logs for security threats (admin only).
+
+    Detects:
+    - PREGREET violations (spam bots)
+    - Failed authentication attempts
+    - Email rejections
+    - DNS blocklist hits
+    - Suspicious connection patterns
+
+    Args:
+        hours: Number of hours to analyze (default: 24, max: 168/7 days)
+        max_lines: Maximum log lines to process (default: None = all)
+    """
+    try:
+        # Analyze logs from Docker Mailserver volume
+        # Default path: /var/log/mail/mail.log (inside mailserver container)
+        # In production, this should be mounted to the API container
+        log_path = "/var/log/mail/mail.log"
+
+        # Parse and analyze logs
+        analysis = analyze_postfix_logs(
+            log_path=log_path,
+            hours=hours,
+            max_lines=max_lines
+        )
+
+        return {
+            "success": True,
+            "data": {
+                "analysis_period_hours": hours,
+                "max_lines_processed": max_lines,
+                **analysis
+            }
+        }
+
+    except FileNotFoundError:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="Mail log file not found. Ensure mailserver logs are accessible."
+        )
+    except Exception as e:
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail=f"Failed to analyze logs: {str(e)}"
+        )
+
+
+@router.get(
+    "/security/events",
+    summary="Get security events from database",
+    responses={
+        403: {"model": ErrorResponse, "description": "Admin access required"},
+        500: {"model": ErrorResponse, "description": "Internal server error"}
+    }
+)
+async def get_security_events(
+    page: int = Query(1, ge=1),
+    page_size: int = Query(50, ge=1, le=200),
+    event_type: Optional[str] = Query(None, description="Filter by event type"),
+    severity: Optional[str] = Query(None, description="Filter by severity"),
+    ip_address: Optional[str] = Query(None, description="Filter by IP address"),
+    hours: Optional[int] = Query(None, ge=1, le=720, description="Filter by hours"),
+    db: AsyncSession = Depends(get_db),
+    admin_user: dict = Depends(require_admin)
+):
+    """Get security events from database with filtering and pagination (admin only).
+
+    Args:
+        page: Page number (starts at 1)
+        page_size: Items per page (1-200)
+        event_type: Filter by event type (pregreet_violation, auth_failure, etc.)
+        severity: Filter by severity (low, medium, high, critical)
+        ip_address: Filter by specific IP address
+        hours: Filter events from last N hours
+    """
+    try:
+        offset = (page - 1) * page_size
+
+        # Build query with filters
+        query = select(SecurityEvent)
+
+        if event_type:
+            query = query.where(SecurityEvent.event_type == event_type)
+
+        if severity:
+            query = query.where(SecurityEvent.severity == severity)
+
+        if ip_address:
+            query = query.where(SecurityEvent.ip_address == ip_address)
+
+        if hours:
+            cutoff_time = datetime.utcnow() - timedelta(hours=hours)
+            query = query.where(SecurityEvent.event_timestamp >= cutoff_time)
+
+        # Get total count
+        count_query = select(func.count()).select_from(query.subquery())
+        total_result = await db.execute(count_query)
+        total = total_result.scalar() or 0
+
+        # Get events with pagination
+        query = query.order_by(desc(SecurityEvent.event_timestamp)).offset(offset).limit(page_size)
+        result = await db.execute(query)
+        events = result.scalars().all()
+
+        return {
+            "success": True,
+            "data": {
+                "items": [event.to_dict() for event in events],
+                "total": total,
+                "page": page,
+                "page_size": page_size,
+                "filters": {
+                    "event_type": event_type,
+                    "severity": severity,
+                    "ip_address": ip_address,
+                    "hours": hours
+                }
+            }
+        }
+
+    except Exception as e:
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail=f"Failed to fetch security events: {str(e)}"
+        )
+
+
+@router.get(
+    "/security/stats",
+    summary="Get security statistics",
+    responses={
+        403: {"model": ErrorResponse, "description": "Admin access required"},
+        500: {"model": ErrorResponse, "description": "Internal server error"}
+    }
+)
+async def get_security_stats(
+    hours: int = Query(24, ge=1, le=720),
+    db: AsyncSession = Depends(get_db),
+    admin_user: dict = Depends(require_admin)
+):
+    """Get security statistics from database (admin only).
+
+    Args:
+        hours: Time window for statistics (default: 24, max: 720/30 days)
+    """
+    try:
+        cutoff_time = datetime.utcnow() - timedelta(hours=hours)
+
+        # Count events by type
+        event_types_result = await db.execute(
+            select(SecurityEvent.event_type, func.count(SecurityEvent.id))
+            .where(SecurityEvent.event_timestamp >= cutoff_time)
+            .group_by(SecurityEvent.event_type)
+        )
+        event_types = dict(event_types_result.all())
+
+        # Count events by severity
+        severity_result = await db.execute(
+            select(SecurityEvent.severity, func.count(SecurityEvent.id))
+            .where(SecurityEvent.event_timestamp >= cutoff_time)
+            .group_by(SecurityEvent.severity)
+        )
+        severity_breakdown = dict(severity_result.all())
+
+        # Top offending IPs
+        top_ips_result = await db.execute(
+            select(SecurityEvent.ip_address, func.count(SecurityEvent.id).label('count'))
+            .where(SecurityEvent.event_timestamp >= cutoff_time)
+            .group_by(SecurityEvent.ip_address)
+            .order_by(desc('count'))
+            .limit(10)
+        )
+        top_ips = [{"ip": ip, "count": count} for ip, count in top_ips_result.all()]
+
+        # Total events
+        total_result = await db.execute(
+            select(func.count(SecurityEvent.id))
+            .where(SecurityEvent.event_timestamp >= cutoff_time)
+        )
+        total_events = total_result.scalar() or 0
+
+        return {
+            "success": True,
+            "data": {
+                "time_window_hours": hours,
+                "total_events": total_events,
+                "event_types": event_types,
+                "severity_breakdown": severity_breakdown,
+                "top_offending_ips": top_ips
+            }
+        }
+
+    except Exception as e:
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail=f"Failed to fetch security statistics: {str(e)}"
         )

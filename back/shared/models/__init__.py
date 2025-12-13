@@ -12,6 +12,7 @@ from .event import Event
 from .alias import Alias
 from .activity_log import ActivityLog
 from .forwarding_rule import ForwardingRule, RuleConditionType, RuleActionType
+from .security_event import SecurityEvent, EventType, EventSeverity
 
 __all__ = [
     "Base",
@@ -33,4 +34,7 @@ __all__ = [
     "ForwardingRule",
     "RuleConditionType",
     "RuleActionType",
+    "SecurityEvent",
+    "EventType",
+    "EventSeverity",
 ]
