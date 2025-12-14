@@ -48,9 +48,39 @@ else
 fi
 echo ""
 
+# Mailserver Prerequisites: Create required networks and volumes
+echo -e "${BLUE}Checking mailserver prerequisites...${NC}"
+
+# Create required Docker networks if they don't exist
+NETWORKS=("smtpy-network" "mailserver-network" "proxy-network")
+for network in "${NETWORKS[@]}"; do
+    if ! docker network inspect "$network" >/dev/null 2>&1; then
+        docker network create "$network"
+        echo -e "${GREEN}✓ Created network: $network${NC}"
+    fi
+done
+
+# Create required Docker volumes for mailserver
+VOLUMES=(
+    "infra_mailserver_data"
+    "infra_mailserver_state"
+    "infra_mailserver_logs"
+    "infra_mailserver_config"
+    "infra_npm_letsencrypt"
+)
+for volume in "${VOLUMES[@]}"; do
+    if ! docker volume inspect "$volume" >/dev/null 2>&1; then
+        docker volume create "$volume"
+        echo -e "${GREEN}✓ Created volume: $volume${NC}"
+    fi
+done
+
+echo -e "${GREEN}✓ Prerequisites ready${NC}"
+echo ""
+
 # Step 1: Login to registry (if credentials available)
 if [ -n "$GITHUB_PAT" ] || [ -n "$CR_PAT" ]; then
-    echo -e "${BLUE}[1/7]${NC} Logging in to GitHub Container Registry..."
+    echo -e "${BLUE}[1/8]${NC} Logging in to GitHub Container Registry..."
     PAT="${GITHUB_PAT:-$CR_PAT}"
     echo "$PAT" | docker login ghcr.io -u "$GHCR_OWNER" --password-stdin
     echo -e "${GREEN}✓ Login successful${NC}"
@@ -61,13 +91,13 @@ fi
 echo ""
 
 # Step 2: Pull latest images
-echo -e "${BLUE}[2/7]${NC} Pulling latest images..."
+echo -e "${BLUE}[2/8]${NC} Pulling latest images..."
 docker compose -f $COMPOSE_FILE $COMPOSE_ENV_FILE_OPT pull
 echo -e "${GREEN}✓ Images pulled${NC}"
 echo ""
 
 # Step 3: Stop existing containers
-echo -e "${BLUE}[3/7]${NC} Stopping existing containers..."
+echo -e "${BLUE}[3/8]${NC} Stopping existing containers..."
 
 # Force stop and remove any existing SMTPy containers (even if not managed by current compose project)
 echo "  Force stopping any existing SMTPy containers..."
@@ -80,13 +110,13 @@ echo -e "${GREEN}✓ Old containers stopped${NC}"
 echo ""
 
 # Step 4: Start database services
-echo -e "${BLUE}[4/7]${NC} Starting database and Redis..."
+echo -e "${BLUE}[4/8]${NC} Starting database and Redis..."
 docker compose -f $COMPOSE_FILE $COMPOSE_ENV_FILE_OPT up -d --no-deps db redis
 echo -e "${GREEN}✓ Database services started${NC}"
 echo ""
 
 # Step 5: Wait for database
-echo -e "${BLUE}[5/7]${NC} Waiting for database to be ready..."
+echo -e "${BLUE}[5/8]${NC} Waiting for database to be ready..."
 sleep 10
 MAX_RETRIES=30
 RETRY_COUNT=0
@@ -102,8 +132,14 @@ done
 echo -e "${GREEN}✓ Database is ready${NC}"
 echo ""
 
-# Step 6: Start backend services
-echo -e "${BLUE}[6/7]${NC} Starting backend services..."
+# Step 6: Start mailserver
+echo -e "${BLUE}[6/8]${NC} Starting mailserver..."
+docker compose -f $COMPOSE_FILE $COMPOSE_ENV_FILE_OPT up -d --no-deps mailserver
+echo -e "${GREEN}✓ Mailserver started${NC}"
+echo ""
+
+# Step 7: Start backend services
+echo -e "${BLUE}[7/8]${NC} Starting backend services..."
 
 # Start SMTP server
 echo "  Starting SMTP server..."
@@ -120,8 +156,8 @@ sleep 15
 echo -e "${GREEN}✓ Backend services started${NC}"
 echo ""
 
-# Step 7: Start frontend
-echo -e "${BLUE}[7/7]${NC} Starting frontend..."
+# Step 8: Start frontend
+echo -e "${BLUE}[8/8]${NC} Starting frontend..."
 docker compose -f $COMPOSE_FILE $COMPOSE_ENV_FILE_OPT up -d --no-deps front
 echo -e "${GREEN}✓ Frontend started${NC}"
 echo ""
@@ -157,6 +193,18 @@ if docker compose -f $COMPOSE_FILE $COMPOSE_ENV_FILE_OPT exec -T redis redis-cli
     echo -e "  Redis: ${GREEN}✓ Healthy${NC}"
 else
     echo -e "  Redis: ${RED}✗ Unhealthy${NC}"
+fi
+
+# Check Mailserver
+MAILSERVER_HEALTH=$(docker inspect --format='{{.State.Health.Status}}' mailserver 2>/dev/null || echo "unknown")
+if [ "$MAILSERVER_HEALTH" = "healthy" ]; then
+    echo -e "  Mailserver: ${GREEN}✓ Healthy${NC}"
+elif [ "$MAILSERVER_HEALTH" = "starting" ]; then
+    echo -e "  Mailserver: ${YELLOW}⚠ Starting (may take up to 2 minutes)${NC}"
+elif [ "$MAILSERVER_HEALTH" = "unhealthy" ]; then
+    echo -e "  Mailserver: ${RED}✗ Unhealthy${NC}"
+else
+    echo -e "  Mailserver: ${YELLOW}⚠ Status unknown${NC}"
 fi
 
 # Check API
