@@ -107,7 +107,7 @@ echo -e "${BLUE}[6/7]${NC} Starting backend services..."
 
 # Start SMTP server
 echo "  Starting SMTP server..."
-docker compose -f $COMPOSE_FILE $COMPOSE_ENV_FILE_OPT up -d --no-deps smtp
+docker compose -f $COMPOSE_FILE $COMPOSE_ENV_FILE_OPT up -d --no-deps smtp-receiver
 
 # Start API with 2 replicas
 echo "  Starting API servers (2 replicas)..."
@@ -122,7 +122,7 @@ echo ""
 
 # Step 7: Start frontend
 echo -e "${BLUE}[7/7]${NC} Starting frontend..."
-docker compose -f $COMPOSE_FILE $COMPOSE_ENV_FILE_OPT up -d --no-deps frontend
+docker compose -f $COMPOSE_FILE $COMPOSE_ENV_FILE_OPT up -d --no-deps front
 echo -e "${GREEN}✓ Frontend started${NC}"
 echo ""
 
