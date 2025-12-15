@@ -213,7 +213,7 @@ jobs:
           port: 2345
           username: ${{ secrets.UNRAID_SSH_USER }}
           key: ${{ secrets.UNRAID_SSH_KEY }}
-          source: "docker-compose.prod.yml,.env.production.template"
+          source: "docker-compose.prod.yml,.env.production.template,config/,scripts/"
           target: "/srv/smtpy/"
 
       - name: Deploy with Docker Compose via SSH
@@ -258,6 +258,27 @@ jobs:
             echo "Logging in to GitHub Container Registry..."
             echo "$GITHUB_PAT" | docker login ghcr.io -u "$GHCR_OWNER" --password-stdin
 
+            # Mailserver Prerequisites: Create required networks and volumes
+            echo "Checking mailserver prerequisites..."
+
+            # Create required Docker networks if they don't exist
+            for network in smtpy-network mailserver-network proxy-network; do
+              if ! docker network inspect "$network" >/dev/null 2>&1; then
+                docker network create "$network"
+                echo "✓ Created network: $network"
+              fi
+            done
+
+            # Create required Docker volumes for mailserver
+            for volume in infra_mailserver_data infra_mailserver_state infra_mailserver_logs infra_mailserver_config infra_npm_letsencrypt; do
+              if ! docker volume inspect "$volume" >/dev/null 2>&1; then
+                docker volume create "$volume"
+                echo "✓ Created volume: $volume"
+              fi
+            done
+
+            echo "✓ Prerequisites ready"
+
             # Pull latest images
             echo "Pulling latest images..."
             docker compose -f docker-compose.prod.yml $COMPOSE_ENV_FILE_OPT pull
@@ -274,9 +295,13 @@ jobs:
             sleep 10
             docker compose -f docker-compose.prod.yml $COMPOSE_ENV_FILE_OPT exec -T db pg_isready -U postgres || sleep 5
 
-            # Start SMTP server
-            echo "Starting SMTP server..."
-            docker compose -f docker-compose.prod.yml $COMPOSE_ENV_FILE_OPT up -d --no-deps smtp
+            # Start mailserver
+            echo "Starting mailserver..."
+            docker compose -f docker-compose.prod.yml $COMPOSE_ENV_FILE_OPT up -d --no-deps mailserver
+
+            # Start SMTP receiver
+            echo "Starting SMTP receiver..."
+            docker compose -f docker-compose.prod.yml $COMPOSE_ENV_FILE_OPT up -d --no-deps smtp-receiver
 
             # Start API with replicas
             echo "Starting API servers (2 replicas)..."
@@ -376,6 +401,31 @@ jobs:
               echo "✅ Redis is responding"
             else
               echo "❌ Redis health check failed"
+              exit 1
+            fi
+
+            # Check Mailserver
+            echo "Checking Mailserver..."
+            MAILSERVER_HEALTH=$(docker inspect --format='{{.State.Health.Status}}' mailserver 2>/dev/null || echo "unknown")
+            if [ "$MAILSERVER_HEALTH" = "healthy" ]; then
+              echo "✅ Mailserver is healthy"
+            elif [ "$MAILSERVER_HEALTH" = "starting" ]; then
+              echo "⚠️ Mailserver is still starting (this is normal, may take up to 2 minutes)"
+            elif [ "$MAILSERVER_HEALTH" = "unhealthy" ]; then
+              echo "❌ Mailserver is unhealthy"
+              echo "Checking mailserver logs..."
+              docker logs mailserver --tail 50
+              exit 1
+            else
+              echo "⚠️ Mailserver status unknown"
+            fi
+
+            # Check SMTP Receiver
+            echo "Checking SMTP Receiver..."
+            if docker ps --filter "name=smtpy-smtp-receiver" --format "{{.Status}}" | grep -q "Up"; then
+              echo "✅ SMTP Receiver is running"
+            else
+              echo "❌ SMTP Receiver health check failed"
               exit 1
             fi
 
