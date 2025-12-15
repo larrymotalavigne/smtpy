@@ -48,13 +48,20 @@ fi
 # Generate postfix database files
 log_info "Generating Postfix database files..."
 
+# The source files are mounted read-only, so we need to create .db files in /etc/postfix
+# and configure Postfix to use them from there
+
 # Generate virtual alias database
 if [ -f /tmp/docker-mailserver/postfix-virtual.cf ]; then
     log_info "Compiling virtual alias database from postfix-virtual.cf..."
-    if postmap /tmp/docker-mailserver/postfix-virtual.cf; then
-        if [ -f /tmp/docker-mailserver/postfix-virtual.cf.db ]; then
-            log_info "✓ Virtual alias database created successfully"
-            ls -lh /tmp/docker-mailserver/postfix-virtual.cf.db
+    # Copy source file to /etc/postfix where we can write the .db file
+    cp /tmp/docker-mailserver/postfix-virtual.cf /etc/postfix/virtual
+    if postmap /etc/postfix/virtual; then
+        if [ -f /etc/postfix/virtual.db ]; then
+            log_info "✓ Virtual alias database created successfully at /etc/postfix/virtual.db"
+            ls -lh /etc/postfix/virtual.db
+            # Also create symlink in /tmp/docker-mailserver for compatibility
+            ln -sf /etc/postfix/virtual.db /tmp/docker-mailserver/postfix-virtual.cf.db 2>/dev/null || true
         else
             log_error "Failed to create virtual alias database"
             exit 1
@@ -70,10 +77,14 @@ fi
 # Generate transport database
 if [ -f /tmp/docker-mailserver/postfix-transport ]; then
     log_info "Compiling transport database from postfix-transport..."
-    if postmap /tmp/docker-mailserver/postfix-transport; then
-        if [ -f /tmp/docker-mailserver/postfix-transport.db ]; then
-            log_info "✓ Transport database created successfully"
-            ls -lh /tmp/docker-mailserver/postfix-transport.db
+    # Copy source file to /etc/postfix where we can write the .db file
+    cp /tmp/docker-mailserver/postfix-transport /etc/postfix/transport
+    if postmap /etc/postfix/transport; then
+        if [ -f /etc/postfix/transport.db ]; then
+            log_info "✓ Transport database created successfully at /etc/postfix/transport.db"
+            ls -lh /etc/postfix/transport.db
+            # Also create symlink in /tmp/docker-mailserver for compatibility
+            ln -sf /etc/postfix/transport.db /tmp/docker-mailserver/postfix-transport.db 2>/dev/null || true
         else
             log_error "Failed to create transport database"
             exit 1

@@ -15,10 +15,14 @@ This directory contains configuration files for the docker-mailserver integratio
 The `user-patches.sh` script automatically runs on container startup and:
 
 1. Waits for Postfix to be ready
-2. Compiles `postfix-virtual.cf` to `postfix-virtual.cf.db` using `postmap`
-3. Compiles `postfix-transport` to `postfix-transport.db` using `postmap`
-4. Reloads Postfix to apply the changes
-5. Waits for Rspamd and ClamAV to initialize
+2. Copies `postfix-virtual.cf` to `/etc/postfix/virtual`
+3. Compiles to `virtual.db` using `postmap` (writable location)
+4. Copies `postfix-transport` to `/etc/postfix/transport`
+5. Compiles to `transport.db` using `postmap` (writable location)
+6. Reloads Postfix to apply the changes
+7. Waits for Rspamd and ClamAV to initialize
+
+Note: Config files are mounted read-only from the host, so `.db` files are generated in `/etc/postfix/` instead of `/tmp/docker-mailserver/`.
 
 ## Troubleshooting
 
@@ -46,12 +50,12 @@ docker restart mailserver
 ### Verify database files exist
 
 ```bash
-docker exec mailserver ls -la /tmp/docker-mailserver/*.db
+docker exec mailserver ls -la /etc/postfix/*.db
 ```
 
 You should see:
-- `postfix-virtual.cf.db`
-- `postfix-transport.db`
+- `virtual.db`
+- `transport.db`
 
 ### Check mailserver health
 
@@ -70,12 +74,11 @@ docker logs mailserver --tail 100 -f
 Edit `postfix-virtual.cf` to add virtual aliases, then regenerate the database:
 
 ```bash
-# Edit the file
+# Edit the file on the host
 nano config/mailserver/postfix-virtual.cf
 
 # Regenerate database (automatic on restart, or manual)
-docker exec mailserver postmap /tmp/docker-mailserver/postfix-virtual.cf
-docker exec mailserver postfix reload
+docker exec mailserver bash -c "cp /tmp/docker-mailserver/postfix-virtual.cf /etc/postfix/virtual && postmap /etc/postfix/virtual && postfix reload"
 ```
 
 ## Routing Emails to SMTPy
@@ -83,15 +86,14 @@ docker exec mailserver postfix reload
 Edit `postfix-transport` to route specific addresses to SMTPy:
 
 ```bash
-# Edit the file
+# Edit the file on the host
 nano config/mailserver/postfix-transport
 
 # Add a line like:
 # myalias@atomdev.fr       smtp:[smtpy-smtp-receiver]:2525
 
 # Regenerate database
-docker exec mailserver postmap /tmp/docker-mailserver/postfix-transport
-docker exec mailserver postfix reload
+docker exec mailserver bash -c "cp /tmp/docker-mailserver/postfix-transport /etc/postfix/transport && postmap /etc/postfix/transport && postfix reload"
 ```
 
 ## SSL/TLS Setup
