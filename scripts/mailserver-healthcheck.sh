@@ -52,8 +52,27 @@ check_smtp() {
     local port=$1
     local service_name=$2
 
-    # Try to connect and send EHLO command
-    response=$(timeout 5 bash -c "echo 'EHLO healthcheck' | nc 127.0.0.1 $port" 2>/dev/null | head -n 1)
+    # Try to connect and follow proper SMTP protocol:
+    # 1. Wait for server banner (220)
+    # 2. Send EHLO with proper CRLF line ending
+    # 3. Send QUIT to cleanly disconnect
+    response=$(timeout 5 bash -c "
+        exec 3<>/dev/tcp/127.0.0.1/$port
+        # Read server banner
+        read -u 3 banner
+        # Send EHLO with CRLF
+        printf 'EHLO healthcheck\r\n' >&3
+        # Read response
+        read -u 3 ehlo_response
+        # Send QUIT with CRLF
+        printf 'QUIT\r\n' >&3
+        # Close connection
+        exec 3<&-
+        exec 3>&-
+        # Output both banner and EHLO response for verification
+        echo \"\$banner\"
+        echo \"\$ehlo_response\"
+    " 2>/dev/null)
 
     if echo "$response" | grep -q "220"; then
         log "${GREEN}✓${NC} $service_name (port $port) responded correctly"
@@ -69,8 +88,24 @@ check_imap() {
     local port=$1
     local service_name=$2
 
-    # Try to connect to IMAP
-    response=$(timeout 5 bash -c "echo 'A1 LOGOUT' | nc 127.0.0.1 $port" 2>/dev/null | head -n 1)
+    # Try to connect to IMAP and follow proper protocol:
+    # 1. Wait for server banner (OK)
+    # 2. Send LOGOUT with proper CRLF line ending
+    response=$(timeout 5 bash -c "
+        exec 3<>/dev/tcp/127.0.0.1/$port
+        # Read server banner
+        read -u 3 banner
+        # Send LOGOUT with CRLF
+        printf 'A1 LOGOUT\r\n' >&3
+        # Read response
+        read -u 3 logout_response
+        # Close connection
+        exec 3<&-
+        exec 3>&-
+        # Output both banner and logout response for verification
+        echo \"\$banner\"
+        echo \"\$logout_response\"
+    " 2>/dev/null)
 
     if echo "$response" | grep -q "OK"; then
         log "${GREEN}✓${NC} $service_name (port $port) responded correctly"
