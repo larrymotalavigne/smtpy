@@ -74,3 +74,28 @@ smtp_tls_ciphers = medium
 # Queue Configuration
 # maximal_queue_lifetime = 5d
 # bounce_queue_lifetime = 5d
+
+# Postscreen Configuration
+# Whitelist localhost and Docker networks from postscreen checks
+# This prevents health checks from triggering PREGREET violations
+postscreen_access_list = permit_mynetworks,
+                        cidr:/tmp/docker-mailserver/postscreen_access.cidr
+
+# Postscreen greet wait time (default is 6 seconds)
+# Increase if needed for slower connections
+postscreen_greet_wait = ${stress?2}${stress:6}s
+
+# Postscreen actions
+postscreen_greet_action = enforce
+postscreen_dnsbl_action = enforce
+
+# Milter Configuration
+# Use soft_fail for milters to prevent mail rejection when milter is unavailable
+# This allows mail to flow even if Rspamd is still starting up
+smtpd_milters = inet:localhost:11332
+non_smtpd_milters = $smtpd_milters
+milter_default_action = accept
+milter_protocol = 6
+
+# Milter connection macros
+milter_mail_macros = i {mail_addr} {client_addr} {client_name} {auth_authen}

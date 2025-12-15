@@ -1,0 +1,23 @@
+# Postscreen Access Control (CIDR format)
+# This file whitelists IP addresses/networks from postscreen checks
+#
+# Format: network_address/prefix_length action
+#
+# Actions:
+#   permit - Whitelist the client from all postscreen tests
+#   reject - Reject the client
+#
+# Documentation: http://www.postfix.org/postscreen.8.html
+# See also: http://www.postfix.org/cidr_table.5.html
+
+# Whitelist localhost for health checks
+# This prevents health checks from being blocked by postscreen PREGREET detection
+127.0.0.0/8         permit
+::1                 permit
+
+# Whitelist Docker bridge networks
+172.16.0.0/12       permit
+10.0.0.0/8          permit
+
+# Add your trusted networks below
+# Example: 192.168.1.0/24  permit
