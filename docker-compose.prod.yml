@@ -340,10 +340,13 @@ services:
       - /etc/localtime:/etc/localtime:ro
       # Health check script
       - ./scripts/mailserver-healthcheck.sh:/usr/local/bin/healthcheck.sh:ro
+      # Setup script for database generation and initialization
+      - ./scripts/setup-mailserver.sh:/usr/local/bin/setup-mailserver.sh:ro
       # Custom Postfix configuration for virtual domains
       - ./config/mailserver/postfix-main.cf:/tmp/docker-mailserver/postfix-main.cf:ro
       - ./config/mailserver/postfix-virtual.cf:/tmp/docker-mailserver/postfix-virtual.cf:ro
       - ./config/mailserver/postfix-transport:/tmp/docker-mailserver/postfix-transport:ro
+      - ./config/mailserver/postscreen_access.cidr:/tmp/docker-mailserver/postscreen_access.cidr:ro
     networks:
       - smtpy-network
       - mailserver-network

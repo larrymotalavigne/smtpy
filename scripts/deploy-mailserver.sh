@@ -150,6 +150,16 @@ if docker ps | grep -q mailserver; then
     docker logs mailserver --tail 20
     echo "---------------------------------------"
 
+    # Run setup script to generate databases and configure mailserver
+    echo ""
+    print_info "Running mailserver setup script..."
+    if docker exec mailserver bash /usr/local/bin/setup-mailserver.sh; then
+        print_success "Setup script completed successfully"
+    else
+        print_warning "Setup script failed (this may be normal on first start)"
+        print_info "You can manually run: docker exec mailserver bash /usr/local/bin/setup-mailserver.sh"
+    fi
+
 else
     print_error "Mailserver container failed to start"
     print_info "Checking logs..."
