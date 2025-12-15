@@ -389,17 +389,13 @@ volumes:
     driver: local
   # Mailserver volumes reference existing infra project volumes to preserve data
   mailserver_data:
-    external: true
-    name: infra_mailserver_data
+    driver: local
   mailserver_state:
-    external: true
-    name: infra_mailserver_state
+    driver: local
   mailserver_logs:
-    external: true
-    name: infra_mailserver_logs
+    driver: local
   mailserver_config:
-    external: true
-    name: infra_mailserver_config
+    driver: local
   npm_letsencrypt:
     external: true
     name: infra_npm_letsencrypt

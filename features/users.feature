@@ -1,4 +1,4 @@
-xFeature: Users basic interactions with SMTPy
+Feature: Users basic interactions with SMTPy
   As a user of SMTPy
   I want to access the service and see it is healthy
   So that I can trust the platform is running
