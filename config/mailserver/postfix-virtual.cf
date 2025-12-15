@@ -10,8 +10,8 @@
 #   contact@atomdev.fr        user@atomdev.fr
 #
 # After editing, run:
-#   docker exec mailserver postmap /tmp/docker-mailserver/postfix-virtual.cf
-#   docker exec mailserver postfix reload
+#   docker exec mailserver bash -c "cp /tmp/docker-mailserver/postfix-virtual.cf /etc/postfix/virtual && postmap /etc/postfix/virtual && postfix reload"
+#   Or simply restart the container: docker restart mailserver
 #
 # Documentation: http://www.postfix.org/virtual.5.html
 

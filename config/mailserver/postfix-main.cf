@@ -6,12 +6,12 @@
 
 # Virtual Domain Configuration
 # Enable virtual domains and aliases
-virtual_alias_maps = hash:/tmp/docker-mailserver/postfix-virtual.cf
+virtual_alias_maps = hash:/etc/postfix/virtual
 virtual_transport = lmtp:unix:private/dovecot-lmtp
 
 # Transport Maps for SMTPy Integration
 # Route emails for specific addresses to SMTPy SMTP receiver
-transport_maps = hash:/tmp/docker-mailserver/postfix-transport
+transport_maps = hash:/etc/postfix/transport
 
 # Message Size Limits
 # Set maximum message size (default 10MB)

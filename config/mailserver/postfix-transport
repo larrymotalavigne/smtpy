@@ -15,8 +15,8 @@
 #   demo@atomdev.fr          smtp:[smtpy-smtp-receiver]:2525
 #
 # After editing, run:
-#   docker exec mailserver postmap /tmp/docker-mailserver/postfix-transport
-#   docker exec mailserver postfix reload
+#   docker exec mailserver bash -c "cp /tmp/docker-mailserver/postfix-transport /etc/postfix/transport && postmap /etc/postfix/transport && postfix reload"
+#   Or simply restart the container: docker restart mailserver
 #
 # Documentation: http://www.postfix.org/transport.5.html
 
